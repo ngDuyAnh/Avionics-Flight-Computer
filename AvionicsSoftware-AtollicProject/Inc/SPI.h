@@ -16,6 +16,7 @@
 #ifndef SPI_H
 #define SPI_H
 
+#include <inttypes.h>
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_spi.h"
 #include "hardwareDefs.h"

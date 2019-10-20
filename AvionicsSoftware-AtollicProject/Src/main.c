@@ -14,20 +14,20 @@
 
 
 /* Includes ------------------------------------------------------------------*/
-#include "configuration.h"
+#include "main.h"
 #include "FreeRTOS.h"
 #include "flash.h"
-#include "sensorAG.h"
 #include "pressure_sensor_bmp3.h"
-#include "dataLogging.h"
-#include "xtract.h"
-#include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_uart_io.h"
+#include "configuration.h"
 #include "startupTask.h"
-#include "main.h"
+#include "dataLogging.h"
+#include "recovery.h"
+#include "sensorAG.h"
+
 #include "buzzer.h"
 #include "timer.h"
-#include "recovery.h"
+#include "xtract.h"
 
 osThreadId defaultTaskHandle;
 UART_HandleTypeDef huart6_ptr; //global var to be passed to vTask_xtract
@@ -50,6 +50,7 @@ char testpress();
 char testIMU();
 void MX_GPIO_Init();
 void vTask_starter(void * pvParams);
+void Error_Handler(void);
 
 int main(void)
 
