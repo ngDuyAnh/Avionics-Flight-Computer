@@ -13,6 +13,10 @@
 #ifndef FLASH_H
 #define FLASH_H
 
+/**
+ * So far flash.h must depend on SPI.h because it initializes SPI_HandleTypeDef
+ * @todo: maybe in the future we can use a pointer instead then?
+ */
 #include "SPI.h"
 
 /*

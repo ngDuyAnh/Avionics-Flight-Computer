@@ -23,7 +23,6 @@
 
 #include "flash.h"
 #include "xtract.h"
-#include "buttonpress.h"
 #include "cmsis_os.h"
 #include "bmp3_defs.h"
 #include "bmi08x_defs.h"
