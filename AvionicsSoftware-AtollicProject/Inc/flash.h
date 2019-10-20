@@ -72,10 +72,11 @@ typedef enum flash_status_t
 /**
  * @brief Flash structure that holds a communication handler
  */
-typedef struct
+typedef struct flash_t
 {
 	SPI_HandleTypeDef spi_handle; /**< SPI handle. */
-}Flash;
+} Flash;
+
 
 /**
  * @brief

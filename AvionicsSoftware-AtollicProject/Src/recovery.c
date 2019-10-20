@@ -16,6 +16,8 @@
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include "recovery.h"
+#include "cmsis_os.h"
+#include "configuration.h"
 #include "hardwareDefs.h"
 #include "stm32f4xx_hal.h"
 

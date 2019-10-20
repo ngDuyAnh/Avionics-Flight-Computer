@@ -16,7 +16,12 @@
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include "dataLogging.h"
-
+#include "cmsis_os.h"				//For delay and queues
+#include "flash.h"					//For flash memory functions
+#include "pressure_sensor_bmp3.h"	//For bmp reading struct
+#include "sensorAG.h"				//For imu_reading struct
+#include "buzzer.h"
+#include "recovery.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS

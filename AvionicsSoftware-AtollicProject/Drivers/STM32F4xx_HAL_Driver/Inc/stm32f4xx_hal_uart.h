@@ -155,7 +155,7 @@ typedef enum
 /** 
   * @brief  UART handle Structure definition  
   */  
-typedef struct
+typedef struct UART_HandleType_t
 {
   USART_TypeDef                 *Instance;        /*!< UART registers base address        */
   

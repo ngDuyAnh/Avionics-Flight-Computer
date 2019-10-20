@@ -18,10 +18,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "stm32f4xx_hal_uart_io.h"
+#include "configuration.h"
 
+#include "flash.h"
 #include "xtract.h"
 #include "buttonpress.h"
 #include "cmsis_os.h"
+#include "bmp3_defs.h"
+#include "bmi08x_defs.h"
+#include "recovery.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS

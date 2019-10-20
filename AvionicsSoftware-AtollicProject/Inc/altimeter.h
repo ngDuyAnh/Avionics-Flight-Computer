@@ -29,7 +29,7 @@
 // ENUMS AND ENUM TYPEDEFS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include <stdint.h>
-#include "configuration.h"
+#include "forward_declarations.h"
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // STRUCTS AND STRUCT TYPEDEFS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -82,6 +82,6 @@ typedef union {
 // Returns:
 //  float - float value of altitude approximation
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-alt_value altitude_approx(float pressure, float temperature,configData_t*config);
+alt_value altitude_approx(float pressure, float temperature, configData_t*config);
 
 #endif // TEMPLATE_H
