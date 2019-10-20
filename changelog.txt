@@ -24,3 +24,5 @@ Changes made:
 	-redesigned flash.h/flash.c dataLoging.h/dataLoging.c
 	-built a state machine in the dataLogger to enable flexible control of the state changes
 
+6. Documentation
+	-provided some template on how headers may look like (see flash.h and flash.c)
