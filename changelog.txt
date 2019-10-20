@@ -1,0 +1,26 @@
+Avionics System v2.0
+
+Changes made:
+1. Fixed includes:
+	-removed unnecessary includes and moved them to the implementation file
+	-removed redundant/duplicate includes
+
+2. Project filesystem structure
+	-separated tasks into the folder /tasks
+	-separated sensor tasks into the folder /tasks/sensors
+	-removed unused files
+	-added new files resulted from separating and categorizing some functions
+	and putting them aside into different files
+
+3. Naming
+	-names for many files (most of the files)
+	-e.g: dataLoging -> flight_state_controller, xtract -> command_line_interface, etc...
+
+
+4. Name conventions:
+	-typedefs, structs, enums, unions: made a step towards standardising the naming across the project
+
+5. Design
+	-redesigned flash.h/flash.c dataLoging.h/dataLoging.c
+	-built a state machine in the dataLogger to enable flexible control of the state changes
+
