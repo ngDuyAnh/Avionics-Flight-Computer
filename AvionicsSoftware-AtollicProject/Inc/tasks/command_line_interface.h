@@ -1,43 +1,53 @@
-#ifndef PRESSURE_SENSOR_BMP280_H
-#define PRESSURE_SENSOR_BMP280_H
+#ifndef XTRACT_H
+#define XTRACT_H
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// pressure_sensor_bmp280.h
 // UMSATS 2018-2020
 //
 // Repository:
-//  UMSATS > Avionics 2019
+//  UMSATS>Avionics-2019
 //
 // File Description:
-//  Control and usage of BMP280 sensor inside of RTOS task.
+//  xtraxt.h UART CLI utility to pull data off of STM32 flash memory
 //
 // History
-// 2019-03-04 Eric Kapilik
+// 2019-02-15 by Eric Kapilik
 // - Created.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-#include <inttypes.h>
 #include "forward_declarations.h"
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-#define TIMEOUT 100 // milliseconds
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ENUMS AND ENUM TYPEDEFS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+typedef enum{
+
+	MAIN_MENU,
+	READ_MENU,
+	CONFIG_MENU,
+	EMATCH_MENU,
+	MEM_MENU,
+	SAVE_MENU
+
+} menuState_t;
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // STRUCTS AND STRUCT TYPEDEFS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Keep SPI connection and BMP sensor struct togehter
-struct bmp280_sensor_struct{
-	struct bmp280_dev* bmp_ptr;
-	SPI_HandleTypeDef* hspi_ptr;
-};
-typedef struct bmp280_sensor_struct bmp280_sensor;
+typedef struct{
+
+	UART_HandleTypeDef *huart;
+	Flash *flash;
+	configData_t *flightCompConfig;
+	TaskHandle_t startupTaskHandle;
+}	xtractParams;
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // TYPEDEFS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -51,46 +61,78 @@ typedef struct bmp280_sensor_struct bmp280_sensor;
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
-//  Task for testing the BMP280 sensor.
-//    - initializes sensor
-//    - read data & print to UART screen cycle
+//  create task to read & handle UART connection
+//
+// Returns:
+//   VOID
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void vTask_command_line_interface(void *pvParameters);
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Description:
+//  handle command passed in
+//		- does not create command parameter deep copy
+//		- will call one of the other commands declared below
 //
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void vTask_pressure_sensor_280(void *pvParameters);
+void handle_command(char* command,xtractParams * params,menuState_t* state);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
-//  Initialize BMP280 sensor and be ready to read via SPI 4w.
-//  Also performs unit self test.
-// *Based off of https://github.com/BoschSensortec/BMP280_driver/blob/master/examples/basic.c
+//  display introduction about xtract program
 //
 // Returns:
-//  0 if no errors.
+//  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-int8_t init_bmp280_sensor(bmp280_sensor* bmp280_sensor_ptr);
+void intro(UART_HandleTypeDef * uart); //display on start up
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
-//  Captures pressure reading (32 bit precision) from BMP280 sensor.
-// NOTE:
-//  The sensor that this function will get measurements from is the one that was passed in via init_bmp280_sensor
+//  display help menu, including short description of all available commands
 //
 // Returns:
-//  uint32_t - 32 bit precision pressure measurement
+//  Enter description of return values (if any).
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-uint32_t bmp280_get_press();
+void help(UART_HandleTypeDef * uart); //display help menu
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
-//  Captures temperature reading (32 bit precision) from BMP280 sensor.
-// NOTE:
-//  The sensor that this function will get measurements from is the one that was passed in via init_bmp280_sensor
+//  read data from flash memory - CURRENTLY DUMMY FUNCTION
 //
 // Returns:
-//  uint32_t - 32 bit precision temperature measurement
+//  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-int32_t bmp280_get_temp();
+void read(xtractParams * params);
 
-#endif // PRESSURE_SENSOR_BMP280_H
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Description:
+//  starts a timer that prints when it is done
+//
+// Returns:
+//  VOID
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+//void start(void);
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Description:
+//  menu for ematch options.
+//
+// Returns:
+//  VOID
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void ematch(char* command, xtractParams * params);
+
+
+void memory_menu(char* command, xtractParams * params);
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Description:
+//  menu for setting flight computer options.
+//
+// Returns:
+//  VOID
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void configure(char* command,xtractParams * params);
+
+#endif // XTRACT_H

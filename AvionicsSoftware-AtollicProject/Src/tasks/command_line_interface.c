@@ -22,7 +22,7 @@
 #include "configuration.h"
 
 #include "flash.h"
-#include "tasks/cli.h"
+#include "tasks/command_line_interface.h"
 #include "cmsis_os.h"
 #include "bmp3_defs.h"
 #include "bmi08x_defs.h"
@@ -65,7 +65,7 @@ uint16_t delay_ematch_menu_fire = 10000;
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTIONS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void vTask_CLI(void *pvParameters){
+void vTask_command_line_interface(void *pvParameters){
 
 	xtractParams * params = (xtractParams *)pvParameters;
 

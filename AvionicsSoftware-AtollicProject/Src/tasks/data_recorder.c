@@ -15,12 +15,12 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-#include "tasks/dataLogging.h"
+#include "tasks/data_recorder.h"
 #include "cmsis_os.h"
 #include "flash.h"                    //For flash memory functions
-#include "tasks/pressure_sensor_bmp3.h"    //For bmp reading struct
+#include "tasks/sensors/pressure_sensor.h"    //For bmp reading struct
 #include "stm32f4xx_hal_uart_io.h"
-#include "tasks/sensorAG.h"                //For imu_reading struct
+#include "tasks/sensors/imu_sensor.h"                //For imu_reading struct
 #include "buzzer.h"
 #include "recovery.h"
 #include "altimeter.h"

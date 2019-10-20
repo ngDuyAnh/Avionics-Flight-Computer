@@ -1,38 +1,36 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// pressure_sensor_bmp280.h
+// pressure_sensor_bmp3.c
 // UMSATS 2018-2020
 //
 // Repository:
 //  UMSATS > Avionics 2019
 //
 // File Description:
-//  Control and usage of BMP280 sensor inside of RTOS task.
+//  Control and usage of BMP3 sensor inside of RTOS task.
 //
 // History
-// 2019-03-04 Eric Kapilik
+// 2019-04-06 Eric Kapilik
 // - Created.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-#include <tasks/pressure_sensor_bmp280.h>
-#include <stdio.h>
+#include <tasks/sensors/pressure_sensor.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include "bmp280.h"
+#include "bmp3.h"
 #include "stm32f4xx_hal_uart_io.h"
 #include "cmsis_os.h"
 #include "SPI.h"
-
+#include "configuration.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 static UART_HandleTypeDef* uart;
 static char buf[128];
-static bmp280_sensor* static_bmp280_sensor;
+static bmp3_sensor* static_bmp3_sensor;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ENUMS AND ENUM TYPEDEFS
@@ -50,13 +48,13 @@ static bmp280_sensor* static_bmp280_sensor;
 // FUNCTION PROTOTYPES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 /*
- * Brief: Configures the  static_bmp280_sensor according to parameterized filter, os_pres, and odr
+ * Brief: Configures the  static_bmp3_sensor according to parameterized filter, os_pres, and odr
  * Param:
  *   - filter: filter coefficient
  *   - os_pres: oversampling rate for pressure
  *   - odr: output data rate
  */
-static uint8_t bmp280_config(uint8_t filter, uint8_t os_pres, uint8_t odr);
+static uint8_t bmp3_config(uint8_t filter, uint8_t os_pres,uint8_t os_temp, uint8_t odr);
 
 static void delay_ms(uint32_t period_ms);
 
@@ -64,130 +62,161 @@ static int8_t spi_reg_write(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uin
 
 static int8_t spi_reg_read(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length);
 
-static void print_rslt(const char api_name[], int8_t rslt);
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // PUBLIC FUNCTIONS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-int8_t init_bmp280_sensor(bmp280_sensor* bmp280_sensor_ptr){
+int8_t init_bmp3_sensor(bmp3_sensor* bmp3_sensor_ptr){
 	int8_t rslt;
-	struct bmp280_dev* bmp280_ptr;
+	struct bmp3_dev* bmp3_ptr;
 	SPI_HandleTypeDef* hspi_ptr;
 
 	 //Initialize SPI Handler
 	hspi_ptr = malloc(sizeof(SPI_HandleTypeDef));
 	while(!hspi_ptr){} //Could not malloc a hspi
-	spi1_init(hspi_ptr);
+	spi2_init(hspi_ptr);
 
-	//Initialize BMP280 Handler
-	bmp280_ptr = malloc(sizeof(struct bmp280_dev));
+	//Initialize BMP3 Handler
+	bmp3_ptr = malloc(sizeof(struct bmp3_dev));
 
-	/* Set bmp280_sensor_ptr members to newly initialized handlers */
-	bmp280_sensor_ptr->bmp_ptr = bmp280_ptr;
-	bmp280_sensor_ptr->hspi_ptr = hspi_ptr;
+	/* Set bmp3_sensor_ptr members to newly initialized handlers */
+	bmp3_sensor_ptr->bmp_ptr = bmp3_ptr;
+	bmp3_sensor_ptr->hspi_ptr = hspi_ptr;
 
-	// Save static reference to bmp280_sensor_ptr for use in spi_reg_read/write wrapper functions
+	// Save static reference to bmp3_sensor_ptr for use in spi_reg_read/write wrapper functions
 	// The spi_reg_read/write functions have function signatures defined by the BOSCH API which they conform to.
-	// Unforuntately, a reference to the SPI connection is not in that signature, so I keep a static reference to it for use in said wrapper functions.
-	static_bmp280_sensor = bmp280_sensor_ptr;
+	// Unfortunately, a reference to the SPI connection is not in that signature, so I keep a static reference to it for use in said wrapper functions.
+	static_bmp3_sensor = bmp3_sensor_ptr;
 
 	/* Map the delay function pointer with the function responsible for implementing the delay */
-	bmp280_ptr->delay_ms = delay_ms;
+	bmp3_ptr->delay_ms = delay_ms;
 
 	/* Select the interface mode as SPI */
-	bmp280_ptr->intf = BMP280_SPI_INTF;
-	bmp280_ptr->read = spi_reg_read;
-	bmp280_ptr->write = spi_reg_write;
-	bmp280_ptr->dev_id = 0;
+	bmp3_ptr->intf = BMP3_SPI_INTF;
+	bmp3_ptr->read = spi_reg_read;
+	bmp3_ptr->write = spi_reg_write;
+	bmp3_ptr->dev_id = 0;
 
-	rslt = bmp280_init(bmp280_ptr); //bosch API initialization method
+	rslt = bmp3_init(bmp3_ptr); //bosch API initialization method
 
-	while(rslt != BMP280_OK){} //stop if initialization failed
+	while(rslt != BMP3_OK){} //stop if initialization failed
 
-	rslt = bmp280_selftest(bmp280_ptr);
-	while(rslt != BMP280_OK){} //spin wait if self test failed
 	return rslt;
 }
 
-uint32_t bmp280_get_press(){
-	int8_t rslt;
-	struct bmp280_uncomp_data ucomp_data;
-	uint32_t pres32;
+int8_t get_sensor_data(struct bmp3_dev *dev, struct bmp3_data* data)
+{
+    int8_t rslt;
+    /* Variable used to select the sensor component */
+    uint8_t sensor_comp;
 
-    /* Reading the raw data from sensor */
-    rslt = bmp280_get_uncomp_data(&ucomp_data, static_bmp280_sensor->bmp_ptr);
+    /* Sensor component selection */
+    sensor_comp = BMP3_PRESS | BMP3_TEMP;
+    /* Temperature and Pressure data are read and stored in the bmp3_data instance */
+    rslt = bmp3_get_sensor_data(sensor_comp, data, dev);
 
-    /* Getting the compensated pressure using 32 bit precision */
-    rslt = bmp280_get_comp_pres_32bit(&pres32, ucomp_data.uncomp_press, static_bmp280_sensor->bmp_ptr);
-
-    return pres32;
+    return rslt;
 }
 
-int32_t bmp280_get_temp(){
+static uint8_t bmp3_config(uint8_t iir,uint8_t os_pres, uint8_t os_temp, uint8_t odr){
 	int8_t rslt;
-	struct bmp280_uncomp_data ucomp_data;
-	int32_t temp32;
+	struct bmp3_dev *dev = static_bmp3_sensor->bmp_ptr;
 
-	/* Reading the raw data from sensor */
-	rslt = bmp280_get_uncomp_data(&ucomp_data, static_bmp280_sensor->bmp_ptr);
+	/* Used to select the settings user needs to change */
+	uint16_t settings_sel;
 
-	/* Getting the compensated temperature using 32 bit precision */
-	//result is integer (i.e. 1234 is 12.34 C)
-	rslt = bmp280_get_comp_temp_32bit(&temp32, ucomp_data.uncomp_temp, static_bmp280_sensor->bmp_ptr);
+	/* Select the pressure and temperature sensor to be enabled */
+	dev->settings.press_en = BMP3_ENABLE;
+	dev->settings.temp_en = BMP3_ENABLE;
+	/* Select the output data rate and oversampling settings for pressure and temperature */
+	dev->settings.odr_filter.press_os = os_pres;
+	dev->settings.odr_filter.temp_os = os_temp;
+	dev->settings.odr_filter.odr = odr;
+	dev->settings.odr_filter.iir_filter = iir;
+	/* Assign the settings which needs to be set in the sensor */
+	settings_sel = BMP3_PRESS_EN_SEL | BMP3_TEMP_EN_SEL | BMP3_PRESS_OS_SEL | BMP3_TEMP_OS_SEL | BMP3_ODR_SEL| BMP3_IIR_FILTER_SEL;
+	rslt = bmp3_set_sensor_settings(settings_sel, dev);
 
-	return temp32;
-}
+	/* Set the power mode to normal mode */
+	dev->settings.op_mode = BMP3_NORMAL_MODE;
+	rslt = bmp3_set_op_mode(dev);
 
-static uint8_t bmp280_config(uint8_t filter, uint8_t os_pres, uint8_t odr){
-	struct bmp280_config conf;
-	uint8_t rslt;
-
-	/* Configuration */
-	/* Always read the current settings before writing, especially when
-	 * all the configuration is not modified */
-	rslt = bmp280_get_config(&conf, static_bmp280_sensor->bmp_ptr);
-	//print_rslt("bmp280_get_config status", rslt);
-
-    /* configuring the temperature oversampling, filter coefficient and output data rate */
-    /* Overwrite the desired settings */
-    conf.filter = filter;
-
-    /* Pressure oversampling */
-    conf.os_pres = os_pres;
-
-    /* Setting the output data rate */
-	conf.odr = odr;
-
-	/* lock in the changes */
-	rslt = bmp280_set_config(&conf, static_bmp280_sensor->bmp_ptr);
-	//print_rslt("bmp280_set_config status", rslt);
-
-	/* Always set the power mode after setting the configuration */
-	rslt = bmp280_set_power_mode(BMP280_NORMAL_MODE, static_bmp280_sensor->bmp_ptr);
-    //print_rslt("bmp280_set_power_mode status", rslt);
 	return rslt;
 }
+void init_bmp(configData_t * configParams){
 
-void vTask_pressure_sensor_280(void *pvParameters){
-	int rslt;
-    int32_t temp32;
-    uint32_t pres32;
+	bmp3_sensor* bmp3_sensor_ptr = malloc(sizeof(bmp3_sensor));
+	int8_t rslt;
+	rslt = init_bmp3_sensor(bmp3_sensor_ptr);
+	if(rslt != 0){
+		while(1){}
+	}
+	rslt = bmp3_config(configParams->values.iir_coef,configParams->values.pres_os, configParams->values.temp_os, configParams->values.bmp_odr);
+	if(rslt != 0){
+		while(1){}
+	}
+}
 
-    uart = (UART_HandleTypeDef*) pvParameters; //Get uart for printing to console
+void calibrate_bmp(configData_t * configParams){
 
-	bmp280_sensor* bmp280_sensor_ptr = malloc(sizeof(bmp280_sensor));
-	rslt = init_bmp280_sensor(bmp280_sensor_ptr);
+	bmp_data_struct dataStruct;
+	get_sensor_data(static_bmp3_sensor->bmp_ptr, &dataStruct.data);
+	configParams->values.ref_alt=0;
+	configParams->values.ref_pres = (uint32_t)dataStruct.data.pressure/100;
+}
+
+void vTask_pressure_sensor_bmp3(void *pvParameters){
+
+	PressureTaskParams * params = (PressureTaskParams *) pvParameters;
+	QueueHandle_t bmp_queue = params->bmp388_queue;
+	uart = params->huart;	//Get uart for printing to console
+	configData_t * configParams = params->flightCompConfig;
+
+
+	int8_t rslt;
+
+	/* Variable used to store the compensated data */
+	bmp_data_struct dataStruct;
+
+	TickType_t prevTime;
+
+
+	bmp3_sensor* bmp3_sensor_ptr = malloc(sizeof(bmp3_sensor));
+
+	rslt = init_bmp3_sensor(bmp3_sensor_ptr);
+	bmp3_print_rslt("init_bmp3_sensor", rslt);
 
     /* Configuration */
-	rslt = bmp280_config(BMP280_FILTER_COEFF_16, BMP280_OS_4X, BMP280_ODR_1000_MS);
+	//rslt = bmp3_config(BMP3_IIR_FILTER_COEFF_15,BMP3_OVERSAMPLING_4X, BMP3_OVERSAMPLING_4X, BMP3_ODR_50_HZ);
+	rslt = bmp3_config(configParams->values.iir_coef,configParams->values.pres_os, configParams->values.temp_os, configParams->values.bmp_odr);
+	if(rslt != 0){
+		while(1){}
+	}
+	prevTime =xTaskGetTickCount();
+	int i;
+	for(i=0;i<3;i++){
+		get_sensor_data(static_bmp3_sensor->bmp_ptr, &dataStruct.data);
+		vTaskDelayUntil(&prevTime,configParams->values.data_rate);
+	}
 
-
+	if(!IS_IN_FLIGHT(configParams->values.flags)){
+		get_sensor_data(static_bmp3_sensor->bmp_ptr, &dataStruct.data);
+		configParams->values.ref_pres = dataStruct.data.pressure/100;
+	}
     while(1){
-    	pres32 = bmp280_get_press(bmp280_sensor_ptr);
-    	temp32 = bmp280_get_temp(bmp280_sensor_ptr);
-    	sprintf(buf, "Pressure: %ld [Pa]\tTemperature: %ld [0.01 C]", pres32, temp32);
-    	transmit_line(uart, buf);
-    	bmp280_sensor_ptr->bmp_ptr->delay_ms(1000);
+
+    	get_sensor_data(static_bmp3_sensor->bmp_ptr, &dataStruct.data);
+    	dataStruct.time_ticks = xTaskGetTickCount();
+
+    	xQueueSend(bmp_queue,&dataStruct,1);
+
+    	//sprintf(buf, "Pressure: %ld [Pa] at time: %d", (uint32_t)dataStruct.data.pressure,dataStruct.time_ticks);
+    	//sprintf(buf, "P %d",dataStruct.time_ticks);
+    	//transmit_line(uart, buf);
+
+    	//sprintf(buf, "Temperature: %ld [0.01 C]", (int32_t)dataStruct.data.temperature);
+    	//transmit_line(uart, buf);
+
+    	vTaskDelayUntil(&prevTime,configParams->values.data_rate);
     }
 }
 
@@ -205,6 +234,7 @@ void vTask_pressure_sensor_280(void *pvParameters){
 static void delay_ms(uint32_t period_ms)
 {
     vTaskDelay((TickType_t) period_ms);
+	//HAL_Delay(period_ms);
 }
 
 /*!
@@ -224,7 +254,7 @@ static int8_t spi_reg_write(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uin
 {
 	int8_t rslt = 0; //assume success
 
-	spi_send(*(static_bmp280_sensor->hspi_ptr), &reg_addr, 1, reg_data, length, TIMEOUT);
+	spi_send(*(static_bmp3_sensor->hspi_ptr), &reg_addr, 1, reg_data, length, TIMEOUT);
 
     return rslt;
 }
@@ -246,7 +276,7 @@ static int8_t spi_reg_read(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint
 {
 	int8_t rslt = 0; //assume success
 
-    spi_receive( *(static_bmp280_sensor->hspi_ptr), &reg_addr, 1, reg_data, length, TIMEOUT);
+    spi_receive( *(static_bmp3_sensor->hspi_ptr), &reg_addr, 1, reg_data, length, TIMEOUT);
 
     return rslt;
 }
@@ -259,73 +289,46 @@ static int8_t spi_reg_read(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint
  *
  *  @return void.
  */
-static void print_rslt(const char api_name[], int8_t rslt)
+void bmp3_print_rslt(const char api_name[], int8_t rslt)
 {
-	/*! @name Error codes
-	#define BMP280_E_NULL_PTR                    INT8_C(-1)
-	#define BMP280_E_DEV_NOT_FOUND               INT8_C(-2)
-	#define BMP280_E_INVALID_LEN                 INT8_C(-3)
-	#define BMP280_E_COMM_FAIL                   INT8_C(-4)
-	#define BMP280_E_INVALID_MODE                INT8_C(-5)
-	#define BMP280_E_BOND_WIRE                   INT8_C(-6)
-	#define BMP280_E_IMPLAUS_TEMP                INT8_C(-7)
-	#define BMP280_E_IMPLAUS_PRESS               INT8_C(-8)
-	#define BMP280_E_CAL_PARAM_RANGE             INT8_C(-9)
-	#define BMP280_E_UNCOMP_TEMP_RANGE           INT8_C(-10)
-	#define BMP280_E_UNCOMP_PRES_RANGE           INT8_C(-11)
-	#define BMP280_E_UNCOMP_TEMP_AND_PRESS_RANGE INT8_C(-12)
-	#define BMP280_E_UNCOMP_DATA_CALC            INT8_C(-13)
-	#define BMP280_E_32BIT_COMP_TEMP             INT8_C(-14)
-	#define BMP280_E_32BIT_COMP_PRESS            INT8_C(-15)
-	#define BMP280_E_64BIT_COMP_PRESS            INT8_C(-16)
-	#define BMP280_E_DOUBLE_COMP_TEMP            INT8_C(-17)
-	#define BMP280_E_DOUBLE_COMP_PRESS           INT8_C(-18) */
-    if (rslt != BMP280_OK)
+    if (rslt != BMP3_OK)
     {
     	char error_msg[64];
-        if (rslt == BMP280_E_NULL_PTR)
+        if (rslt == BMP3_E_NULL_PTR)
         {
         	sprintf(error_msg, "Null pointer error");
         }
-        else if (rslt == BMP280_E_DEV_NOT_FOUND)
+        else if (rslt == BMP3_E_DEV_NOT_FOUND)
         {
         	sprintf(error_msg, "Device not found");
         }
-        else if (rslt == BMP280_E_INVALID_LEN)
+        else if (rslt == BMP3_E_INVALID_ODR_OSR_SETTINGS)
 		{
-        	sprintf(error_msg, "BMP280_E_INVALID_LEN");
+			sprintf(error_msg, "Invalid ODR OSR settings");
 		}
-        else if (rslt == BMP280_E_COMM_FAIL)
-        {
-        	sprintf(error_msg, "Bus communication failed");
-        }
-        else if (rslt == BMP280_E_INVALID_MODE)
+        else if (rslt == BMP3_E_CMD_EXEC_FAILED)
 		{
-        	sprintf(error_msg, "Invalid Mode.");
+			sprintf(error_msg, "Command execution failed");
 		}
-        else if (rslt == BMP280_E_BOND_WIRE)
+        else if (rslt == BMP3_E_CONFIGURATION_ERR)
 		{
-        	sprintf(error_msg, "Bond wire.");
+			sprintf(error_msg, "Configuration error");
 		}
-        else if (rslt == BMP280_E_IMPLAUS_PRESS)
+        else if (rslt == BMP3_E_INVALID_LEN)
 		{
-        	sprintf(error_msg, "Invalid Pressure");
+			sprintf(error_msg, "Invalid length");
 		}
-        else if (rslt == BMP280_E_IMPLAUS_TEMP)
+        else if (rslt == BMP3_E_COMM_FAIL)
 		{
-        	sprintf(error_msg, "Invalid Temperature");
+			sprintf(error_msg, "Communication failure");
 		}
-        else if (rslt == BMP280_E_INVALID_MODE)
+        else if (rslt == BMP3_E_FIFO_WATERMARK_NOT_REACHED)
 		{
-        	sprintf(error_msg, "Invalid Mode");
+			sprintf(error_msg, "FIFO Watermark not reached");
 		}
-        else if (rslt == BMP280_E_CAL_PARAM_RANGE)
-        {
-        	sprintf(error_msg, "Calibration Parameter range invalid");
-        }
         else
         {
-            /* For more error codes refer "*_defs.h" */
+            //For more error codes refer "bmp3_defs.h"
         	sprintf(error_msg, "Unknown error code");
         }
         sprintf(buf, "\r\nERROR [%d] %s : %s\r\n", rslt, api_name, error_msg);

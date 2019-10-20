@@ -22,17 +22,17 @@
 #include "recovery.h"
 #include "buzzer.h"
 
-#include "tasks/pressure_sensor_bmp3.h"
-#include "tasks/startupTask.h"
-#include "tasks/dataLogging.h"
-#include "tasks/sensorAG.h"
+#include "tasks/sensors/pressure_sensor.h"
+#include "tasks/startup.h"
+#include "tasks/data_recorder.h"
+#include "tasks/sensors/imu_sensor.h"
 #include "tasks/timer.h"
-#include "tasks/cli.h"
+#include "tasks/command_line_interface.h"
 
 
 
 osThreadId defaultTaskHandle;
-UART_HandleTypeDef huart6_ptr; //global var to be passed to vTask_CLI
+UART_HandleTypeDef huart6_ptr; //global var to be passed to vTask_command_line_interface
 
 SPI_HandleTypeDef flash_spi;
 Flash flash;
@@ -235,7 +235,7 @@ int main(void)
 			  ) != 1){
 		Error_Handler();
 	}
-	if(xTaskCreate(vTask_CLI,     /* Pointer to the function that implements the task */
+	if(xTaskCreate(vTask_command_line_interface,     /* Pointer to the function that implements the task */
 				   "xtract uart cli", /* Text name for the task. This is only to facilitate debugging */
 				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
 				   (void *) &xtractParameters,    /* pointer to the huart object */
