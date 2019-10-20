@@ -94,7 +94,7 @@ void process_imu_data(imu_data_struct imu_reading, uint8_t* dest, uint32_t times
 	write_16(imu_reading.data_gyro.z, &dest[13]);
 }
 
-float process_bmp_data_and_return_altitude(bmp_data_struct bmp_reading, uint8_t * dest, float ref_pres, float ref_alt)
+float process_bmp_data_and_return_altitude(pressure_sensor_data bmp_reading, uint8_t * dest, float ref_pres, float ref_alt)
 {
 	//Update the header bytes.
 	uint32_t header = (dest[0] << 16) + (dest[1] << 8) + dest[2];
@@ -110,10 +110,10 @@ float process_bmp_data_and_return_altitude(bmp_data_struct bmp_reading, uint8_t 
 }
 
 
-void loggingTask(void *params)
+void thread_data_recorder_start(void *params)
 {
 	
-	LoggingStruct_t *logStruct = (LoggingStruct_t *) params;
+	thread_data_recorder_parameters *logStruct = (thread_data_recorder_parameters *) params;
 	Flash *flash_ptr = logStruct->flash_ptr;
 	UART_HandleTypeDef *huart = logStruct->uart;
 	configData_t *configParams = logStruct->flightCompConfig;
@@ -152,7 +152,7 @@ void loggingTask(void *params)
 	}
 	
 	imu_data_struct imu_reading;
-	bmp_data_struct bmp_reading;
+	pressure_sensor_data bmp_reading;
 	
 	
 	

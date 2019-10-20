@@ -61,7 +61,7 @@ void Timer_GPIO_Init(void)
 	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
 	HAL_GPIO_Init(INPUT_PORT, &GPIO_InitStruct);
 }
-void vTask_timer(void *param)
+void thread_timer_start(void *param)
 {
 	
 	//taskENABLE_INTERRUPTS();

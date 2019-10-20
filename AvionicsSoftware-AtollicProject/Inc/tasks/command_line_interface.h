@@ -33,7 +33,7 @@ typedef struct{
 	configData_t *flightCompConfig;
 	TaskHandle_t startupTaskHandle;
 	
-}	cli_parameters_t;
+}thread_cli_parameters;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -53,6 +53,6 @@ void thread_command_line_interface_start(void *pvParameters);
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void task_cli_execute_command(char* command, cli_parameters_t * params, menuState_t* state);
+void task_cli_execute_command(char* command, thread_cli_parameters * params, menuState_t* state);
 
 #endif // XTRACT_H

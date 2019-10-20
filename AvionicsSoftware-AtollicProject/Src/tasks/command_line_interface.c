@@ -69,7 +69,7 @@ uint16_t delay_ematch_menu_fire = 10000;
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void configure(char* command, cli_parameters_t * params);
+void configure(char* command, thread_cli_parameters * params);
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  menu for ematch options.
@@ -77,9 +77,9 @@ void configure(char* command, cli_parameters_t * params);
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void ematch(char* command, cli_parameters_t * params);
+void ematch(char* command, thread_cli_parameters * params);
 
-void memory_menu(char* command, cli_parameters_t * params);
+void memory_menu(char* command, thread_cli_parameters * params);
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  display introduction about xtract program
@@ -104,7 +104,7 @@ void help(UART_HandleTypeDef * uart); //display help menu
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void cli_read(cli_parameters_t * params);
+void cli_read(thread_cli_parameters * params);
 
 
 
@@ -113,7 +113,7 @@ void cli_read(cli_parameters_t * params);
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 void thread_command_line_interface_start(void *pvParameters){
 
-	cli_parameters_t * params = (cli_parameters_t *)pvParameters;
+	thread_cli_parameters * params = (thread_cli_parameters *)pvParameters;
 
 	UART_HandleTypeDef * uart = params->huart;
 
@@ -129,7 +129,7 @@ void thread_command_line_interface_start(void *pvParameters){
 	}
 } //vTaskUART_CLI END
 
-void task_cli_execute_command(char* command, cli_parameters_t * params, menuState_t * state){
+void task_cli_execute_command(char* command, thread_cli_parameters * params, menuState_t * state){
 
 
 	UART_HandleTypeDef * uart = params->huart;
@@ -215,7 +215,7 @@ void help(UART_HandleTypeDef * uart){
 }
 
 
-void memory_menu(char* command, cli_parameters_t * params){
+void memory_menu(char* command, thread_cli_parameters * params){
 
 	UART_HandleTypeDef * uart = params->huart;
 	Flash * flash = params->flash;
@@ -372,7 +372,7 @@ void memory_menu(char* command, cli_parameters_t * params){
 
 }
 
-void ematch(char* command, cli_parameters_t * params){
+void ematch(char* command, thread_cli_parameters * params){
 
 	UART_HandleTypeDef * uart = params->huart;
 
@@ -532,7 +532,7 @@ void ematch(char* command, cli_parameters_t * params){
 
 }
 
-void configure(char* command, cli_parameters_t * params){
+void configure(char* command, thread_cli_parameters * params){
 
 	UART_HandleTypeDef * uart = params->huart;
 	configData_t * config = params->flightCompConfig;
@@ -1118,7 +1118,7 @@ void configure(char* command, cli_parameters_t * params){
 
 }
 
-void cli_read(cli_parameters_t * params){
+void cli_read(thread_cli_parameters * params){
 
 	UART_HandleTypeDef * uart = params->huart;
 	Flash * flash = params->flash;

@@ -74,14 +74,14 @@ struct bmi08x_dev bmi088dev = {
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTIONS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void vTask_sensorAG(void *param){
+void thread_imu_start(void *param){
 
 	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
 
 	int8_t rslt;
 
 	//Get the parameters.
-	ImuTaskStruct * params = (ImuTaskStruct *)param;
+	thread_imu_parameters * params = (thread_imu_parameters *)param;
 	QueueHandle_t  queue = params->imu_queue;
 	UART_HandleTypeDef * uart_ptr = params->huart;
 

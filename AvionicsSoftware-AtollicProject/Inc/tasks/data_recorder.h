@@ -81,7 +81,7 @@ typedef struct{
 
 	TaskHandle_t *timerTask_h;
 
-}LoggingStruct_t;
+}thread_data_recorder_parameters;
 
 
 typedef struct{
@@ -111,6 +111,6 @@ typedef struct{
 // Returns:
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void loggingTask(void * params);
+void thread_data_recorder_start(void * params);
 
 #endif // DATA_LOGGING_H

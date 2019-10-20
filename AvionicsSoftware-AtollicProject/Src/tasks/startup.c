@@ -137,7 +137,7 @@ static void eraseFlash(startParams * params){
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void vTask_starter(void * pvParams){
+void thread_startup_start(void * pvParams){
 
 	  startParams * sp = (startParams *) pvParams;
 

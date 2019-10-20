@@ -94,7 +94,9 @@ configStatus_t read_config(configData_t* configuration){
 
 	configStatus_t stat = CONFIG_ERROR;
 
-	FlashStatus result = flash_read_page(configuration->values.flash,0x00000000,configuration->bytes,sizeof(configData_t)-(sizeof(Flash*)+4)); //The state variable is padded to 4 bytes!
+	FlashStatus result = flash_read_page(configuration->values.flash,
+											0x00000000,configuration->bytes,
+											sizeof(configData_t)-(sizeof(Flash*)+4)); //The state variable is padded to 4 bytes!
 
 	if(result == FLASH_OK){
 		stat = CONFIG_OK;

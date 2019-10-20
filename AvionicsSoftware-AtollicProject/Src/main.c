@@ -15,8 +15,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "FreeRTOS.h"
 #include "flash.h"
+#include "FreeRTOS.h"
 #include "stm32f4xx_hal_uart_io.h"
 #include "configuration.h"
 #include "recovery.h"
@@ -34,13 +34,14 @@
 osThreadId defaultTaskHandle;
 UART_HandleTypeDef huart6_ptr; //global var to be passed to thread_command_line_interface_start
 
+configData_t flightCompConfig;
 SPI_HandleTypeDef flash_spi;
 Flash flash;
-ImuTaskStruct imuTaskParams ;
-LoggingStruct_t logParams;
-PressureTaskParams bmp388Params;
-cli_parameters_t xtractParameters;
-configData_t flightCompConfig;
+
+thread_imu_parameters				thread_imu_params ;
+thread_data_recorder_parameters		thread_data_recorder_params;
+thread_pressure_sensor_parameters	thread_pressure_sensor_params;
+thread_cli_parameters				thread_cli_params;
 
 
 startParams tasks;
@@ -51,7 +52,7 @@ void testFlash(Flash * flash);
 char testpress();
 char testIMU();
 void MX_GPIO_Init();
-void vTask_starter(void * pvParams);
+void thread_startup_start(void * pvParams);
 void Error_Handler(void);
 
 int main(void)
@@ -81,7 +82,7 @@ int main(void)
 	  while(1);
 	}
 
-	QueueHandle_t bmpQueue_h = xQueueCreate(10,sizeof(bmp_data_struct));
+	QueueHandle_t bmpQueue_h = xQueueCreate(10,sizeof(pressure_sensor_data));
 	if(bmpQueue_h == NULL){
 	  while(1);
 	}
@@ -135,35 +136,35 @@ int main(void)
 
 	recovery_init();
 	transmit_line(&huart6_ptr,"Recovery GPIO pins setup.");
+	
+	
+	thread_data_recorder_params.flash_ptr = &flash;
+	thread_data_recorder_params.IMU_data_queue = imuQueue_h;
+	thread_data_recorder_params.PRES_data_queue= bmpQueue_h;
+	thread_data_recorder_params.uart = &huart6_ptr;
+	thread_data_recorder_params.flightCompConfig = &flightCompConfig;
+	
+	thread_pressure_sensor_params.huart = &huart6_ptr;
+	thread_pressure_sensor_params.bmp388_queue =bmpQueue_h;
+	thread_pressure_sensor_params.flightCompConfig = &flightCompConfig;
+	
+	thread_imu_params.huart = &huart6_ptr;
+	thread_imu_params.imu_queue = imuQueue_h;
+	thread_imu_params.flightCompConfig = &flightCompConfig;
 
-
-	logParams.flash_ptr = &flash;
-	logParams.IMU_data_queue = imuQueue_h;
-	logParams.PRES_data_queue= bmpQueue_h;
-	logParams.uart = &huart6_ptr;
-	logParams.flightCompConfig = &flightCompConfig;
-
-	bmp388Params.huart = &huart6_ptr;
-	bmp388Params.bmp388_queue =bmpQueue_h;
-	bmp388Params.flightCompConfig = &flightCompConfig;
-
-	imuTaskParams.huart = &huart6_ptr;
-	imuTaskParams.imu_queue = imuQueue_h;
-	imuTaskParams.flightCompConfig = &flightCompConfig;
-
-	//cli_parameters_t xtractParameters;
-	xtractParameters.flash = &flash;
-	xtractParameters.huart = &huart6_ptr;
-	xtractParameters.flightCompConfig = &flightCompConfig;
+	//thread_cli_parameters thread_cli_params;
+	thread_cli_params.flash = &flash;
+	thread_cli_params.huart = &huart6_ptr;
+	thread_cli_params.flightCompConfig = &flightCompConfig;
 
 	tasks.loggingTask_h = NULL;
-	tasks.bmpTask_h = NULL;
-	tasks.imuTask_h = NULL;
-	tasks.xtractTask_h = NULL;
-	tasks.timerTask_h = NULL;
-	xtractParameters.startupTaskHandle = NULL;
-
-	logParams.timerTask_h = &tasks.timerTask_h;
+	tasks.bmpTask_h		= NULL;
+	tasks.imuTask_h		= NULL;
+	tasks.xtractTask_h	= NULL;
+	tasks.timerTask_h	= NULL;
+	thread_cli_params.startupTaskHandle = NULL;
+	
+	thread_data_recorder_params.timerTask_h = &tasks.timerTask_h;
 	tasks.flash_ptr = &flash;
 	tasks.huart_ptr = &huart6_ptr;
 	tasks.flightCompConfig = &flightCompConfig;
@@ -192,11 +193,6 @@ int main(void)
 	}
 
 	}
-	// testFlash(&flash);
-
-	//Timer_GPIO_Init(); //GPIO MUST be firstly initialized
-	// MX_HAL_UART2_Init(&huart2_ptr); //UART uses GPIO pin 2 & 3
-
 
 	/* Create the thread(s) */
 	/* definition and creation of defaultTask */
@@ -204,41 +200,41 @@ int main(void)
 	defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
 
-	if(xTaskCreate(	vTask_timer, 	 /* Pointer to the function that implements the task */
-	      		  	"timer", /* Text name for the task. This is only to facilitate debugging */
-	      		  	 1000,		 /* Stack depth - small microcontrollers will use much less stack than this */
-	  				 NULL,	/* pointer to the huart object */
-	  				 1,			 /* This task will run at priorirt 2. */
-	  				 &tasks.timerTask_h		 /* This example does not use the task handle. */
-	        	  	  ) == -1){
+	if(xTaskCreate(thread_timer_start,     /* Pointer to the function that implements the task */
+				   "timer", /* Text name for the task. This is only to facilitate debugging */
+				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
+				   NULL,    /* pointer to the huart object */
+				   1,             /* This task will run at priorirt 2. */
+				   &tasks.timerTask_h         /* This example does not use the task handle. */
+	) == -1){
 	  	  Error_Handler();
 	    }
 
-	if( xTaskCreate(	vTask_sensorAG, 	 /* Pointer to the function that implements the task */
-			"acc and gyro sensor", /* Text name for the task. This is only to facilitate debugging */
-			 1000,		 /* Stack depth - small microcontrollers will use much less stack than this */
-			 (void*) &imuTaskParams,	/* pointer to the huart object */
-			 2,			 /* This task will run at priorirt 2. */
-			 &tasks.imuTask_h		 /* This example does not use the task handle. */
-			  ) !=1){
+	if(xTaskCreate(thread_imu_start,     /* Pointer to the function that implements the task */
+				   "acc and gyro sensor", /* Text name for the task. This is only to facilitate debugging */
+				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
+				   (void *) &thread_imu_params,    /* pointer to the huart object */
+				   2,             /* This task will run at priorirt 2. */
+				   &tasks.imuTask_h         /* This example does not use the task handle. */
+	) !=1){
 
 		Error_Handler();
 	}
 
 
-	if(xTaskCreate(	loggingTask, 	 /* Pointer to the function that implements the task */
-			"Logging task", /* Text name for the task. This is only to facilitate debugging */
-			 10000,		 /* Stack depth - small microcontrollers will use much less stack than this */
-			 (void*) &logParams,	/* pointer to the huart object */
-			 2,			 /* This task will run at priorirt 2. */
-			 &tasks.loggingTask_h	 /* This example does not use the task handle. */
-			  ) != 1){
+	if(xTaskCreate(thread_data_recorder_start,     /* Pointer to the function that implements the task */
+				   "Logging task", /* Text name for the task. This is only to facilitate debugging */
+				   10000,         /* Stack depth - small microcontrollers will use much less stack than this */
+				   (void *) &thread_data_recorder_params,    /* pointer to the huart object */
+				   2,             /* This task will run at priorirt 2. */
+				   &tasks.loggingTask_h     /* This example does not use the task handle. */
+	) != 1){
 		Error_Handler();
 	}
 	if(xTaskCreate(thread_command_line_interface_start,     /* Pointer to the function that implements the task */
 				   "xtract uart cli", /* Text name for the task. This is only to facilitate debugging */
 				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
-				   (void *) &xtractParameters,    /* pointer to the huart object */
+				   (void *) &thread_cli_params,    /* pointer to the huart object */
 				   1,             /* This task will run at priorirt 1. */
 				   &tasks.xtractTask_h         /* This example does not use the task handle. */
 	) == -1){
@@ -247,23 +243,23 @@ int main(void)
 
 
 
-	if(xTaskCreate(	vTask_pressure_sensor_bmp3, 	 /* Pointer to the function that implements the task */
-		"bmp388 pressure sensor", /* Text name for the task. This is only to facilitate debugging */
-		 1000,		 /* Stack depth - small microcontrollers will use much less stack than this */
-		 (void*) &bmp388Params,	/* function arguments */
-		 2,			 /* This task will run at priority 1. */
-		 &tasks.bmpTask_h		 /* This example does not use the task handle. */
-		  ) != 1){
+	if(xTaskCreate(thread_pressure_sensor_start,     /* Pointer to the function that implements the task */
+				   "bmp388 pressure sensor", /* Text name for the task. This is only to facilitate debugging */
+				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
+				   (void *) &thread_pressure_sensor_params,    /* function arguments */
+				   2,             /* This task will run at priority 1. */
+				   &tasks.bmpTask_h         /* This example does not use the task handle. */
+	) != 1){
 		Error_Handler();
 	}
 
-	if(xTaskCreate(	vTask_starter, 	 /* Pointer to the function that implements the task */
-		"starter task", /* Text name for the task. This is only to facilitate debugging */
-		 1000,		 /* Stack depth - small microcontrollers will use much less stack than this */
-		 (void*)&tasks,	/* function arguments */
-		 1,			 /* This task will run at priority 1. */
-		 &xtractParameters.startupTaskHandle		 /* This example does not use the task handle. */
-		  ) == -1){
+	if(xTaskCreate(thread_startup_start,     /* Pointer to the function that implements the task */
+				   "starter task", /* Text name for the task. This is only to facilitate debugging */
+				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
+				   (void *) &tasks,    /* function arguments */
+				   1,             /* This task will run at priority 1. */
+				   &thread_cli_params.startupTaskHandle         /* This example does not use the task handle. */
+	) == -1){
 		Error_Handler();
 	}
 

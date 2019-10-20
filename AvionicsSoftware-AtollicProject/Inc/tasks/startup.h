@@ -71,6 +71,6 @@ typedef struct{
 // Returns:
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void vTask_starter(void * pvParams);
+void thread_startup_start(void * pvParams);
 
 #endif // TEMPLATE_H

@@ -39,6 +39,6 @@
 //  Enter description of return values (if any).
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 void Timer_GPIO_Init(void);
-void vTask_timer(void *param);
+void thread_timer_start(void *param);
 
 #endif // TIMER_H
