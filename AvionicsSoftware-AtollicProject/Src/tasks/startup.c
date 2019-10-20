@@ -65,7 +65,7 @@ static void eraseFlash(startParams * params){
 
 	  Flash* flash = params->flash_ptr;
 	  UART_HandleTypeDef * huart = params->huart_ptr;
-	  configData_t * config = params->flightCompConfig;
+	  configuration_data_t * config = params->flightCompConfig;
 
 	  uint8_t dataRX[256];
 	  transmit_line(huart,"Checking flash memory...");
@@ -144,27 +144,27 @@ void thread_startup_start(void * pvParams){
 	  TaskHandle_t dataLoggingTask_h = sp->loggingTask_h;
 	  TaskHandle_t bmpTask_h = sp->bmpTask_h;
 	  TaskHandle_t imuTask_h = sp->imuTask_h;
-	  TaskHandle_t xtractTask_h = sp->xtractTask_h;
+	  TaskHandle_t cliTask_h = sp->cli_h;
 	  Flash * flash = sp->flash_ptr;
 	  UART_HandleTypeDef * huart = sp->huart_ptr;
-	  configData_t * config = sp->flightCompConfig;
+	  configuration_data_t * config = sp->flightCompConfig;
 
-	  vTaskSuspend(xtractTask_h);
+	  vTaskSuspend(cliTask_h);
 	  vTaskSuspend(imuTask_h);
 	  vTaskSuspend(bmpTask_h);
 	  vTaskSuspend(dataLoggingTask_h);
 
 	  while(1){
 
-		  if((!HAL_GPIO_ReadPin(USR_PB_PORT,USR_PB_PIN))||(config->values.state==STATE_XTRACT)){
+		  if((!HAL_GPIO_ReadPin(USR_PB_PORT,USR_PB_PIN))||(config->values.state == STATE_CLI)){
 
 			  HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
-			  config->values.state = STATE_XTRACT;
-			  vTaskResume(xtractTask_h);
+			  config->values.state = STATE_CLI;
+			  vTaskResume(cliTask_h);
 			  vTaskSuspend(NULL);
 
 		  }else{
-
+				
 			  if(!IS_IN_FLIGHT(config->values.flags)){
 
 				  uint32_t count = 0;

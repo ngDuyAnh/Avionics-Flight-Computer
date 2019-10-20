@@ -18,6 +18,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include <tasks/sensors/pressure_sensor.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "bmp3.h"
 #include "stm32f4xx_hal_uart_io.h"
@@ -80,7 +81,14 @@ static void delay_ms(uint32_t period_ms);
 static int8_t spi_reg_write(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length);
 static int8_t spi_reg_read(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length);
 
-
+altitude_data calculate_altitude(float pressure, float temperature, float ref_pres, float ref_alt)
+{
+	float p_term = powf((ref_pres/(pressure/100)),(1/5.257F))-1;
+	float t_term = (temperature/100)+273.15F;
+	altitude_data result;
+	result.float_val = (uint32_t)(p_term*t_term)/0.0065F+ref_alt;;
+	return result;
+}
 
 int8_t init_bmp3_sensor(_bmp3_sensor* bmp3_sensor_ptr){
 	int8_t rslt;
@@ -159,7 +167,7 @@ static uint8_t bmp3_config(uint8_t iir,uint8_t os_pres, uint8_t os_temp, uint8_t
 
 	return rslt;
 }
-void init_bmp(configData_t * configParams){
+void init_bmp(configuration_data_t * configParams){
 
 	_bmp3_sensor* bmp3_sensor_ptr = malloc(sizeof(_bmp3_sensor));
 	int8_t rslt;
@@ -173,7 +181,7 @@ void init_bmp(configData_t * configParams){
 	}
 }
 
-void calibrate_bmp(configData_t * configParams){
+void calibrate_bmp(configuration_data_t * configParams){
 
 	pressure_sensor_data dataStruct;
 	get_sensor_data(s_bmp3_sensor->bmp_ptr, &dataStruct.data);
@@ -186,7 +194,7 @@ void thread_pressure_sensor_start(void *pvParameters){
 	thread_pressure_sensor_parameters * params = (thread_pressure_sensor_parameters *) pvParameters;
 	QueueHandle_t bmp_queue = params->bmp388_queue;
 	uart = params->huart;	//Get uart for printing to console
-	configData_t * configParams = params->flightCompConfig;
+	configuration_data_t * configParams = params->flightCompConfig;
 
 
 	int8_t rslt;

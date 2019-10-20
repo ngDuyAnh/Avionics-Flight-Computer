@@ -65,7 +65,7 @@ void thread_timer_start(void *param)
 {
 	
 	//taskENABLE_INTERRUPTS();
-	configData_t *configParams = (configData_t *) param;
+	configuration_data_t *configParams = (configuration_data_t *) param;
 	
 	//Set both of the outputs to 0 for setup
 	HAL_GPIO_WritePin(OUTPUT1_PORT, OUTPUT1_PIN, GPIO_PIN_RESET); //turn Output 1 off

@@ -30,7 +30,7 @@ typedef enum{
 typedef struct{
 	UART_HandleTypeDef *huart;
 	Flash *flash;
-	configData_t *flightCompConfig;
+	configuration_data_t *flightCompConfig;
 	TaskHandle_t startupTaskHandle;
 	
 }thread_cli_parameters;

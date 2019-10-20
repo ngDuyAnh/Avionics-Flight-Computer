@@ -24,25 +24,6 @@
 #include "flash.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// DEFINITIONS AND MACROS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// ENUMS AND ENUM TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// STRUCTS AND STRUCT TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// FUNCTION PROTOTYPES
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Enter description for static function here.
 //
@@ -54,7 +35,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTIONS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-configStatus_t init_config(configData_t* configuration){
+ConfigStatus init_config(configuration_data_t* configuration){
 
 	configuration->values.id = ID;
 
@@ -84,19 +65,19 @@ configStatus_t init_config(configData_t* configuration){
 
 	configuration->values.state = STATE_LAUNCHPAD;
 
-	configStatus_t result = CONFIG_OK;
+	ConfigStatus result = CONFIG_OK;
 
 	return result;
 
 }
 
-configStatus_t read_config(configData_t* configuration){
+ConfigStatus read_config(configuration_data_t* configuration){
 
-	configStatus_t stat = CONFIG_ERROR;
+	ConfigStatus stat = CONFIG_ERROR;
 
 	FlashStatus result = flash_read_page(configuration->values.flash,
 											0x00000000,configuration->bytes,
-											sizeof(configData_t)-(sizeof(Flash*)+4)); //The state variable is padded to 4 bytes!
+										 sizeof(configuration_data_t) - (sizeof(Flash*) + 4)); //The state variable is padded to 4 bytes!
 
 	if(result == FLASH_OK){
 		stat = CONFIG_OK;
@@ -105,18 +86,18 @@ configStatus_t read_config(configData_t* configuration){
 	return stat;
 }
 
-configStatus_t write_config(configData_t* configuration){
+ConfigStatus write_config(configuration_data_t* configuration){
 
 
 	FlashStatus result;
 
-	configStatus_t stat = CONFIG_ERROR;
+	ConfigStatus stat = CONFIG_ERROR;
 
 	result = flash_erase_param_sector(configuration->values.flash,0x00000000);
 	while(FLASH_IS_DEVICE_BUSY(flash_get_status_register(configuration->values.flash))){}
 
 	if(result == FLASH_OK){
-	 result = flash_program_page(configuration->values.flash,0x00000000,configuration->bytes,sizeof(configData_t)-(sizeof(Flash*)+4));
+	 result = flash_program_page(configuration->values.flash,0x00000000,configuration->bytes, sizeof(configuration_data_t) - (sizeof(Flash*) + 4));
 
 		while(FLASH_IS_DEVICE_BUSY(flash_get_status_register(configuration->values.flash))){
 			stat = CONFIG_OK;

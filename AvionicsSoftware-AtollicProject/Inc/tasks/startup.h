@@ -36,12 +36,12 @@ typedef struct{
 	  TaskHandle_t loggingTask_h ;
 	  TaskHandle_t bmpTask_h ;
 	  TaskHandle_t imuTask_h ;
-	  TaskHandle_t xtractTask_h;
+	  TaskHandle_t cli_h;
 	  TaskHandle_t timerTask_h;
 
 	  Flash * flash_ptr;
 	  UART_HandleTypeDef * huart_ptr;
-	  configData_t * flightCompConfig;
+	  configuration_data_t * flightCompConfig;
 
 }startParams;
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------

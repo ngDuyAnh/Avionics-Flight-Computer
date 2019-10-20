@@ -23,18 +23,18 @@
 #include "buzzer.h"
 
 #include "tasks/sensors/pressure_sensor.h"
-#include "tasks/startup.h"
-#include "tasks/data_recorder.h"
-#include "tasks/sensors/imu_sensor.h"
-#include "tasks/timer.h"
+#include "tasks/flight_state_controller.h"
 #include "tasks/command_line_interface.h"
+#include "tasks/sensors/imu_sensor.h"
+#include "tasks/startup.h"
+#include "tasks/timer.h"
 
 
 
 osThreadId defaultTaskHandle;
 UART_HandleTypeDef huart6_ptr; //global var to be passed to thread_command_line_interface_start
 
-configData_t flightCompConfig;
+configuration_data_t flightCompConfig;
 SPI_HandleTypeDef flash_spi;
 Flash flash;
 
@@ -55,10 +55,7 @@ void MX_GPIO_Init();
 void thread_startup_start(void * pvParams);
 void Error_Handler(void);
 
-int main(void)
-
-
-{
+int main(void){
 
 	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
 	HAL_Init();
@@ -68,16 +65,14 @@ int main(void)
 
 	/* Initialize all configured peripherals */
 	MX_GPIO_Init(); //GPIO MUST be firstly initialized
-
-
-
+	
 	MX_HAL_UART6_Init(&huart6_ptr); //UART uses GPIO pin 2 & 3
 	transmit_line(&huart6_ptr,"UMSATS ROCKETRY FLIGHT COMPUTER");
 
 	buzzerInit();
 	//buzz(500);
 
-	QueueHandle_t imuQueue_h = xQueueCreate(10,sizeof(imu_data_struct));
+	QueueHandle_t imuQueue_h = xQueueCreate(10,sizeof(imu_sensor_data));
 	if(imuQueue_h == NULL){
 	  while(1);
 	}
@@ -160,7 +155,7 @@ int main(void)
 	tasks.loggingTask_h = NULL;
 	tasks.bmpTask_h		= NULL;
 	tasks.imuTask_h		= NULL;
-	tasks.xtractTask_h	= NULL;
+	tasks.cli_h	= NULL;
 	tasks.timerTask_h	= NULL;
 	thread_cli_params.startupTaskHandle = NULL;
 	
@@ -169,26 +164,26 @@ int main(void)
 	tasks.huart_ptr = &huart6_ptr;
 	tasks.flightCompConfig = &flightCompConfig;
 
-	if(!IS_IN_FLIGHT(flightCompConfig.values.flags)){
-
-
-	flightCompConfig.values.state = STATE_LAUNCHPAD; // CHANGE TO STATE_LAUNCHPAD !!!!!
-	//init_bmp(&flightCompConfig);
-	char imu_good = testIMU();
-	char bmp_good = testpress();
-
-	if(imu_good == 1 && bmp_good==1){
-		HAL_Delay(1000);
+	if(!IS_IN_FLIGHT(flightCompConfig.values.flags))
+	{
+		flightCompConfig.values.state = STATE_LAUNCHPAD;
+		//init_bmp(&flightCompConfig);
+		char imu_good = testIMU();
+		char bmp_good = testpress();
+	
+		if(imu_good == 1 && bmp_good==1){
+			HAL_Delay(1000);
 
 		buzz(500); //CHANGE TO 2 SECONDS !!!!!
 	}
 	else{
 
 		int i;
-		for(i=0;i<20;i++){
+		for(i=0;i<20;i++)
+		{
 			buzz(500);
 			HAL_Delay(500);
-			flightCompConfig.values.state = STATE_XTRACT;
+			flightCompConfig.values.state = STATE_CLI;
 		}
 	}
 
@@ -222,7 +217,7 @@ int main(void)
 	}
 
 
-	if(xTaskCreate(thread_data_recorder_start,     /* Pointer to the function that implements the task */
+	if(xTaskCreate(thread_flight_state_controller_start,     /* Pointer to the function that implements the task */
 				   "Logging task", /* Text name for the task. This is only to facilitate debugging */
 				   10000,         /* Stack depth - small microcontrollers will use much less stack than this */
 				   (void *) &thread_data_recorder_params,    /* pointer to the huart object */
@@ -236,13 +231,11 @@ int main(void)
 				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
 				   (void *) &thread_cli_params,    /* pointer to the huart object */
 				   1,             /* This task will run at priorirt 1. */
-				   &tasks.xtractTask_h         /* This example does not use the task handle. */
+				   &tasks.cli_h         /* This example does not use the task handle. */
 	) == -1){
 		Error_Handler();
 	}
-
-
-
+	
 	if(xTaskCreate(thread_pressure_sensor_start,     /* Pointer to the function that implements the task */
 				   "bmp388 pressure sensor", /* Text name for the task. This is only to facilitate debugging */
 				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
@@ -264,18 +257,12 @@ int main(void)
 	}
 
 	//Start with all tasks suspended except starter task.
-	vTaskSuspend(tasks.xtractTask_h);
+	vTaskSuspend(tasks.cli_h);
 	vTaskSuspend(tasks.imuTask_h);
 	vTaskSuspend(tasks.bmpTask_h);
 	vTaskSuspend(tasks.loggingTask_h);
 	vTaskSuspend(tasks.timerTask_h);
 	/* Start scheduler -- comment to not use FreeRTOS */
-
-
-
-
-
-
 
 	osKernelStart();
 
@@ -284,17 +271,13 @@ int main(void)
 	/* Infinite loop */
 	while (1)
 	{
-
 		if(HAL_GPIO_ReadPin(USR_PB_PORT,USR_PB_PIN)){
 
 			HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
 		}
 		else{
-
 			HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
 		}
-
-
 	}
 }
 

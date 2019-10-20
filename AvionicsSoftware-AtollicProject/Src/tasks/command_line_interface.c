@@ -133,7 +133,7 @@ void task_cli_execute_command(char* command, thread_cli_parameters * params, men
 
 
 	UART_HandleTypeDef * uart = params->huart;
-	configData_t * config = params->flightCompConfig;
+	configuration_data_t * config = params->flightCompConfig;
 	TaskHandle_t startupTaskHandle = params->startupTaskHandle;
 
 
@@ -535,7 +535,7 @@ void ematch(char* command, thread_cli_parameters * params){
 void configure(char* command, thread_cli_parameters * params){
 
 	UART_HandleTypeDef * uart = params->huart;
-	configData_t * config = params->flightCompConfig;
+	configuration_data_t * config = params->flightCompConfig;
 
 	char output [256];
 

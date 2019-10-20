@@ -51,15 +51,6 @@
 #define GND_ALT					0
 #define GND_PRES				101325
 
-
-#define STATE_XTRACT					0x01
-#define STATE_LAUNCHPAD					0x02
-#define STATE_LAUNCHPAD_ARMED			0x03
-#define STATE_IN_FLIGHT_PRE_APOGEE		0x04
-#define STATE_IN_FLIGHT_POST_APOGEE		0x05
-#define STATE_IN_FLIGHT_POST_MAIN		0x06
-#define STATE_LANDED					0x07
-
 //Macros to get flags.
 #define IS_IN_FLIGHT(x)		((x>>0)&0x01)
 #define	IS_RECORDING(x)		((x>>1)&0x01)
@@ -67,16 +58,23 @@
 #define IS_POST_DROGUE(x)	((x>>3)&0x01)
 #define IS_POST_MAIN(x)		((x>>4)&0x01)
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// ENUMS AND ENUM TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+typedef enum
+{
+	STATE_CLI=0,
+	STATE_LAUNCHPAD,
+	STATE_LAUNCHPAD_ARMED,
+	STATE_IN_FLIGHT_PRE_APOGEE,
+	STATE_IN_FLIGHT_POST_APOGEE,
+	STATE_IN_FLIGHT_POST_MAIN,
+	STATE_LANDED
+}ApplicationState;
+
 typedef enum{
 	CONFIG_OK,
 	CONFIG_ERROR
-} configStatus_t;
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// STRUCTS AND STRUCT TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+} ConfigStatus;
+
 typedef struct {
 
 	uint8_t 	 id;
@@ -107,35 +105,23 @@ typedef struct {
 	Flash * flash;
 	uint8_t state;
 
+}configuration_data_values;
 
 
-}configDataStruct_t;
-
-typedef union configData_u{
-
-	uint8_t  bytes[sizeof(configDataStruct_t)] ;
-	configDataStruct_t values;
-} configData_t;
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// CONSTANTS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+typedef union configuration_data_union{
+	uint8_t bytes[sizeof(configuration_data_values)] ;
+	configuration_data_values values;
+} configuration_data_t;
 
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// FUNCTION PROTOTYPES
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Populates the configuration struct with the defaults listed in this header file.
 //
 // Returns:
-//  Returns a configStatus_t with OK or ERROR.
+//  Returns a ConfigStatus with OK or ERROR.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-configStatus_t init_config(configData_t* configuration);
+ConfigStatus init_config(configuration_data_t* configuration);
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -143,9 +129,9 @@ configStatus_t init_config(configData_t* configuration);
 //  Reads the configuration values from flash memory..
 //
 // Returns:
-//  Returns a configStatus_t with OK or ERROR.
+//  Returns a ConfigStatus with OK or ERROR.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-configStatus_t read_config(configData_t* configuration);
+ConfigStatus read_config(configuration_data_t* configuration);
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -153,9 +139,9 @@ configStatus_t read_config(configData_t* configuration);
 //  Writes the configuration values to flash memory..
 //
 // Returns:
-//  Returns a configStatus_t with OK or ERROR.
+//  Returns a ConfigStatus with OK or ERROR.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-configStatus_t write_config(configData_t* configuration);
+ConfigStatus write_config(configuration_data_t* configuration);
 
 
 #endif // CONFIGURATION_H

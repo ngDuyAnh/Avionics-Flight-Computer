@@ -18,19 +18,22 @@
 #include "forward_declarations.h"
 #include "cmsis_os.h"
 
+#define	ACC_LENGTH	6		//Length of a accelerometer measurement in bytes.
+#define	GYRO_LENGTH	6		//Length of a gyroscope measurement in bytes.
+
 //Groups both sensor readings and a time stamp.
-typedef struct {
+typedef struct imu_sensor_data{
 
 	struct bmi08x_sensor_data	data_acc;
 	struct bmi08x_sensor_data	data_gyro;
 	uint32_t time_ticks;	//time of sensor reading in ticks.
-}imu_data_struct;
+}imu_sensor_data;
 
 //Parameters for thread_imu_start.
 typedef struct{
 	UART_HandleTypeDef * huart;
 	QueueHandle_t imu_queue;
-	configData_t *flightCompConfig;
+	configuration_data_t *flightCompConfig;
 } thread_imu_parameters;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -50,7 +53,7 @@ void delay(uint32_t period);
 void thread_imu_start(void *param);
 
 //configuration functions for accelerometer and gyroscope
-int8_t accel_config(struct bmi08x_dev *bmi088dev,configData_t * configParams, int8_t rslt);
-int8_t gyro_config(struct bmi08x_dev *bmi088dev,configData_t * configParams, int8_t rslt);
+int8_t accel_config(struct bmi08x_dev *bmi088dev, configuration_data_t * configParams, int8_t rslt);
+int8_t gyro_config(struct bmi08x_dev *bmi088dev, configuration_data_t * configParams, int8_t rslt);
 
 #endif // SENSOR_AG_H

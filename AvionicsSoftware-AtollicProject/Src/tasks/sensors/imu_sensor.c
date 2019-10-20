@@ -85,12 +85,12 @@ void thread_imu_start(void *param){
 	QueueHandle_t  queue = params->imu_queue;
 	UART_HandleTypeDef * uart_ptr = params->huart;
 
-	configData_t * configParams = params->flightCompConfig;
+	configuration_data_t * configParams = params->flightCompConfig;
 
 
 	TickType_t prevTime;
 
-	imu_data_struct dataStruct;
+	imu_sensor_data dataStruct;
 
 	//initialize the SPI
 	spi3_init(&hspi); //use the already made SPI interface
@@ -156,7 +156,7 @@ void thread_imu_start(void *param){
 
 
 //set the accelerometer starting configurations
-int8_t accel_config(struct bmi08x_dev *dev,configData_t * configParams, int8_t rslt){
+int8_t accel_config(struct bmi08x_dev *dev, configuration_data_t * configParams, int8_t rslt){
 	uint8_t data = 0;
 
 	//not sure if necessary
@@ -193,7 +193,7 @@ int8_t accel_config(struct bmi08x_dev *dev,configData_t * configParams, int8_t r
 }
 
 //set the accelerometer starting configurations
-int8_t gyro_config(struct bmi08x_dev *dev,configData_t * configParams, int8_t rslt){
+int8_t gyro_config(struct bmi08x_dev *dev, configuration_data_t * configParams, int8_t rslt){
 	uint8_t data = 0;
 
 	//not sure if necessary
