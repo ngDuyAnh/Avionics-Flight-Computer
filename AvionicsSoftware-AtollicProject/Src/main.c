@@ -17,20 +17,22 @@
 #include "main.h"
 #include "FreeRTOS.h"
 #include "flash.h"
-#include "pressure_sensor_bmp3.h"
 #include "stm32f4xx_hal_uart_io.h"
 #include "configuration.h"
-#include "startupTask.h"
-#include "dataLogging.h"
 #include "recovery.h"
-#include "sensorAG.h"
-
 #include "buzzer.h"
-#include "timer.h"
-#include "xtract.h"
+
+#include "tasks/pressure_sensor_bmp3.h"
+#include "tasks/startupTask.h"
+#include "tasks/dataLogging.h"
+#include "tasks/sensorAG.h"
+#include "tasks/timer.h"
+#include "tasks/cli.h"
+
+
 
 osThreadId defaultTaskHandle;
-UART_HandleTypeDef huart6_ptr; //global var to be passed to vTask_xtract
+UART_HandleTypeDef huart6_ptr; //global var to be passed to vTask_CLI
 
 SPI_HandleTypeDef flash_spi;
 Flash flash;
@@ -233,13 +235,13 @@ int main(void)
 			  ) != 1){
 		Error_Handler();
 	}
-	if(xTaskCreate(	vTask_xtract, 	 /* Pointer to the function that implements the task */
-		"xtract uart cli", /* Text name for the task. This is only to facilitate debugging */
-		 1000,		 /* Stack depth - small microcontrollers will use much less stack than this */
-		 (void*) &xtractParameters,	/* pointer to the huart object */
-		 1,			 /* This task will run at priorirt 1. */
-		 &tasks.xtractTask_h		 /* This example does not use the task handle. */
-	  ) == -1){
+	if(xTaskCreate(vTask_CLI,     /* Pointer to the function that implements the task */
+				   "xtract uart cli", /* Text name for the task. This is only to facilitate debugging */
+				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
+				   (void *) &xtractParameters,    /* pointer to the huart object */
+				   1,             /* This task will run at priorirt 1. */
+				   &tasks.xtractTask_h         /* This example does not use the task handle. */
+	) == -1){
 		Error_Handler();
 	}
 
