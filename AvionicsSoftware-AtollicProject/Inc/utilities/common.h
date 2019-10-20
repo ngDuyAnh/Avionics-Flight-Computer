@@ -2,7 +2,8 @@
 #define AVIONICS_COMMON_H
 
 #include <stdint.h>
-
+#include <stddef.h>
+#include <stdbool.h>
 
 static inline void write_32(uint32_t src, uint8_t * dest)
 {
