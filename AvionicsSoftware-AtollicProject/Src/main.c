@@ -32,14 +32,14 @@
 
 
 osThreadId defaultTaskHandle;
-UART_HandleTypeDef huart6_ptr; //global var to be passed to vTask_command_line_interface
+UART_HandleTypeDef huart6_ptr; //global var to be passed to thread_command_line_interface_start
 
 SPI_HandleTypeDef flash_spi;
 Flash flash;
 ImuTaskStruct imuTaskParams ;
 LoggingStruct_t logParams;
 PressureTaskParams bmp388Params;
-xtractParams xtractParameters;
+cli_parameters_t xtractParameters;
 configData_t flightCompConfig;
 
 
@@ -151,7 +151,7 @@ int main(void)
 	imuTaskParams.imu_queue = imuQueue_h;
 	imuTaskParams.flightCompConfig = &flightCompConfig;
 
-	//xtractParams xtractParameters;
+	//cli_parameters_t xtractParameters;
 	xtractParameters.flash = &flash;
 	xtractParameters.huart = &huart6_ptr;
 	xtractParameters.flightCompConfig = &flightCompConfig;
@@ -235,7 +235,7 @@ int main(void)
 			  ) != 1){
 		Error_Handler();
 	}
-	if(xTaskCreate(vTask_command_line_interface,     /* Pointer to the function that implements the task */
+	if(xTaskCreate(thread_command_line_interface_start,     /* Pointer to the function that implements the task */
 				   "xtract uart cli", /* Text name for the task. This is only to facilitate debugging */
 				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
 				   (void *) &xtractParameters,    /* pointer to the huart object */

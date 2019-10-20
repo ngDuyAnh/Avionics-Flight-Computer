@@ -63,14 +63,59 @@
 uint16_t delay_ematch_menu_fire = 10000;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Description:
+//  menu for setting flight computer options.
+//
+// Returns:
+//  VOID
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void configure(char* command, cli_parameters_t * params);
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Description:
+//  menu for ematch options.
+//
+// Returns:
+//  VOID
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void ematch(char* command, cli_parameters_t * params);
+
+void memory_menu(char* command, cli_parameters_t * params);
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Description:
+//  display introduction about xtract program
+//
+// Returns:
+//  VOID
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void intro(UART_HandleTypeDef * uart); //display on start up
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Description:
+//  display help menu, including short description of all available commands
+//
+// Returns:
+//  Enter description of return values (if any).
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void help(UART_HandleTypeDef * uart); //display help menu
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Description:
+//  read data from flash memory - CURRENTLY DUMMY FUNCTION
+//
+// Returns:
+//  VOID
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void cli_read(cli_parameters_t * params);
+
+
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTIONS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void vTask_command_line_interface(void *pvParameters){
+void thread_command_line_interface_start(void *pvParameters){
 
-	xtractParams * params = (xtractParams *)pvParameters;
+	cli_parameters_t * params = (cli_parameters_t *)pvParameters;
 
 	UART_HandleTypeDef * uart = params->huart;
-	Flash * flash = params->flash;
 
 	menuState_t state = MAIN_MENU;
 	intro(uart); //display help on start up
@@ -80,15 +125,14 @@ void vTask_command_line_interface(void *pvParameters){
 	while(1){
 		transmit(uart, ">> ");
 		cmd_buf = receive_command(uart); //puts input into buffrx
-		handle_command(cmd_buf,params,&state); //handles command sitting in buffrx
+		task_cli_execute_command(cmd_buf, params, &state); //handles command sitting in buffrx
 	}
 } //vTaskUART_CLI END
 
-void handle_command(char* command,xtractParams * params,menuState_t * state){
+void task_cli_execute_command(char* command, cli_parameters_t * params, menuState_t * state){
 
 
 	UART_HandleTypeDef * uart = params->huart;
-	Flash * flash = params->flash;
 	configData_t * config = params->flightCompConfig;
 	TaskHandle_t startupTaskHandle = params->startupTaskHandle;
 
@@ -99,7 +143,7 @@ void handle_command(char* command,xtractParams * params,menuState_t * state){
 		help(uart);
 	}
 	else if((strcmp(command, "read") == 0 && *state == MAIN_MENU )|| *state == READ_MENU){
-		read(params);
+		cli_read(params);
 	}
 	else if((strcmp(command, "config") == 0 && *state == MAIN_MENU )|| *state == CONFIG_MENU){
 
@@ -130,7 +174,6 @@ void handle_command(char* command,xtractParams * params,menuState_t * state){
 			*state = MEM_MENU;
 		}
 		memory_menu(command,params);
-
 	}
 	else if((strcmp(command, "save") == 0 && *state == MAIN_MENU )|| *state == SAVE_MENU){
 		write_config(config);
@@ -172,11 +215,10 @@ void help(UART_HandleTypeDef * uart){
 }
 
 
-void memory_menu(char* command, xtractParams * params){
+void memory_menu(char* command, cli_parameters_t * params){
 
 	UART_HandleTypeDef * uart = params->huart;
 	Flash * flash = params->flash;
-	configData_t * config = params->flightCompConfig;
 
 	char output [256];
 	if(strcmp(command, "help") == 0 || strcmp(command, "mem") == 0){
@@ -330,11 +372,9 @@ void memory_menu(char* command, xtractParams * params){
 
 }
 
-void ematch(char* command, xtractParams * params){
+void ematch(char* command, cli_parameters_t * params){
 
 	UART_HandleTypeDef * uart = params->huart;
-	Flash * flash = params->flash;
-	configData_t * config = params->flightCompConfig;
 
 	char output [256];
 
@@ -492,10 +532,9 @@ void ematch(char* command, xtractParams * params){
 
 }
 
-void configure(char* command,xtractParams * params){
+void configure(char* command, cli_parameters_t * params){
 
 	UART_HandleTypeDef * uart = params->huart;
-	Flash * flash = params->flash;
 	configData_t * config = params->flightCompConfig;
 
 	char output [256];
@@ -1079,11 +1118,10 @@ void configure(char* command,xtractParams * params){
 
 }
 
-void read(xtractParams * params){
+void cli_read(cli_parameters_t * params){
 
 	UART_HandleTypeDef * uart = params->huart;
 	Flash * flash = params->flash;
-	configData_t * config = params->flightCompConfig;
 
 	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
 	transmit_line(uart, "Data transfer will start in 20 seconds. The LED will turn off when the transfer is complete.");
