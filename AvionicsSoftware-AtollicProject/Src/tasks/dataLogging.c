@@ -17,7 +17,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include "tasks/dataLogging.h"
 #include "cmsis_os.h"
-#include "flash.h"					//For flash memory functions
+#include "flash.h"                    //For flash memory functions
 #include "tasks/pressure_sensor_bmp3.h"    //For bmp reading struct
 #include "stm32f4xx_hal_uart_io.h"
 #include "tasks/sensorAG.h"                //For imu_reading struct
@@ -25,6 +25,7 @@
 #include "recovery.h"
 #include "altimeter.h"
 #include "configuration.h"
+#include "utilities/common.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
@@ -43,15 +44,14 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //Checks if a measurement is empty. returns 0 if it is empty.
-uint8_t isMeasurementEmpty(Measurement_t * measurement){
-
+uint8_t isMeasurementEmpty(Measurement_t *measurement)
+{
 	uint8_t result = 0;
-	int i;
-
-	for(i=0;i<sizeof(Measurement_t);i++){
-
-		if(measurement->data[i] != 0){
-			result ++;
+	for(size_t i = 0; i < sizeof(Measurement_t); i++)
+	{
+		if(measurement->data[i] != 0)
+		{
+			result++;
 		}
 	}
 	return result;
@@ -59,72 +59,103 @@ uint8_t isMeasurementEmpty(Measurement_t * measurement){
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTIONS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+struct buffer_container
+{
+	int d;
+};
 
-void loggingTask(void * params){
+void check_recovery_circuit(configData_t * configParams)
+{
+	recoverySelect_t event_d = DROGUE;
+	continuityStatus_t cont_d = check_continuity(event_d);
+	recoverySelect_t event_m = MAIN;
+	continuityStatus_t cont_m = check_continuity(event_m);
+	
+	while(cont_m == OPEN_CIRCUIT || cont_d == OPEN_CIRCUIT)
+	{
+		
+		cont_m = check_continuity(event_m);
+		cont_d = check_continuity(event_d);
+	}
+	configParams->values.state = STATE_LAUNCHPAD_ARMED;
+	write_config(configParams);
+}
 
-	LoggingStruct_t * logStruct = (LoggingStruct_t *)params;
-	Flash * flash_ptr = logStruct->flash_ptr;
-	UART_HandleTypeDef * huart = logStruct->uart;
-	configData_t * configParams = logStruct->flightCompConfig;
+void process_imu_data(imu_data_struct imu_reading, uint8_t* dest, uint32_t timestamp)
+{
+	// Make sure time doesn't overwrite type and event bits.
+	uint32_t header = (ACC_TYPE | GYRO_TYPE) + (timestamp & 0x0FFF);
+	write_24(header,                  &dest[0]);
+	write_16(imu_reading.data_acc.x,  &dest[3]);
+	write_16(imu_reading.data_acc.y,  &dest[5]);
+	write_16(imu_reading.data_acc.z,  &dest[7]);
+	write_16(imu_reading.data_gyro.x, &dest[9]);
+	write_16(imu_reading.data_gyro.y, &dest[11]);
+	write_16(imu_reading.data_gyro.z, &dest[13]);
+}
+
+float process_bmp_data_and_return_altitude(bmp_data_struct bmp_reading, uint8_t * dest, float ref_pres, float ref_alt)
+{
+	//Update the header bytes.
+	uint32_t header = (dest[0] << 16) + (dest[1] << 8) + dest[2];
+	header |= PRES_TYPE | TEMP_TYPE;
+	alt_value altitude = altitude_approx((float) bmp_reading.data.pressure, (float) bmp_reading.data.temperature, ref_pres, ref_alt);
+	
+	write_24(header, &dest[0]);
+	write_24(bmp_reading.data.pressure,    &dest[15]);
+	write_24(bmp_reading.data.temperature, &dest[18]);
+	write_32(altitude.byte_val,            &dest[21]);
+
+	return altitude.float_val;
+}
+
+
+void loggingTask(void *params)
+{
+	
+	LoggingStruct_t *logStruct = (LoggingStruct_t *) params;
+	Flash *flash_ptr = logStruct->flash_ptr;
+	UART_HandleTypeDef *huart = logStruct->uart;
+	configData_t *configParams = logStruct->flightCompConfig;
 	TaskHandle_t *timerTask_h = logStruct->timerTask_h;
 	uint32_t flash_address = FLASH_START_ADDRESS;
-
+	
 	if(IS_IN_FLIGHT(configParams->values.flags)){
-
 		flash_address = configParams->values.end_data_address;
 	}
 
-	//If start and end are equal there is no other flight data, otherwise start recording after already saved data.
-//	if(configParams->values.start_data_address == configParams->values.end_data_address){
-//
-//		flash_address = configParams->values.start_data_address;
-//	}else{
-//		flash_address = configParams->values.end_data_address;
-//	}
-
-//	int32_t velocity_a = 0;
-//	int32_t velocity_p = 0;
-//	int32_t acc_x_filtered;
-//	int32_t acc_y_filtered;
 	int32_t acc_z_filtered;
-	uint8_t acc_z_filter_index=0;
-	float altFiltered = 0;
-	uint8_t alt_filter_count=0;
-
+	uint8_t acc_z_filter_index = 0;
+	float total_filtered_altitude = 0;
+	uint8_t alt_filter_count = 0;
 	uint8_t running = 1;
-	uint8_t data_bufferA[DATA_BUFFER_SIZE];			//This stores the data until we have enough to write to flash.
-	uint8_t	data_bufferB[DATA_BUFFER_SIZE]; 		//This stores the data until we have enough to write to flash.
-	uint16_t ring_buff_size  = DATA_BUFFER_SIZE*25;
-	uint8_t launchpadBuffer[ring_buff_size];
-	BufferSelection_t buffer_selection = BUFFER_A;
-	uint16_t buffer_index_curr = 0;					//The current index in the buffer.
-
-
-	uint8_t is_there_data; 				//Used to keep track of if the current measurement has data.
-	Measurement_t measurement;
+	
+	uint8_t data_bufferA[DATA_BUFFER_SIZE];        // This stores the data until we have enough to write to flash.
+	uint8_t data_bufferB[DATA_BUFFER_SIZE];        // This stores the data until we have enough to write to flash.
+	uint8_t launchpadBuffer[DATA_BUFFER_SIZE * 25];
+	uint8_t is_there_data;                // Used to keep track of if the current measurement has data.
 	uint8_t measurement_length = 0;
-
-	uint32_t prev_time_ticks = 0;	//Holds the previous time to calculate the change in time.
-
-	char buf[120];
-
-	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
-
+	
+	uint16_t buffer_index_curr = 0;                    //The current index in the buffer.
+	uint16_t ring_buff_size = DATA_BUFFER_SIZE * 25;
+	
+	Measurement_t measurement;
+	BufferSelection_t buffer_selection = BUFFER_A;
+	
+	
+	HAL_GPIO_WritePin(USR_LED_PORT, USR_LED_PIN, GPIO_PIN_RESET);
+	
 	//Make sure the measurement starts empty.
 	int i;
-	for(i=0;i<sizeof(Measurement_t);i++){
-
+	for(i = 0; i < sizeof(Measurement_t); i++){
 		measurement.data[i] = 0;
 	}
-
-
-	imu_data_struct  imu_reading;
-
-	bmp_data_struct	bmp_reading;
-
-	prev_time_ticks = xTaskGetTickCount();
-
-
+	
+	imu_data_struct imu_reading;
+	bmp_data_struct bmp_reading;
+	
+	
+	
 	alt_value altitude;
 	alt_value alt_prev;
 	alt_prev.float_val = 0;
@@ -132,358 +163,281 @@ void loggingTask(void * params){
 	uint8_t alt_main_count = 0;
 	uint16_t apogee_holdout_count = 0;
 	uint8_t landed_counter = 0;
-
-	//buzz(250);
+	
 	if(!IS_IN_FLIGHT(configParams->values.flags)){
-	recoverySelect_t event_d = DROGUE;
-	continuityStatus_t cont_d = check_continuity(event_d);
-
-	recoverySelect_t event_m = MAIN;
-	continuityStatus_t cont_m = check_continuity(event_m);
-
-	while(cont_m == OPEN_CIRCUIT || cont_d == OPEN_CIRCUIT){
-
-		cont_m = check_continuity(event_m);
-		cont_d = check_continuity(event_d);
+		check_recovery_circuit(configParams);
 	}
-	configParams->values.state = STATE_LAUNCHPAD_ARMED;
-	write_config(configParams);}
-
 	buzz(250); // CHANGE TO 2 SECONDS!!!!!!!
-	while(1){
-
-		measurement_length=0;
-
+	
+	uint32_t start_time = xTaskGetTickCount();
+	while(1)
+	{
+		
+		measurement_length = 0;
+		
 		/* IMU READING*******************************************************************************************************************************/
-
+		
 		//Try and get data from the IMU queue. Block for up to a quarter of the time between the fastest measurement.
-		BaseType_t stat = xQueueReceive(logStruct->IMU_data_queue,&imu_reading,configParams->values.data_rate/4);
-
-		if(stat == pdPASS){
-			//We have read data from the IMU.
-
+		if(pdTRUE == xQueueReceive(logStruct->IMU_data_queue, &imu_reading, configParams->values.data_rate / 4))
+		{
 			//Check if the current measurement has data.
-			is_there_data = isMeasurementEmpty(&measurement);
-
-			if(!is_there_data){
-
-				uint16_t delta_t = imu_reading.time_ticks-prev_time_ticks;
-
-				uint32_t header  = (ACC_TYPE | GYRO_TYPE) + (delta_t & 0x0FFF);// Make sure time doesn't overwrite type and event bits.
-
-				measurement.data[0] = (header >> 16) & 0xFF;
-				measurement.data[1] = (header >> 8) & 0xFF;
-				measurement.data[2] = (header) & 0xFF;
-
+			if(!isMeasurementEmpty(&measurement))
+			{
+				uint16_t timestamp = imu_reading.time_ticks - start_time;
+				process_imu_data(imu_reading, &measurement.data[0], timestamp);
 				measurement_length = ACC_LENGTH + GYRO_LENGTH;
-
-				prev_time_ticks = imu_reading.time_ticks;
-
-				measurement.data[3] = ((uint16_t)imu_reading.data_acc.x) >>8;
-				measurement.data[4] = ((uint16_t)imu_reading.data_acc.x) & 0xFF;
-
-				measurement.data[5] = ((uint16_t)imu_reading.data_acc.y) >>8;
-				measurement.data[6] = ((uint16_t)imu_reading.data_acc.y) & 0xFF;
-
-				measurement.data[7] = ((uint16_t)imu_reading.data_acc.z) >>8;
-				measurement.data[8] = ((uint16_t)imu_reading.data_acc.z) & 0xFF;
-
-				measurement.data[9] = ((uint16_t)imu_reading.data_gyro.x) >>8;
-				measurement.data[10] = ((uint16_t)imu_reading.data_gyro.x) & 0xFF;
-
-				measurement.data[11] = ((uint16_t)imu_reading.data_gyro.y) >>8;
-				measurement.data[12] = ((uint16_t)imu_reading.data_gyro.y) & 0xFF;
-
-				measurement.data[13] = ((uint16_t)imu_reading.data_gyro.z) >>8;
-				measurement.data[14] = ((uint16_t)imu_reading.data_gyro.z) & 0xFF;
-
-//				int32_t acc_z_temp = imu_reading.data_acc.z - 2732;
-//				acc_z_filtered += acc_z_temp;
-//				acc_z_filter_index ++;
-//				if(acc_z_filter_index == 8){
-//
-//					acc_z_filtered = acc_z_filtered >>3;
-//					acc_z_filter_index = 0;
-//
-//				}
-
-
-
-//				sprintf(buf,"%d acc.z %ld acc.z filtered\n",imu_reading.data_acc.z,acc_z_filtered);
-//				transmit_line(huart, buf);
+				start_time = imu_reading.time_ticks;
 			}
-
-
-			HAL_GPIO_TogglePin(USR_LED_PORT,USR_LED_PIN);
-		}
-		else{
-
-			for(i=0;i<sizeof(Measurement_t);i++){
-
-				measurement.data[i] = 0;
-			}
+			
+			HAL_GPIO_TogglePin(USR_LED_PORT, USR_LED_PIN);
+		}else
+		{
+			clear_buffer(measurement.data, sizeof(Measurement_t));
 			continue;
 		}
-
+		
 		/* BMP READING*******************************************************************************************************************************/
 		//Try and get data from the BMP queue. Block for up to a quarter of the time between the fastest measurement.
-		stat = xQueueReceive(logStruct->PRES_data_queue,&bmp_reading,configParams->values.data_rate/4);
-
-		if(stat == pdPASS){
-
-			is_there_data = isMeasurementEmpty(&measurement);
-
-			if(is_there_data){
+		if(pdTRUE == xQueueReceive(logStruct->PRES_data_queue, &bmp_reading, configParams->values.data_rate / 4))
+		{
+			if(isMeasurementEmpty(&measurement))
+			{
+				// TODO: this does not make sense, how can we have imu
+				//       readings and entering here if Measurement is Empty
 				//We already have a imu reading.
-
-				measurement_length += (PRES_LENGTH + TEMP_LENGTH + ALT_LENGTH);
-
 				//Update the header bytes.
-				uint32_t header = (measurement.data[0]<<16)+(measurement.data[1]<<8) + measurement.data[2];
-				header |= PRES_TYPE | TEMP_TYPE;
-
-				measurement.data[0] = (header >> 16) & 0xFF;
-				measurement.data[1] = (header >> 8) & 0xFF;
-				measurement.data[2] = (header) & 0xFF;
-
-				measurement.data[15]= (((uint32_t)bmp_reading.data.pressure) >>16) &0xFF ;	//MSB
-				measurement.data[16]= (((uint32_t)bmp_reading.data.pressure) >> 8) & 0xFF;	//LSB
-				measurement.data[17]= ((uint32_t)bmp_reading.data.pressure) & 0xFF;		//XLSB
-
-				measurement.data[18]= (((uint32_t)bmp_reading.data.temperature) >>16) & 0xFF;	//MSB
-				measurement.data[19]= ((uint32_t)bmp_reading.data.temperature >> 8) & 0xFF;	//LSB
-				measurement.data[20]= (uint32_t)bmp_reading.data.temperature & 0xFF; //XLSB
-
-		    	altitude = altitude_approx((float)bmp_reading.data.pressure, (float)bmp_reading.data.temperature,configParams);
-		    	measurement.data[21] = (altitude.byte_val>>24) & 0xFF;
-		    	measurement.data[22] = (altitude.byte_val>>16) & 0xFF;
-		    	measurement.data[23] = (altitude.byte_val>>8) & 0xFF;
-		    	measurement.data[24] = (altitude.byte_val) & 0xFF;
-
-
-		    	altFiltered = altFiltered + (altitude.float_val - altFiltered)*0.2;
-
-//		    	int16_t alt_int = altitude.float_val;
-//		    	int16_t alt_dec = (altitude.float_val*100)-(alt_int*100);
-//				int16_t alt_int = altFiltered;
-//				int16_t alt_dec = (altFiltered*100)-(alt_int*100);
-//		    	char c = ' ';
-//		    	if(alt_int < 0 ){
-//		    		alt_int = -alt_int;
-//		    		c = '-';
-//		    	}
-
-//		    	if(alt_dec < 0 ){
-//		    		alt_dec = -alt_dec;
-//		    		c = '-';
-//		    	}
-//
-//		    	sprintf(buf, "Altitude: %c%d.%02d [m]", c,alt_int,alt_dec);
-//		    	transmit_line(huart, buf);
-
+				float approx_altitude = process_bmp_data_and_return_altitude(bmp_reading, &measurement.data[0],
+														 configParams->values.ref_pres, configParams->values.ref_alt);
+				
+				
+				total_filtered_altitude += (approx_altitude - total_filtered_altitude) * 0.2;
+				measurement_length += (PRES_LENGTH + TEMP_LENGTH + ALT_LENGTH);
+				// TODO: why we are not updating start_time here like in the IMU clause?
 			}
-		}
-		else{
-			for(i=0;i<sizeof(Measurement_t);i++){
-
-				measurement.data[i] = 0;
-			}
+		}else
+		{
+			clear_buffer(measurement.data, sizeof(Measurement_t));
 			continue;
 		}
-
-
-		if(configParams->values.state == STATE_LAUNCHPAD_ARMED && imu_reading.data_acc.x>10892){
-			
+		
+		
+		
+		if(configParams->values.state == STATE_LAUNCHPAD_ARMED && imu_reading.data_acc.x > 10892)
+		{
 			buzz(250);
 			vTaskResume(*timerTask_h); //start fixed timers.
 			configParams->values.state = STATE_IN_FLIGHT_PRE_APOGEE;
-			configParams->values.flags = configParams->values.flags |  0x04;
-			//configParams->values.state = STATE_IN_FLIGHT_POST_APOGEE;
+			configParams->values.flags = configParams->values.flags | 0x04;
 			//Record the launch event.
-			uint32_t header = (measurement.data[0]<<16)+(measurement.data[1]<<8) + measurement.data[2];
+			uint32_t header = (measurement.data[0] << 16) + (measurement.data[1] << 8) + measurement.data[2];
 			header |= LAUNCH_DETECT;
 			configParams->values.flags = configParams->values.flags | 0x01;
 			write_config(configParams);
-
-			measurement.data[0] = (header >> 16) & 0xFF;
-			measurement.data[1] = (header >> 8) & 0xFF;
-			measurement.data[2] = (header) & 0xFF;
+			write_24(header, &measurement.data[0]);
 			
-			int p;
+			
 			uint16_t buff_end = (ring_buff_size);
-			for(p=0;p<25;p++){
+			for(uint8_t j = 0; j < 25; j++)
+			{
 				//need to copy last portion into the bufferA. Make sure to start from right place, which wont be the next spot.
-
-				if((buffer_index_curr + 256) < buff_end){
-				FlashStatus stat_f2 = flash_program_page(flash_ptr,flash_address,&launchpadBuffer[buffer_index_curr],DATA_BUFFER_SIZE);
-				while(FLASH_IS_DEVICE_BUSY(stat_f2)){
-					  stat_f2 = flash_get_status_register(flash_ptr);
-					 vTaskDelay(1);
-				 }
-				 buffer_index_curr += 256;
-				}
-				else{
-
+				
+				if((buffer_index_curr + 256) < buff_end)
+				{
+					FlashStatus stat_f2 = flash_program_page(flash_ptr, flash_address,
+															 &launchpadBuffer[buffer_index_curr], DATA_BUFFER_SIZE);
+					while(FLASH_IS_DEVICE_BUSY(stat_f2))
+					{
+						stat_f2 = flash_get_status_register(flash_ptr);
+						vTaskDelay(1);
+					}
+					buffer_index_curr += 256;
+				}else
+				{
+					
 					uint8_t buff_temp[256];
-					memcpy(&buff_temp,&launchpadBuffer[buffer_index_curr],buff_end-buffer_index_curr);
-					memcpy(&buff_temp[buff_end-buffer_index_curr],&launchpadBuffer,DATA_BUFFER_SIZE-(buff_end-buffer_index_curr));
-
-					FlashStatus stat_f2 = flash_program_page(flash_ptr,flash_address,buff_temp,DATA_BUFFER_SIZE);
-					  while(FLASH_IS_DEVICE_BUSY(stat_f2)){
-						  stat_f2 = flash_get_status_register(flash_ptr);
-						 vTaskDelay(1);
-					  }
-					  buffer_index_curr = DATA_BUFFER_SIZE-(buff_end-buffer_index_curr);
+					memcpy(&buff_temp, &launchpadBuffer[buffer_index_curr], buff_end - buffer_index_curr);
+					memcpy(&buff_temp[buff_end - buffer_index_curr], &launchpadBuffer,
+						   DATA_BUFFER_SIZE - (buff_end - buffer_index_curr));
+					
+					FlashStatus stat_f2 = flash_program_page(flash_ptr, flash_address, buff_temp, DATA_BUFFER_SIZE);
+					while(FLASH_IS_DEVICE_BUSY(stat_f2))
+					{
+						stat_f2 = flash_get_status_register(flash_ptr);
+						vTaskDelay(1);
+					}
+					buffer_index_curr = DATA_BUFFER_SIZE - (buff_end - buffer_index_curr);
 				}
-
+				
 				flash_address += DATA_BUFFER_SIZE;
 			}
-			buffer_index_curr = 0 ;
+			buffer_index_curr = 0;
 		}
-
+		
 		//Check if the rocket has landed.
- 		if(configParams->values.state == STATE_IN_FLIGHT_POST_MAIN){
-
-			if(alt_count >0){
-
+		if(configParams->values.state == STATE_IN_FLIGHT_POST_MAIN)
+		{
+			
+			if(alt_count > 0)
+			{
+				
 				//If altitude is within a 1m range for 20 samples
-				if(altitude.float_val>(alt_prev.float_val - 1.0) && altitude.float_val < (alt_prev.float_val+1.0)){
+				if(altitude.float_val > (alt_prev.float_val - 1.0) && altitude.float_val < (alt_prev.float_val + 1.0))
+				{
 					alt_count++;
-					if(alt_count >245){
+					if(alt_count > 245)
+					{
 						alt_count = 201;
 					}
-				}else{
+				}else
+				{
 					alt_count = 0;
 				}
-
-			}
-			else{
-
+				
+			}else
+			{
+				
 				alt_prev.float_val = altitude.float_val;
 				alt_count++;
-				if(alt_count >245){
+				if(alt_count > 245)
+				{
 					alt_count = 201;
 				}
 			}
-
-			if((pow(imu_reading.data_gyro.x,2)+pow(imu_reading.data_gyro.y,2)+pow(imu_reading.data_gyro.z,2))<63075){
-			//If the gyro readings are all less than ~4.4 deg/sec and the altitude is not changing then the rocket has probably landed.
-
-				if(alt_count > 200){
-
+			
+			if((pow(imu_reading.data_gyro.x, 2) + pow(imu_reading.data_gyro.y, 2) + pow(imu_reading.data_gyro.z, 2)) <
+			   63075)
+			{
+				//If the gyro readings are all less than ~4.4 deg/sec and the altitude is not changing then the rocket has probably landed.
+				
+				if(alt_count > 200)
+				{
+					
 					configParams->values.state = STATE_LANDED;
 					configParams->values.flags = configParams->values.flags & ~(0x01);
 					write_config(configParams);
-					uint32_t header = (measurement.data[0]<<16)+(measurement.data[1]<<8) + measurement.data[2];
+					uint32_t header = (measurement.data[0] << 16) + (measurement.data[1] << 8) + measurement.data[2];
 					header |= LAND_DETECT;
-
+					
 					measurement.data[0] = (header >> 16) & 0xFF;
 					measurement.data[1] = (header >> 8) & 0xFF;
 					measurement.data[2] = (header) & 0xFF;
-
+					
 					//Put everything into low power mode.
 					running = 0;
-
+					
 				}
 			}
 		}
 		
 		
 		//Check if the altitude is below 1500ft, after the drogue has been deployed.
-		if(configParams->values.state == STATE_IN_FLIGHT_POST_APOGEE ){
-
-			if(altFiltered<375.0){
+		if(configParams->values.state == STATE_IN_FLIGHT_POST_APOGEE)
+		{
+			
+			if(total_filtered_altitude < 375.0)
+			{
 				//375m ==  1230 ft
-				alt_main_count ++;
-			}
-			else{
+				alt_main_count++;
+			}else
+			{
 				alt_main_count = 0;
 			}
-			if(alt_main_count>5){
+			if(alt_main_count > 5)
+			{
 				//deploy main
 				buzz(250);
 				recoverySelect_t event = MAIN;
 				enable_mosfet(event);
 				activate_mosfet(event);
 				continuityStatus_t cont = check_continuity(event);
-				uint32_t header = (measurement.data[0]<<16)+(measurement.data[1]<<8) + measurement.data[2];
+				uint32_t header = (measurement.data[0] << 16) + (measurement.data[1] << 8) + measurement.data[2];
 				header |= MAIN_DETECT;
-
+				
 				measurement.data[0] = (header >> 16) & 0xFF;
 				measurement.data[1] = (header >> 8) & 0xFF;
 				measurement.data[2] = (header) & 0xFF;
-
-				if(cont == OPEN_CIRCUIT){
-
-					configParams->values.state =  STATE_IN_FLIGHT_POST_MAIN;
-					configParams->values.flags = configParams->values.flags |  0x10;
+				
+				if(cont == OPEN_CIRCUIT)
+				{
+					
+					configParams->values.state = STATE_IN_FLIGHT_POST_MAIN;
+					configParams->values.flags = configParams->values.flags | 0x10;
 					write_config(configParams);
-					uint32_t header = (measurement.data[0]<<16)+(measurement.data[1]<<8) + measurement.data[2];
+					uint32_t header = (measurement.data[0] << 16) + (measurement.data[1] << 8) + measurement.data[2];
 					header |= MAIN_DEPLOY;
 					measurement.data[0] = (header >> 16) & 0xFF;
 					measurement.data[1] = (header >> 8) & 0xFF;
 					measurement.data[2] = (header) & 0xFF;
-
+					
 				}
 			}
 		}
-
+		
 		//check if rocket has reached apogee.
-		if(configParams->values.state == STATE_IN_FLIGHT_PRE_APOGEE){
-
-			apogee_holdout_count ++;
-			if(apogee_holdout_count >(20*15)){
-
-				uint64_t acc_mag = pow(imu_reading.data_acc.x,2)+pow(imu_reading.data_acc.y,2)+pow(imu_reading.data_acc.z,2);
-				if(acc_mag < 1 && altFiltered > 9000.0){
+		if(configParams->values.state == STATE_IN_FLIGHT_PRE_APOGEE)
+		{
+			
+			apogee_holdout_count++;
+			if(apogee_holdout_count > (20 * 15))
+			{
+				
+				uint64_t acc_mag =
+					pow(imu_reading.data_acc.x, 2) + pow(imu_reading.data_acc.y, 2) + pow(imu_reading.data_acc.z, 2);
+				if(acc_mag < 1 && total_filtered_altitude > 9000.0)
+				{
 					//5565132 = 3 * 1362^2 (aprox 0.5 g on all direction)
 					//2438m -> 8,000 ft
-
+					
 					buzz(250);
 					recoverySelect_t event = DROGUE;
 					enable_mosfet(event);
 					activate_mosfet(event);
 					continuityStatus_t cont = check_continuity(event);
-					uint32_t header = (measurement.data[0]<<16)+(measurement.data[1]<<8) + measurement.data[2];
+					uint32_t header = (measurement.data[0] << 16) + (measurement.data[1] << 8) + measurement.data[2];
 					header |= DROGUE_DETECT;
 					measurement.data[0] = (header >> 16) & 0xFF;
 					measurement.data[1] = (header >> 8) & 0xFF;
 					measurement.data[2] = (header) & 0xFF;
-
-					if(cont == OPEN_CIRCUIT){
-						configParams->values.state =  STATE_IN_FLIGHT_POST_APOGEE;
-						configParams->values.flags = configParams->values.flags |  0x08;
+					
+					if(cont == OPEN_CIRCUIT)
+					{
+						configParams->values.state = STATE_IN_FLIGHT_POST_APOGEE;
+						configParams->values.flags = configParams->values.flags | 0x08;
 						write_config(configParams);
-
-						uint32_t header = (measurement.data[0]<<16)+(measurement.data[1]<<8) + measurement.data[2];
+						
+						uint32_t header =
+							(measurement.data[0] << 16) + (measurement.data[1] << 8) + measurement.data[2];
 						header |= DROGUE_DEPLOY;
 						measurement.data[0] = (header >> 16) & 0xFF;
 						measurement.data[1] = (header >> 8) & 0xFF;
 						measurement.data[2] = (header) & 0xFF;
-
+						
 					}
-
+					
 				}
 			}
 		}
-
-
+		
+		
 		/* Fill Buffer and/or write to flash*********************************************************************************************************/
 		is_there_data = isMeasurementEmpty(&measurement);
-
-		if(is_there_data && configParams->values.state == STATE_LAUNCHPAD_ARMED && ((buffer_index_curr+measurement_length + HEADER_SIZE) <= ring_buff_size)){
-
+		
+		if(is_there_data && configParams->values.state == STATE_LAUNCHPAD_ARMED &&
+		   ((buffer_index_curr + measurement_length + HEADER_SIZE) <= ring_buff_size))
+		{
+			
 			//check if room in launchpad buffer.
-
-
-			memcpy(&launchpadBuffer[buffer_index_curr],&(measurement.data),measurement_length+HEADER_SIZE);
-
-			buffer_index_curr += (measurement_length+HEADER_SIZE);
+			
+			
+			memcpy(&launchpadBuffer[buffer_index_curr], &(measurement.data), measurement_length + HEADER_SIZE);
+			
+			buffer_index_curr += (measurement_length + HEADER_SIZE);
 			buffer_index_curr = buffer_index_curr % (ring_buff_size);
-
+			
 			//Reset the measurement.
-			for(i=0;i<sizeof(Measurement_t);i++){
-
+			for(i = 0; i < sizeof(Measurement_t); i++)
+			{
+				
 				measurement.data[i] = 0;
 			}
 		}
@@ -498,36 +452,39 @@ void loggingTask(void * params){
 //
 //			buffer_index_curr = bytesLeft;
 //		}
-		else if(((buffer_index_curr+measurement_length + HEADER_SIZE) < DATA_BUFFER_SIZE) && (is_there_data)){
-
+		else if(((buffer_index_curr + measurement_length + HEADER_SIZE) < DATA_BUFFER_SIZE) && (is_there_data))
+		{
+			
 			//There is room in the current buffer for the full measurement.
-
-			if(buffer_selection == BUFFER_A){
-
-				memcpy(&data_bufferA[buffer_index_curr],&(measurement.data),measurement_length+HEADER_SIZE);
+			
+			if(buffer_selection == BUFFER_A)
+			{
+				
+				memcpy(&data_bufferA[buffer_index_curr], &(measurement.data), measurement_length + HEADER_SIZE);
 				//transmit_bytes(huart,&data_bufferA[buffer_index_curr],measurement_length+2);
-			}
-			else if(buffer_selection == BUFFER_B){
-
-				memcpy(&data_bufferB[buffer_index_curr],&(measurement.data),measurement_length+HEADER_SIZE);
+			}else if(buffer_selection == BUFFER_B)
+			{
+				
+				memcpy(&data_bufferB[buffer_index_curr], &(measurement.data), measurement_length + HEADER_SIZE);
 				//transmit_bytes(huart,&data_bufferB[buffer_index_curr],measurement_length+2);
 			}
-
-			buffer_index_curr += (measurement_length+HEADER_SIZE);
-
+			
+			buffer_index_curr += (measurement_length + HEADER_SIZE);
+			
 			//Reset the measurement.
-			for(i=0;i<sizeof(Measurement_t);i++){
-
+			for(i = 0; i < sizeof(Measurement_t); i++)
+			{
+				
 				measurement.data[i] = 0;
 			}
-
-
-
-		}else if(is_there_data){
-
+			
+			
+		}else if(is_there_data)
+		{
+			
 			//Split measurement across the buffers, and write to flash.
 			uint8_t bytesInPrevBuffer = DATA_BUFFER_SIZE - buffer_index_curr;
-			uint8_t bytesLeft = (measurement_length+HEADER_SIZE)-bytesInPrevBuffer;
+			uint8_t bytesLeft = (measurement_length + HEADER_SIZE) - bytesInPrevBuffer;
 
 //			if((((measurement.data[1]<<8)+measurement.data[0])&0x0FFF)>300){
 //
@@ -538,102 +495,114 @@ void loggingTask(void * params){
 //
 //				while(1){}
 //			}
-
+			
 			//Put as much data as will fit into the almost full buffer.
-			if(buffer_selection == BUFFER_A){
-
-				memcpy(&data_bufferA[buffer_index_curr],&(measurement.data),bytesInPrevBuffer);
+			if(buffer_selection == BUFFER_A)
+			{
+				
+				memcpy(&data_bufferA[buffer_index_curr], &(measurement.data), bytesInPrevBuffer);
 				buffer_selection = BUFFER_B;
 				buffer_index_curr = 0;
-
-			}
-			else if(buffer_selection == BUFFER_B){
-
-				memcpy(&data_bufferB[buffer_index_curr],&(measurement.data),bytesInPrevBuffer);
+				
+			}else if(buffer_selection == BUFFER_B)
+			{
+				
+				memcpy(&data_bufferB[buffer_index_curr], &(measurement.data), bytesInPrevBuffer);
 				buffer_index_curr = BUFFER_A;
-				buffer_selection=0;
-
+				buffer_selection = 0;
+				
 			}
-
+			
 			//Put the rest of the measurement in the next buffer.
-			if(buffer_selection == BUFFER_A){
-
-				memcpy(&data_bufferA[buffer_index_curr],&(measurement.data[bytesInPrevBuffer]),bytesLeft);
+			if(buffer_selection == BUFFER_A)
+			{
+				
+				memcpy(&data_bufferA[buffer_index_curr], &(measurement.data[bytesInPrevBuffer]), bytesLeft);
 				buffer_index_curr = bytesLeft;
-
-			}
-			else if(buffer_selection == BUFFER_B){
-
-				memcpy(&data_bufferB[buffer_index_curr],&(measurement.data[bytesInPrevBuffer]),bytesLeft);
+				
+			}else if(buffer_selection == BUFFER_B)
+			{
+				
+				memcpy(&data_bufferB[buffer_index_curr], &(measurement.data[bytesInPrevBuffer]), bytesLeft);
 				buffer_index_curr = bytesLeft;
-
+				
 			}
-
+			
 			//reset the measurement.
-			for(i=0;i<sizeof(Measurement_t);i++){
-
+			for(i = 0; i < sizeof(Measurement_t); i++)
+			{
+				
 				measurement.data[i] = 0;
 			}
-
-			measurement_length=0;
-
+			
+			measurement_length = 0;
+			
 			//Flash write buffer not in use! then clear old buffer?
-
-			if(buffer_selection == 0){
+			
+			if(buffer_selection == 0)
+			{
 				//We just switched to A so transmit B.
-
-				if(IS_RECORDING(configParams->values.flags)){
-
-					FlashStatus stat_f = flash_program_page(flash_ptr,flash_address,data_bufferB,DATA_BUFFER_SIZE);
-					  while(FLASH_IS_DEVICE_BUSY(stat_f)){
-						  stat_f = flash_get_status_register(flash_ptr);
-						  vTaskDelay(1);
-					  }
-
+				
+				if(IS_RECORDING(configParams->values.flags))
+				{
+					
+					FlashStatus stat_f = flash_program_page(flash_ptr, flash_address, data_bufferB, DATA_BUFFER_SIZE);
+					while(FLASH_IS_DEVICE_BUSY(stat_f))
+					{
+						stat_f = flash_get_status_register(flash_ptr);
+						vTaskDelay(1);
+					}
+					
 					flash_address += DATA_BUFFER_SIZE;
-					if(flash_address>=FLASH_SIZE_BYTES){
+					if(flash_address >= FLASH_SIZE_BYTES)
+					{
 						while(1);
 					}
-
+					
+				}else
+				{
+					transmit_bytes(huart, data_bufferB, 256);
 				}
-				else{
-					transmit_bytes(huart,data_bufferB,256);
-				}
-			}
-			else if (buffer_selection == 1){
+			}else if(buffer_selection == 1)
+			{
 				//We just switched to B so transmit A
-
-				if(IS_RECORDING(configParams->values.flags)){
-					FlashStatus stat_f2 = flash_program_page(flash_ptr,flash_address,data_bufferA,DATA_BUFFER_SIZE);
-					  while(FLASH_IS_DEVICE_BUSY(stat_f2)){
-						  stat_f2 = flash_get_status_register(flash_ptr);
-						  vTaskDelay(1);
-					  }
-
+				
+				if(IS_RECORDING(configParams->values.flags))
+				{
+					FlashStatus stat_f2 = flash_program_page(flash_ptr, flash_address, data_bufferA, DATA_BUFFER_SIZE);
+					while(FLASH_IS_DEVICE_BUSY(stat_f2))
+					{
+						stat_f2 = flash_get_status_register(flash_ptr);
+						vTaskDelay(1);
+					}
+					
 					flash_address += DATA_BUFFER_SIZE;
-
-					if(flash_address>=FLASH_SIZE_BYTES){
+					
+					if(flash_address >= FLASH_SIZE_BYTES)
+					{
 						while(1);
 					}
-				}
-				else{
-					transmit_bytes(huart,data_bufferA,256);
+				}else
+				{
+					transmit_bytes(huart, data_bufferA, 256);
 				}
 			}
-
-
+			
+			
 		}
-
-		for(i=0;i<sizeof(Measurement_t);i++){
-
+		
+		for(i = 0; i < sizeof(Measurement_t); i++)
+		{
+			
 			measurement.data[i] = 0;
 		}
-
-		measurement_length=0;
-
-		if(!running){
+		
+		measurement_length = 0;
+		
+		if(!running)
+		{
 			vTaskSuspend(NULL);
 		}
 	};
-
+	
 }

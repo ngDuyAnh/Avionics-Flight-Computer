@@ -32,5 +32,5 @@ typedef union {
 // Returns:
 //  float - float value of altitude approximation
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-alt_value altitude_approx(float pressure, float temperature, configData_t*config);
+alt_value altitude_approx(float pressure, float temperature, float ref_pres, float ref_alt);
 #endif // TEMPLATE_H
