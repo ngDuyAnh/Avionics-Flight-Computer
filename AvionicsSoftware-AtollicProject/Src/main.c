@@ -15,7 +15,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "configuration.h"
-#include "cmsis_os.h"
+#include "FreeRTOS.h"
 #include "flash.h"
 #include "sensorAG.h"
 #include "pressure_sensor_bmp3.h"

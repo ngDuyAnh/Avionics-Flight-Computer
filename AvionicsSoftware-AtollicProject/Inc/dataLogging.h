@@ -20,7 +20,7 @@
 
 #include <string.h> 				// For memcpy
 #include <math.h>
-#include "cmsis_os.h"				//For delay and queues
+#include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
 #include "forward_declarations.h"

@@ -16,7 +16,7 @@
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include "dataLogging.h"
-#include "cmsis_os.h"				//For delay and queues
+#include "cmsis_os.h"
 #include "flash.h"					//For flash memory functions
 #include "pressure_sensor_bmp3.h"	//For bmp reading struct
 #include "sensorAG.h"				//For imu_reading struct
@@ -269,6 +269,7 @@ void loggingTask(void * params){
 //		    		alt_int = -alt_int;
 //		    		c = '-';
 //		    	}
+
 //		    	if(alt_dec < 0 ){
 //		    		alt_dec = -alt_dec;
 //		    		c = '-';
@@ -278,8 +279,6 @@ void loggingTask(void * params){
 //		    	transmit_line(huart, buf);
 
 			}
-
-
 		}
 		else{
 			for(i=0;i<sizeof(Measurement_t);i++){

@@ -19,6 +19,11 @@
 #include <pressure_sensor_bmp3.h>
 #include <stdlib.h>
 
+#include "bmp3.h"
+#include "stm32f4xx_hal_uart_io.h"
+#include "cmsis_os.h"
+#include "SPI.h"
+#include "configuration.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
