@@ -46,7 +46,7 @@ typedef enum{
 typedef struct{
 
 	UART_HandleTypeDef *huart;
-	FlashStruct_t *flash;
+	Flash *flash;
 	configData_t *flightCompConfig;
 	TaskHandle_t startupTaskHandle;
 }	xtractParams;

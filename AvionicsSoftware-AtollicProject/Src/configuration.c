@@ -91,7 +91,7 @@ configStatus_t read_config(configData_t* configuration){
 
 	configStatus_t stat = CONFIG_ERROR;
 
-	FlashStatus_t result = read_page(configuration->values.flash,0x00000000,configuration->bytes,sizeof(configData_t)-(sizeof(FlashStruct_t*)+4)); //The state variable is padded to 4 bytes!
+	FlashStatus result = flash_read_page(configuration->values.flash,0x00000000,configuration->bytes,sizeof(configData_t)-(sizeof(Flash*)+4)); //The state variable is padded to 4 bytes!
 
 	if(result == FLASH_OK){
 		stat = CONFIG_OK;
@@ -103,17 +103,17 @@ configStatus_t read_config(configData_t* configuration){
 configStatus_t write_config(configData_t* configuration){
 
 
-	FlashStatus_t result;
+	FlashStatus result;
 
 	configStatus_t stat = CONFIG_ERROR;
 
-	result = erase_param_sector(configuration->values.flash,0x00000000);
-	while(IS_DEVICE_BUSY(get_status_reg(configuration->values.flash))){}
+	result = flash_erase_param_sector(configuration->values.flash,0x00000000);
+	while(FLASH_IS_DEVICE_BUSY(flash_get_status_register(configuration->values.flash))){}
 
 	if(result == FLASH_OK){
-	 result = program_page(configuration->values.flash,0x00000000,configuration->bytes,sizeof(configData_t)-(sizeof(FlashStruct_t*)+4));
+	 result = flash_program_page(configuration->values.flash,0x00000000,configuration->bytes,sizeof(configData_t)-(sizeof(Flash*)+4));
 
-		while( IS_DEVICE_BUSY(get_status_reg(configuration->values.flash))){
+		while(FLASH_IS_DEVICE_BUSY(flash_get_status_register(configuration->values.flash))){
 			stat = CONFIG_OK;
 		}
 	}

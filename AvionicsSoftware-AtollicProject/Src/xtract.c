@@ -27,7 +27,7 @@
 // DEFINITIONS AND MACROS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //static UART_HandleTypeDef* uart;
-//static FlashStruct_t * flash;
+//static Flash * flash;
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ENUMS AND ENUM TYPEDEFS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ void vTask_xtract(void *pvParameters){
 	xtractParams * params = (xtractParams *)pvParameters;
 
 	UART_HandleTypeDef * uart = params->huart;
-	FlashStruct_t * flash = params->flash;
+	Flash * flash = params->flash;
 
 	menuState_t state = MAIN_MENU;
 	intro(uart); //display help on start up
@@ -83,7 +83,7 @@ void handle_command(char* command,xtractParams * params,menuState_t * state){
 
 
 	UART_HandleTypeDef * uart = params->huart;
-	FlashStruct_t * flash = params->flash;
+	Flash * flash = params->flash;
 	configData_t * config = params->flightCompConfig;
 	TaskHandle_t startupTaskHandle = params->startupTaskHandle;
 
@@ -170,7 +170,7 @@ void help(UART_HandleTypeDef * uart){
 void memory_menu(char* command, xtractParams * params){
 
 	UART_HandleTypeDef * uart = params->huart;
-	FlashStruct_t * flash = params->flash;
+	Flash * flash = params->flash;
 	configData_t * config = params->flightCompConfig;
 
 	char output [256];
@@ -207,14 +207,14 @@ void memory_menu(char* command, xtractParams * params){
 
 			uint8_t data_rx[FLASH_PAGE_SIZE];
 
-			FlashStatus_t stat;
-			stat = read_page(flash,value,data_rx,FLASH_PAGE_SIZE);
+			FlashStatus stat;
+			stat = flash_read_page(flash,value,data_rx,FLASH_PAGE_SIZE);
 
 			uint8_t busy = stat;
 
-			while(IS_DEVICE_BUSY(busy)){
+			while(FLASH_IS_DEVICE_BUSY(busy)){
 
-				busy = get_status_reg(flash);
+				busy = flash_get_status_register(flash);
 
 				vTaskDelay(pdMS_TO_TICKS(1));
 			}
@@ -252,7 +252,7 @@ void memory_menu(char* command, xtractParams * params){
 	else if (command[0] == 'b'){
 
 
-		uint32_t end_Address = scan_flash(flash);
+		uint32_t end_Address = flash_scan(flash);
 		sprintf(output,"end address :%ld \n",end_Address);
 		transmit_line(uart,output);
 
@@ -265,21 +265,21 @@ void memory_menu(char* command, xtractParams * params){
 			transmit_line(uart,output);
 
 			  uint32_t address = FLASH_START_ADDRESS;
-			  FlashStatus_t stat;
+			  FlashStatus stat;
 			  while(address <= FLASH_END_ADDRESS){
 
 				  if(address>FLASH_PARAM_END_ADDRESS){
-				  stat = erase_sector(flash,address);
+				  stat = flash_erase_sector(flash,address);
 				  address += FLASH_SECTOR_SIZE;
 				  }
 				  else{
-					  stat = erase_param_sector(flash,address);
+					  stat = flash_erase_param_sector(flash,address);
 					  address += FLASH_PARAM_SECTOR_SIZE;
 				  }
 				  //Wait for erase to finish
-				  while(IS_DEVICE_BUSY(stat)){
+				  while(FLASH_IS_DEVICE_BUSY(stat)){
 
-					  stat = get_status_reg(flash);
+					  stat = flash_get_status_register(flash);
 
 					  vTaskDelay(pdMS_TO_TICKS(1));
 				  }
@@ -289,7 +289,7 @@ void memory_menu(char* command, xtractParams * params){
 					transmit_line(uart,output);
 			  }
 
-			  read_page(flash,FLASH_START_ADDRESS,dataRX,256);
+			  flash_read_page(flash,FLASH_START_ADDRESS,dataRX,256);
 			  uint16_t empty = 0xFFFF;
 			  	  int i;
 			  for(i=0;i<256;i++){
@@ -328,7 +328,7 @@ void memory_menu(char* command, xtractParams * params){
 void ematch(char* command, xtractParams * params){
 
 	UART_HandleTypeDef * uart = params->huart;
-	FlashStruct_t * flash = params->flash;
+	Flash * flash = params->flash;
 	configData_t * config = params->flightCompConfig;
 
 	char output [256];
@@ -490,7 +490,7 @@ void ematch(char* command, xtractParams * params){
 void configure(char* command,xtractParams * params){
 
 	UART_HandleTypeDef * uart = params->huart;
-	FlashStruct_t * flash = params->flash;
+	Flash * flash = params->flash;
 	configData_t * config = params->flightCompConfig;
 
 	char output [256];
@@ -1077,7 +1077,7 @@ void configure(char* command,xtractParams * params){
 void read(xtractParams * params){
 
 	UART_HandleTypeDef * uart = params->huart;
-	FlashStruct_t * flash = params->flash;
+	Flash * flash = params->flash;
 	configData_t * config = params->flightCompConfig;
 
 	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
@@ -1091,10 +1091,10 @@ void read(xtractParams * params){
 	vTaskDelay(pdMS_TO_TICKS(1000*10));	//Delay 10 seconds
 
 	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
-	uint32_t endAddress = scan_flash(flash);
+	uint32_t endAddress = flash_scan(flash);
 	while (bytesRead < endAddress){
 
-		read_page(flash,currentAddress,buffer,256*5);
+		flash_read_page(flash,currentAddress,buffer,256*5);
 
 		int i;
 		uint16_t empty =0 ;

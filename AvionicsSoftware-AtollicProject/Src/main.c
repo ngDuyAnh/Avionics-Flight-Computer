@@ -33,7 +33,7 @@ osThreadId defaultTaskHandle;
 UART_HandleTypeDef huart6_ptr; //global var to be passed to vTask_xtract
 
 SPI_HandleTypeDef flash_spi;
-FlashStruct_t flash;
+Flash flash;
 ImuTaskStruct imuTaskParams ;
 LoggingStruct_t logParams;
 PressureTaskParams bmp388Params;
@@ -45,7 +45,7 @@ startParams tasks;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void StartDefaultTask(void const * argument);
-void testFlash(FlashStruct_t * flash);
+void testFlash(Flash * flash);
 char testpress();
 char testIMU();
 void MX_GPIO_Init();
@@ -87,9 +87,9 @@ int main(void)
 	//  vQueueAddToRegistry(imuQueue_h,"imu");
 	//  vQueueAddToRegistry(bmpQueue_h,"bmp");
 
-	flash.hspi = flash_spi;
+	flash.spi_handle = flash_spi;
 
-	FlashStatus_t flash_stat =initialize_flash(&flash);
+	FlashStatus flash_stat =flash_initialize(&flash);
 	if(flash_stat != FLASH_OK){
 	  while(1);
 	}
@@ -125,14 +125,13 @@ int main(void)
 		flightCompConfig.values.state = STATE_IN_FLIGHT_PRE_APOGEE;
 	}
 
-	uint32_t end_Address = scan_flash(&flash);
+	uint32_t end_Address = flash_scan(&flash);
 	sprintf(lines,"end address :%ld \n",end_Address);
 	transmit_line(&huart6_ptr,lines);
 	flightCompConfig.values.end_data_address = end_Address;
 
 	recovery_init();
 	transmit_line(&huart6_ptr,"Recovery GPIO pins setup.");
-
 
 
 	logParams.flash_ptr = &flash;

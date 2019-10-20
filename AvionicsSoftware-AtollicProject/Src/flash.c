@@ -1,304 +1,201 @@
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// UMSATS Rocketry Division
-//
-// Repository:
-//  UMSATS/Avionics-2019
-//
-// File Description:
-//  Source file for the flash memory interface.
-//
-// History
-// 2019-03-29 by Joseph Howarth
-// - Created.
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+/**
+ * @file flash.c
+ * @author UMSATS Rocketry Division. Joseph Howarth
+ * @date 2019-03-29
+ * @brief Source file for the flash memory interface.
+ *
+ * Here typically goes a more extensive explanation of what the header
+ * defines. Doxygens tags are words preceeded by either a backslash @\
+ * or by an at symbol @@.
+ * @see https://github.com/UMSATS/Avionics-2019
+ */
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// INCLUDES
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+#include <stdint.h>
 #include "flash.h"
+#include "hardwareDefs.h"
 
-
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// DEFINITIONS AND MACROS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// ENUMS AND ENUM TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// STRUCTS AND STRUCT TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// FUNCTION PROTOTYPES
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Description:
-//  This function sets the write enable. This is needed before a
-//	write status register, program or erase command.
-//	If the device is busy the function exits early and returns FLASH_BUSY.
-//
-// Returns:
-//  Returns a status. Will be FLASH_BUSY if there is another operation in progress, FLASH_OK otherwise.
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-FlashStatus_t		enable_write(FlashStruct_t * flash);
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// FUNCTIONS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-FlashStatus_t enable_write(FlashStruct_t * flash){
-
-	FlashStatus_t result = FLASH_ERROR;
-
-	uint8_t status_reg = get_status_reg(flash);
-
-
-	if(IS_DEVICE_BUSY(status_reg)){
-
-		result = FLASH_BUSY;
+/**
+ * @brief
+ * This function sets the write enable. This is needed before a
+ * write status register, program or erase command.
+ * @param p_flash Pointer to @c Flash structure
+ * @return Will be FLASH_BUSY if there is another operation in progress, FLASH_OK otherwise.
+ * @see https://github.com/UMSATS/Avionics-2019/
+ */
+FlashStatus enable_write(Flash *flash)
+{
+	uint8_t status_reg = flash_get_status_register(flash);
+	if(FLASH_IS_DEVICE_BUSY(status_reg)){
+		return FLASH_BUSY;
 	}
 	else{
-
-		uint8_t command = WE_COMMAND;
-
-		spi_transmit(flash->hspi,&command,NULL,1,10);
-
-		result = FLASH_OK;
+		uint8_t command = FLASH_ENABLE_WRITE_COMMAND;
+		spi_transmit(flash->spi_handle, &command, NULL, 1, 10);
+		return FLASH_OK;
 	}
-	return result;
 }
 
-FlashStatus_t 	erase_sector(FlashStruct_t * flash,uint32_t address){
-
-	FlashStatus_t result = FLASH_ERROR;
-
-	uint8_t status_reg = get_status_reg(flash);
-
-
-	if(IS_DEVICE_BUSY(status_reg)){
-
-		result = FLASH_BUSY;
+/**
+ * @brief
+ * This function is responsible to work like a generic interface to send any command to the flash driver
+ * @param p_flash Pointer to @c Flash structure
+ * @param address pointer to where in the flash memory you want to apply the operation to
+ * @return Will be FLASH_BUSY if there is another operation in progress, FLASH_OK otherwise.
+ * @note Any additional commands should always call this function. If this function does not satisfy the
+ * needs later on when the interface is extended to potentially support more operations
+ * a developer should modify this function to his needs to keep this function as a generic interface forever
+ * @see https://github.com/UMSATS/Avionics-2019/
+ */
+FlashStatus execute_command(Flash *flash, uint32_t address, uint8_t command)
+{
+	uint8_t status_reg = flash_get_status_register(flash);
+	if(FLASH_IS_DEVICE_BUSY(status_reg)){
+		return FLASH_BUSY;
 	}
 	else{
-
+		FlashStatus result = FLASH_ERROR;
 		enable_write(flash);
-
-		uint8_t command_address [] = { ERASE_SEC_COMMAND, (address & (HIGH_BYTE_MASK_24B))>>16, (address & (MID_BYTE_MASK_24B))>>8, address & (LOW_BYTE_MASK_24B)};
-
-		spi_send(flash->hspi,command_address,4,NULL,0,10);
-
-		result = FLASH_OK;
+		if(command == FLASH_BULK_ERASE_COMMAND)
+		{
+			enable_write(flash);
+			uint8_t _command = FLASH_BULK_ERASE_COMMAND;
+			spi_send(flash->spi_handle, &_command, 1, NULL, 0, 10);
+			return FLASH_OK;
+		}
+		else
+		{
+			uint8_t command_address[] =
+				{
+					(command),
+					(address & (FLASH_HIGH_BYTE_MASK_24B)) >> 16,
+					(address & (FLASH_MID_BYTE_MASK_24B)) >> 8 ,
+					(address & (FLASH_LOW_BYTE_MASK_24B))
+				};
+			
+			spi_send(flash->spi_handle, command_address, 4, NULL, 0, 10);
+			return FLASH_OK;
+		};
 	}
-	return result;
-}
-
-FlashStatus_t 	erase_param_sector(FlashStruct_t * flash,uint32_t address){
-
-	FlashStatus_t result = FLASH_ERROR;
-
-	uint8_t status_reg = get_status_reg(flash);
-
-
-	if(IS_DEVICE_BUSY(status_reg)){
-
-		result = FLASH_BUSY;
-	}
-	else{
-
-		enable_write(flash);
-
-		uint8_t command_address [] = { ERASE_PARAM_SEC_COMMAND, (address & (HIGH_BYTE_MASK_24B))>>16, (address & (MID_BYTE_MASK_24B))>>8, address & (LOW_BYTE_MASK_24B)};
-
-		spi_send(flash->hspi,command_address,4,NULL,0,10);
-
-		result = FLASH_OK;
-	}
-	return result;
 }
 
 
-FlashStatus_t 	erase_device(FlashStruct_t * flash){
 
-	FlashStatus_t result = FLASH_ERROR;
-
-	uint8_t status_reg = get_status_reg(flash);
-
-
-	if(IS_DEVICE_BUSY(status_reg)){
-
-		result = FLASH_BUSY;
-	}
-	else{
-
-		enable_write(flash);
-
-		uint8_t command = BULK_ERASE_COMMAND;
-
-		spi_send(flash->hspi,&command,1,NULL,0,10);
-
-		result = FLASH_OK;
-	}
-	return result;
-}
-
-uint8_t get_status_reg(FlashStruct_t * flash){
-
-	uint8_t command = GET_STATUS_REG_COMMAND;
+uint8_t flash_get_status_register(Flash *p_flash)
+{
+	uint8_t command = FLASH_GET_STATUS_REG_COMMAND;
 	uint8_t status_reg;
-
-
-	spi_receive(flash->hspi,&command,1,&status_reg,1,10);
-
+	spi_receive(p_flash->spi_handle, &command, 1, &status_reg, 1, 10);
 	return status_reg;
 }
 
-FlashStatus_t program_page(FlashStruct_t * flash,uint32_t address,uint8_t * data_buffer,uint16_t num_bytes){
 
-	FlashStatus_t result = FLASH_ERROR;
-
-	uint8_t status_reg = get_status_reg(flash);
-
-
-	if(IS_DEVICE_BUSY(status_reg)){
-
-		result = FLASH_BUSY;
-	}
-	else{
-
-
-		//Writes must be enabled.
-		enable_write(flash);
-		uint8_t command_address [] = { PP_COMMAND, (address & (HIGH_BYTE_MASK_24B))>>16, (address & (MID_BYTE_MASK_24B))>>8, address & (LOW_BYTE_MASK_24B)};
-
-		spi_send(flash->hspi,command_address,4,data_buffer,num_bytes,200);
-		result = FLASH_OK;
-	}
-	return result;
-}
-FlashStatus_t 	read_page(FlashStruct_t * flash,uint32_t address,uint8_t * data_buffer,uint16_t num_bytes){
-
-
-	FlashStatus_t result = FLASH_ERROR;
-
-	uint8_t status_reg = get_status_reg(flash);
-
-
-	if(IS_DEVICE_BUSY(status_reg)){
-
-		result = FLASH_BUSY;
-	}
-	else{
-
-		uint8_t command_address [] = { READ_COMMAND, (address & (HIGH_BYTE_MASK_24B))>>16, (address & (MID_BYTE_MASK_24B))>>8, address & (LOW_BYTE_MASK_24B)};
-
-		spi_receive(flash->hspi,command_address,4,data_buffer,num_bytes,200);
-		result = FLASH_OK;
-	}
-	return result;
+FlashStatus flash_erase_sector(Flash *p_flash, uint32_t address)
+{
+	return execute_command(p_flash, address, FLASH_ERASE_SEC_COMMAND);
 }
 
-FlashStatus_t		check_flash_id(FlashStruct_t * flash){
+FlashStatus flash_erase_param_sector(Flash *p_flash, uint32_t address)
+{
+	return execute_command(p_flash, address, FLASH_ERASE_PARAM_SEC_COMMAND);
+}
 
-	FlashStatus_t result = FLASH_ERROR;
-	uint8_t command = READ_ID_COMMAND;
-	uint8_t id[3] = {0,0,0};
+FlashStatus flash_program_page(Flash *p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
+{
+	return execute_command(p_flash, address, FLASH_PP_COMMAND);
+}
 
-	//uint8_t bytes_to_send = sizeof(command)+sizeof(id)/sizeof(id[0]);
-	spi_receive(flash->hspi,(uint8_t *)&command,1,id,3,10);
+FlashStatus flash_read_page(Flash *p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
+{
+	return execute_command(p_flash, address, FLASH_READ_COMMAND);
+}
 
-	if((id[0] == MANUFACTURER_ID) && (id[1] == DEVICE_ID_MSB) && (id[2] == DEVICE_ID_LSB) ){
+FlashStatus flash_erase_device(Flash *flash)
+{
+	return execute_command(flash, 0, FLASH_BULK_ERASE_COMMAND);
+}
 
-		result = FLASH_OK;
+FlashStatus flash_check_id(Flash *p_flash)
+{
+	uint8_t command = FLASH_READ_ID_COMMAND;
+	uint8_t id[3] = {0, 0, 0};
+	
+	spi_receive(p_flash->spi_handle, (uint8_t *) &command, 1, id, 3, 10);
+	if((id[0] == FLASH_MANUFACTURER_ID) && (id[1] == FLASH_DEVICE_ID_MSB) && (id[2] == FLASH_DEVICE_ID_LSB)){
+		return FLASH_OK;
 	}
-
-	return result;
+	
+	return FLASH_ERROR;
 }
 
 
-FlashStatus_t		initialize_flash(FlashStruct_t * flash){
-
+FlashStatus flash_initialize(Flash *p_flash)
+{
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 	__HAL_RCC_GPIOC_CLK_ENABLE();
-
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	//This configures the write protect pin(Active Low).
-    GPIO_InitStruct.Pin = FLASH_WP_PIN;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-    GPIO_InitStruct.Alternate = 0;
-
-    HAL_GPIO_Init(FLASH_WP_PORT,&GPIO_InitStruct);
-
-    GPIO_InitTypeDef GPIO_InitStruct2 = {0};
-    //This configures the hold pin(Active Low).
-    GPIO_InitStruct2.Pin = FLASH_HOLD_PIN;
-    GPIO_InitStruct2.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct2.Pull = GPIO_NOPULL;
-    GPIO_InitStruct2.Speed = GPIO_SPEED_FREQ_MEDIUM;
-    GPIO_InitStruct2.Alternate = 0;
-
-    HAL_GPIO_Init(FLASH_HOLD_PORT,&GPIO_InitStruct2);
-
-    HAL_GPIO_WritePin(FLASH_WP_PORT,FLASH_WP_PIN,GPIO_PIN_SET);
-    HAL_GPIO_WritePin(FLASH_HOLD_PORT,FLASH_HOLD_PIN,GPIO_PIN_SET);
+	GPIO_InitStruct.Pin = FLASH_WP_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitStruct.Alternate = 0;
+	
+	HAL_GPIO_Init(FLASH_WP_PORT, &GPIO_InitStruct);
+	
+	GPIO_InitTypeDef GPIO_InitStruct2 = {0};
+	//This configures the hold pin(Active Low).
+	GPIO_InitStruct2.Pin = FLASH_HOLD_PIN;
+	GPIO_InitStruct2.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct2.Pull = GPIO_NOPULL;
+	GPIO_InitStruct2.Speed = GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitStruct2.Alternate = 0;
+	
+	HAL_GPIO_Init(FLASH_HOLD_PORT, &GPIO_InitStruct2);
+	
+	HAL_GPIO_WritePin(FLASH_WP_PORT, FLASH_WP_PIN, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(FLASH_HOLD_PORT, FLASH_HOLD_PIN, GPIO_PIN_SET);
 	//Set up the SPI interface
-	spi1_init(&(flash->hspi));
-
-    HAL_GPIO_WritePin(FLASH_SPI_CS_PORT,FLASH_SPI_CS_PIN,GPIO_PIN_SET);
-	FlashStatus_t result = FLASH_ERROR;
-	result = check_flash_id(flash);
-
+	spi1_init(&(p_flash->spi_handle));
+	
+	HAL_GPIO_WritePin(FLASH_SPI_CS_PORT, FLASH_SPI_CS_PIN, GPIO_PIN_SET);
+	FlashStatus result = FLASH_ERROR;
+	result = flash_check_id(p_flash);
+	
 	return result;
 }
 
-uint32_t scan_flash(FlashStruct_t * flash){
-
-
+uint32_t flash_scan(Flash *p_flash)
+{
 	uint32_t result = 0;
-
 	uint8_t dataRX[256];
 	uint32_t i;
 	int j;
-	i=FLASH_START_ADDRESS;
-	while(i<FLASH_SIZE_BYTES){
-
-		FlashStatus_t stat;
-
-		for(j=0;j<256;j++){
+	i = FLASH_START_ADDRESS;
+	while(i < FLASH_SIZE_BYTES)
+	{
+		FlashStatus status;
+		for(j = 0; j < 256; j++){
 			dataRX[j] = 0;
 		}
-
-		stat = read_page(flash,i,dataRX,256);
-
-		uint16_t empty= 0xFFFF;
-		for(j=0;j<256;j++){
-
+		
+		status = flash_read_page(p_flash, i, dataRX, 256);
+		uint16_t empty = 0xFFFF;
+		for(j = 0; j < 256; j++)
+		{
 			if(dataRX[j] != 0xFF){
-				empty --;
+				empty--;
 			}
 		}
-
-		if(empty == 0xFFFF){
-
+		
+		if(empty == 0xFFFF)
+		{
 			result = i;
 			break;
 		}
-
+		
 		i = i + 256;
 	}
-
-	if (result == 0) result = FLASH_SIZE_BYTES; //ADDED AFTER RECOVERY!!!!
+	
+	if(result == 0) result = FLASH_SIZE_BYTES;
 	return result;
-
 }
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------

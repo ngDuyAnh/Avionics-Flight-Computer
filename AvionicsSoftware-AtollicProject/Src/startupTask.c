@@ -55,16 +55,16 @@ static void eraseFlash(startParams * params){
 
 	  HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
 
-	  FlashStatus_t stat;
+	  FlashStatus stat;
 
-	  FlashStruct_t * flash = params->flash_ptr;
+	  Flash* flash = params->flash_ptr;
 	  UART_HandleTypeDef * huart = params->huart_ptr;
 	  configData_t * config = params->flightCompConfig;
 
 	  uint8_t dataRX[256];
 	  transmit_line(huart,"Checking flash memory...");
 	 // Read the first page of memory. If its empty, assume the whole memory is empty.
-	  stat = read_page(flash,config->values.start_data_address,dataRX,256);
+	  stat = flash_read_page(flash,config->values.start_data_address,dataRX,256);
 
 	  uint16_t good= 0xFFFF;
 
@@ -91,17 +91,17 @@ static void eraseFlash(startParams * params){
 		  while(address < config->values.end_data_address){
 
 			  if(address>FLASH_PARAM_END_ADDRESS){
-			  stat = erase_sector(flash,address);
+			  stat = flash_erase_sector(flash,address);
 			  address += FLASH_SECTOR_SIZE;
 			  }
 			  else{
-				  stat = erase_param_sector(flash,address);
+				  stat = flash_erase_param_sector(flash,address);
 				  address += FLASH_PARAM_SECTOR_SIZE;
 			  }
 			  //Wait for erase to finish
-			  while(IS_DEVICE_BUSY(stat)){
+			  while(FLASH_IS_DEVICE_BUSY(stat)){
 
-				  stat = get_status_reg(flash);
+				  stat = flash_get_status_register(flash);
 
 				  vTaskDelay(pdMS_TO_TICKS(1));
 			  }
@@ -109,7 +109,7 @@ static void eraseFlash(startParams * params){
 
 		  }
 
-		  read_page(flash,FLASH_START_ADDRESS,dataRX,256);
+		  flash_read_page(flash,FLASH_START_ADDRESS,dataRX,256);
 		  uint16_t empty = 0xFFFF;
 
 		  for(i=0;i<256;i++){
@@ -139,7 +139,7 @@ void vTask_starter(void * pvParams){
 	  TaskHandle_t bmpTask_h = sp->bmpTask_h;
 	  TaskHandle_t imuTask_h = sp->imuTask_h;
 	  TaskHandle_t xtractTask_h = sp->xtractTask_h;
-	  FlashStruct_t * flash = sp->flash_ptr;
+	  Flash * flash = sp->flash_ptr;
 	  UART_HandleTypeDef * huart = sp->huart_ptr;
 	  configData_t * config = sp->flightCompConfig;
 

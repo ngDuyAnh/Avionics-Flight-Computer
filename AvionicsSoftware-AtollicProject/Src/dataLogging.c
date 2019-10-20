@@ -55,7 +55,7 @@ uint8_t isMeasurementEmpty(Measurement_t * measurement){
 void loggingTask(void * params){
 
 	LoggingStruct_t * logStruct = (LoggingStruct_t *)params;
-	FlashStruct_t * flash_ptr = logStruct->flash_ptr;
+	Flash * flash_ptr = logStruct->flash_ptr;
 	UART_HandleTypeDef * huart = logStruct->uart;
 	configData_t * configParams = logStruct->flightCompConfig;
 	TaskHandle_t *timerTask_h = logStruct->timerTask_h;
@@ -308,9 +308,9 @@ void loggingTask(void * params){
 				//need to copy last portion into the bufferA. Make sure to start from right place, which wont be the next spot.
 
 				if((buffer_index_curr + 256) < buff_end){
-				FlashStatus_t stat_f2 = program_page(flash_ptr,flash_address,&launchpadBuffer[buffer_index_curr],DATA_BUFFER_SIZE);
-				while(IS_DEVICE_BUSY(stat_f2)){
-					  stat_f2 = get_status_reg(flash_ptr);
+				FlashStatus stat_f2 = flash_program_page(flash_ptr,flash_address,&launchpadBuffer[buffer_index_curr],DATA_BUFFER_SIZE);
+				while(FLASH_IS_DEVICE_BUSY(stat_f2)){
+					  stat_f2 = flash_get_status_register(flash_ptr);
 					 vTaskDelay(1);
 				 }
 				 buffer_index_curr += 256;
@@ -321,9 +321,9 @@ void loggingTask(void * params){
 					memcpy(&buff_temp,&launchpadBuffer[buffer_index_curr],buff_end-buffer_index_curr);
 					memcpy(&buff_temp[buff_end-buffer_index_curr],&launchpadBuffer,DATA_BUFFER_SIZE-(buff_end-buffer_index_curr));
 
-					FlashStatus_t stat_f2 = program_page(flash_ptr,flash_address,buff_temp,DATA_BUFFER_SIZE);
-					  while(IS_DEVICE_BUSY(stat_f2)){
-						  stat_f2 = get_status_reg(flash_ptr);
+					FlashStatus stat_f2 = flash_program_page(flash_ptr,flash_address,buff_temp,DATA_BUFFER_SIZE);
+					  while(FLASH_IS_DEVICE_BUSY(stat_f2)){
+						  stat_f2 = flash_get_status_register(flash_ptr);
 						 vTaskDelay(1);
 					  }
 					  buffer_index_curr = DATA_BUFFER_SIZE-(buff_end-buffer_index_curr);
@@ -577,9 +577,9 @@ void loggingTask(void * params){
 
 				if(IS_RECORDING(configParams->values.flags)){
 
-					FlashStatus_t stat_f = program_page(flash_ptr,flash_address,data_bufferB,DATA_BUFFER_SIZE);
-					  while(IS_DEVICE_BUSY(stat_f)){
-						  stat_f = get_status_reg(flash_ptr);
+					FlashStatus stat_f = flash_program_page(flash_ptr,flash_address,data_bufferB,DATA_BUFFER_SIZE);
+					  while(FLASH_IS_DEVICE_BUSY(stat_f)){
+						  stat_f = flash_get_status_register(flash_ptr);
 						  vTaskDelay(1);
 					  }
 
@@ -597,9 +597,9 @@ void loggingTask(void * params){
 				//We just switched to B so transmit A
 
 				if(IS_RECORDING(configParams->values.flags)){
-					FlashStatus_t stat_f2 = program_page(flash_ptr,flash_address,data_bufferA,DATA_BUFFER_SIZE);
-					  while(IS_DEVICE_BUSY(stat_f2)){
-						  stat_f2 = get_status_reg(flash_ptr);
+					FlashStatus stat_f2 = flash_program_page(flash_ptr,flash_address,data_bufferA,DATA_BUFFER_SIZE);
+					  while(FLASH_IS_DEVICE_BUSY(stat_f2)){
+						  stat_f2 = flash_get_status_register(flash_ptr);
 						  vTaskDelay(1);
 					  }
 

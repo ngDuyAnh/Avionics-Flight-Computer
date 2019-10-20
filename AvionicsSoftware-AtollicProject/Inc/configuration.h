@@ -108,7 +108,7 @@ typedef struct {
 	float 	 	 ref_pres;
 
 
-	FlashStruct_t * flash;
+	Flash * flash;
 	uint8_t state;
 
 

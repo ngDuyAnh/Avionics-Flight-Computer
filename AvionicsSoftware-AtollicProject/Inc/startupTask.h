@@ -44,7 +44,7 @@ typedef struct{
 	  TaskHandle_t xtractTask_h;
 	  TaskHandle_t timerTask_h;
 
-	  FlashStruct_t * flash_ptr;
+	  Flash * flash_ptr;
 	  UART_HandleTypeDef * huart_ptr;
 	  configData_t * flightCompConfig;
 

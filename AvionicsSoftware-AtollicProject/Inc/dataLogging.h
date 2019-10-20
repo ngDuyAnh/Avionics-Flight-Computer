@@ -74,7 +74,7 @@ typedef enum{
 
 typedef struct{
 
-	FlashStruct_t * flash_ptr;
+	Flash * flash_ptr;
 	UART_HandleTypeDef * uart;
 	configData_t *flightCompConfig;
 
