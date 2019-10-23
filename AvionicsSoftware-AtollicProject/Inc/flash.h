@@ -13,11 +13,12 @@
 #ifndef FLASH_H
 #define FLASH_H
 
+
+#include <inttypes.h>
 /**
  * So far flash.h must depend on SPI.h because it initializes SPI_HandleTypeDef
  * @todo: maybe in the future we can use a pointer instead then?
  */
-#include "SPI.h"
 
 /*
  *  Macros for flash commands
@@ -76,10 +77,7 @@ typedef enum flash_status_t
 /**
  * @brief Flash structure that holds a communication handler
  */
-typedef struct flash_t
-{
-	SPI_HandleTypeDef spi_handle; /**< SPI handle. */
-} Flash;
+typedef struct flash_t* Flash;
 
 
 /**
@@ -91,7 +89,7 @@ typedef struct flash_t
  * @return @c FLASH_OK if the setup is successful, @c FLASH_ERROR otherwise.
  * @see https://github.com/UMSATS/Avionics-2019/
  */
-FlashStatus flash_initialize(Flash *p_flash);
+Flash flash_initialize();
 
 
 /**
@@ -102,7 +100,7 @@ FlashStatus flash_initialize(Flash *p_flash);
  * @return @c FlashStatus
  * @see https://github.com/UMSATS/Avionics-2019/
  */
-FlashStatus flash_check_id(Flash *p_flash);
+FlashStatus flash_check_id(Flash p_flash);
 
 /**
  * @brief
@@ -115,7 +113,7 @@ FlashStatus flash_check_id(Flash *p_flash);
  * @note The address should be 3 bytes long (0x000000 to 0x7FFFFF).
  * @warning If the LSB of the address is not all 0, then data written past the page will wrap around!
  */
-FlashStatus flash_program_page(Flash *p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes);
+FlashStatus flash_program_page(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes);
 
 /**
  * @brief
@@ -128,7 +126,7 @@ FlashStatus flash_program_page(Flash *p_flash, uint32_t address, uint8_t *data_b
  * @see https://github.com/UMSATS/Avionics-2019/
  * @note If the device is busy the function exits early and returns FLASH_BUSY.
  */
-FlashStatus flash_read_page(Flash *p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes);
+FlashStatus flash_read_page(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes);
 
 /**
  * @brief
@@ -140,7 +138,7 @@ FlashStatus flash_read_page(Flash *p_flash, uint32_t address, uint8_t *data_buff
  * @see https://github.com/UMSATS/Avionics-2019/
  * @note If the device is busy the function exits early and returns FLASH_BUSY.
  */
-FlashStatus flash_erase_sector(Flash *p_flash, uint32_t address);
+FlashStatus flash_erase_sector(Flash p_flash, uint32_t address);
 
 /**
  * @brief
@@ -153,7 +151,7 @@ FlashStatus flash_erase_sector(Flash *p_flash, uint32_t address);
  * @see https://github.com/UMSATS/Avionics-2019/
  * @note If the device is busy the function exits early and returns FLASH_BUSY.
  */
-FlashStatus flash_erase_param_sector(Flash *p_flash, uint32_t address);
+FlashStatus flash_erase_param_sector(Flash p_flash, uint32_t address);
 
 /**
  * @brief
@@ -164,7 +162,7 @@ FlashStatus flash_erase_param_sector(Flash *p_flash, uint32_t address);
  * @see https://github.com/UMSATS/Avionics-2019/
  * @note If the device is busy the function exits early and returns FLASH_BUSY.
  */
-FlashStatus flash_erase_device(Flash *flash);
+FlashStatus flash_erase_device(Flash flash);
 
 /**
  * @brief
@@ -174,7 +172,7 @@ FlashStatus flash_erase_device(Flash *flash);
  * The status register value (8 bits)
  * @see https://github.com/UMSATS/Avionics-2019/
  */
-uint8_t flash_get_status_register(Flash *p_flash);
+uint8_t flash_get_status_register(Flash p_flash);
 
 /**
  * @brief
@@ -185,6 +183,6 @@ uint8_t flash_get_status_register(Flash *p_flash);
  * The address value (32 bits)
  * @see https://github.com/UMSATS/Avionics-2019/
  */
-uint32_t flash_scan(Flash *p_flash);
+uint32_t flash_scan(Flash p_flash);
 
 #endif // FLASH_H

@@ -33,9 +33,9 @@
 
 osThreadId defaultTaskHandle;
 UART_HandleTypeDef huart6_ptr; //global var to be passed to thread_command_line_interface_start
+SPI_HandleTypeDef spi_handle; /**< SPI handle. */
 
 configuration_data_t app_configuration_data;
-SPI_HandleTypeDef flash_spi;
 Flash flash;
 
 thread_imu_parameters				thread_imu_params ;
@@ -86,12 +86,12 @@ int main(void){
 	//  vQueueAddToRegistry(imuQueue_h,"imu");
 	//  vQueueAddToRegistry(bmpQueue_h,"bmp");
 
-	flash.spi_handle = flash_spi;
-
-	FlashStatus flash_stat =flash_initialize(&flash);
-	if(flash_stat != FLASH_OK){
-	 // while(1);
+    flash = flash_initialize();
+	if(flash == NULL)
+	{
+        Error_Handler();
 	}
+	
 	transmit_line(&huart6_ptr,"Flash ID read successful\n");
 	//Initialize and get the flight computer parameters.
 
@@ -269,16 +269,7 @@ int main(void){
 	/* We should never get here as control is now taken by the scheduler */
 
 	/* Infinite loop */
-	while (1)
-	{
-		if(HAL_GPIO_ReadPin(USR_PB_PORT,USR_PB_PIN)){
-
-			HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
-		}
-		else{
-			HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
-		}
-	}
+    Error_Handler();
 }
 
 /**
@@ -457,7 +448,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(void)
 {
   /* User can add his own implementation to report the HAL error return state */
-while(1);
+    while (1)
+    {
+        if(HAL_GPIO_ReadPin(USR_PB_PORT,USR_PB_PIN)){
+            
+            HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
+        }
+        else{
+            HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
+        }
+    }
 }
 
 #ifdef  USE_FULL_ASSERT

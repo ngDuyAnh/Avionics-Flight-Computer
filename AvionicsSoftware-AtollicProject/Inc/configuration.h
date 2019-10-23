@@ -19,6 +19,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include <inttypes.h>
 #include "forward_declarations.h"
+#include "flash.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
@@ -102,7 +103,7 @@ typedef struct {
 	float	 	 ref_alt;
 	float 	 	 ref_pres;
 	
-	Flash * flash;
+	Flash flash;
 	uint8_t state;
 
 }configuration_data_values;

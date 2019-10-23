@@ -15,6 +15,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #include "forward_declarations.h"
+#include "flash.h"
 
 typedef enum{
 
@@ -29,7 +30,7 @@ typedef enum{
 
 typedef struct{
 	UART_HandleTypeDef *huart;
-	Flash *flash;
+	Flash flash;
 	configuration_data_t *flightCompConfig;
 	TaskHandle_t startupTaskHandle;
 	

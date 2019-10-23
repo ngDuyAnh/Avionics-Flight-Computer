@@ -41,7 +41,7 @@ typedef struct
 	uint32_t flash_address;
 	int32_t acc_z_filtered;
 	thread_data_recorder_parameters *logStruct;
-	Flash *flash_ptr;
+	Flash flash;
 	UART_HandleTypeDef *huart;
 	configuration_data_t *config_data;
 	TaskHandle_t *timerTask_h;
@@ -145,12 +145,12 @@ void sm_STATE_LAUNCHPAD_ARMED(necessary_parameters parameters)
 		
 		if((parameters.buffer_index_curr + 256) < buff_end)
 		{
-			FlashStatus stat_f2 = flash_program_page(parameters.flash_ptr, parameters.flash_address,
-													 &parameters.launchpadBuffer[parameters.buffer_index_curr],
-													 DATA_BUFFER_SIZE);
+			FlashStatus stat_f2 = flash_program_page(parameters.flash, parameters.flash_address,
+                                                     &parameters.launchpadBuffer[parameters.buffer_index_curr],
+                                                     DATA_BUFFER_SIZE);
 			while(FLASH_IS_DEVICE_BUSY(stat_f2))
 			{
-				stat_f2 = flash_get_status_register(parameters.flash_ptr);
+				stat_f2 = flash_get_status_register(parameters.flash);
 				vTaskDelay(1);
 			}
 			parameters.buffer_index_curr += 256;
@@ -163,11 +163,11 @@ void sm_STATE_LAUNCHPAD_ARMED(necessary_parameters parameters)
 			memcpy(&buff_temp[buff_end - parameters.buffer_index_curr], &parameters.launchpadBuffer,
 				   DATA_BUFFER_SIZE - (buff_end - parameters.buffer_index_curr));
 			
-			FlashStatus stat_f2 = flash_program_page(parameters.flash_ptr, parameters.flash_address, buff_temp,
-													 DATA_BUFFER_SIZE);
+			FlashStatus stat_f2 = flash_program_page(parameters.flash, parameters.flash_address, buff_temp,
+                                                     DATA_BUFFER_SIZE);
 			while(FLASH_IS_DEVICE_BUSY(stat_f2))
 			{
-				stat_f2 = flash_get_status_register(parameters.flash_ptr);
+				stat_f2 = flash_get_status_register(parameters.flash);
 				vTaskDelay(1);
 			}
 			parameters.buffer_index_curr = DATA_BUFFER_SIZE - (buff_end - parameters.buffer_index_curr);
@@ -369,7 +369,7 @@ void thread_flight_state_controller_start(void *params)
 	necessary_parameters parameters =
 	{
 		.logStruct					= (thread_data_recorder_parameters *) params,
-		.flash_ptr					= parameters.logStruct->flash_ptr,
+		.flash					= parameters.logStruct->flash_ptr,
 		.huart						= parameters.logStruct->uart,
 		.config_data				= parameters.logStruct->flightCompConfig,
 		.timerTask_h				= parameters.logStruct->timerTask_h,
@@ -590,11 +590,11 @@ void fill_buffer_and_or_write_to_flash(necessary_parameters parameters)
 			//We just switched to A so transmit B.
 			if(IS_RECORDING(parameters.config_data->values.flags))
 			{
-				FlashStatus stat_f = flash_program_page(parameters.flash_ptr, parameters.flash_address,
-														parameters.data_bufferB, DATA_BUFFER_SIZE);
+				FlashStatus stat_f = flash_program_page(parameters.flash, parameters.flash_address,
+                                                        parameters.data_bufferB, DATA_BUFFER_SIZE);
 				while(FLASH_IS_DEVICE_BUSY(stat_f))
 				{
-					stat_f = flash_get_status_register(parameters.flash_ptr);
+					stat_f = flash_get_status_register(parameters.flash);
 					vTaskDelay(1);
 				}
 				
@@ -617,11 +617,11 @@ void fill_buffer_and_or_write_to_flash(necessary_parameters parameters)
 			
 			if(IS_RECORDING(parameters.config_data->values.flags))
 			{
-				FlashStatus stat_f2 = flash_program_page(parameters.flash_ptr, parameters.flash_address,
-														 parameters.data_bufferA, DATA_BUFFER_SIZE);
+				FlashStatus stat_f2 = flash_program_page(parameters.flash, parameters.flash_address,
+                                                         parameters.data_bufferA, DATA_BUFFER_SIZE);
 				while(FLASH_IS_DEVICE_BUSY(stat_f2))
 				{
-					stat_f2 = flash_get_status_register(parameters.flash_ptr);
+					stat_f2 = flash_get_status_register(parameters.flash);
 					vTaskDelay(1);
 				}
 				

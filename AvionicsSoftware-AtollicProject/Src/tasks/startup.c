@@ -63,7 +63,7 @@ static void eraseFlash(startParams * params){
 
 	  FlashStatus stat;
 
-	  Flash* flash = params->flash_ptr;
+	  Flash flash = params->flash_ptr;
 	  UART_HandleTypeDef * huart = params->huart_ptr;
 	  configuration_data_t * config = params->flightCompConfig;
 
@@ -145,7 +145,7 @@ void thread_startup_start(void * pvParams){
 	  TaskHandle_t bmpTask_h = sp->bmpTask_h;
 	  TaskHandle_t imuTask_h = sp->imuTask_h;
 	  TaskHandle_t cliTask_h = sp->cli_h;
-	  Flash * flash = sp->flash_ptr;
+	  Flash flash = sp->flash_ptr;
 	  UART_HandleTypeDef * huart = sp->huart_ptr;
 	  configuration_data_t * config = sp->flightCompConfig;
 

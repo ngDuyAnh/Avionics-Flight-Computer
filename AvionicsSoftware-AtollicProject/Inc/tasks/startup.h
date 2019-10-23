@@ -18,6 +18,7 @@
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include "forward_declarations.h"
+#include "flash.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
@@ -39,7 +40,7 @@ typedef struct{
 	  TaskHandle_t cli_h;
 	  TaskHandle_t timerTask_h;
 
-	  Flash * flash_ptr;
+	  Flash flash_ptr;
 	  UART_HandleTypeDef * huart_ptr;
 	  configuration_data_t * flightCompConfig;
 

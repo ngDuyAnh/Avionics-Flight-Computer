@@ -24,6 +24,7 @@
 #include "queue.h"
 #include "task.h"
 #include "forward_declarations.h"
+#include "flash.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
@@ -57,7 +58,7 @@ typedef enum{
 
 typedef struct{
 
-	Flash * flash_ptr;
+	Flash flash_ptr;
 	UART_HandleTypeDef * uart;
 	configuration_data_t *flightCompConfig;
 

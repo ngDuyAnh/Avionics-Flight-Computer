@@ -218,7 +218,7 @@ void help(UART_HandleTypeDef * uart){
 void memory_menu(char* command, thread_cli_parameters * params){
 
 	UART_HandleTypeDef * uart = params->huart;
-	Flash * flash = params->flash;
+	Flash flash = params->flash;
 
 	char output [256];
 	if(strcmp(command, "help") == 0 || strcmp(command, "mem") == 0){
@@ -1121,7 +1121,7 @@ void configure(char* command, thread_cli_parameters * params){
 void cli_read(thread_cli_parameters * params){
 
 	UART_HandleTypeDef * uart = params->huart;
-	Flash * flash = params->flash;
+	Flash flash = params->flash;
 
 	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
 	transmit_line(uart, "Data transfer will start in 20 seconds. The LED will turn off when the transfer is complete.");
