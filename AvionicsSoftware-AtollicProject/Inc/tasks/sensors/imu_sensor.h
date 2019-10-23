@@ -24,16 +24,16 @@
 //Groups both sensor readings and a time stamp.
 typedef struct imu_sensor_data{
 
-	struct bmi08x_sensor_data	data_acc;
-	struct bmi08x_sensor_data	data_gyro;
+	struct bmi08x_sensor_data	accel;
+	struct bmi08x_sensor_data	gyro;
 	uint32_t time_ticks;	//time of sensor reading in ticks.
 }imu_sensor_data;
 
 //Parameters for thread_imu_start.
 typedef struct{
 	UART_HandleTypeDef * huart;
-	QueueHandle_t imu_queue;
-	configuration_data_t *flightCompConfig;
+	QueueHandle_t queue;
+	configuration_data_t *configuration_data;
 } thread_imu_parameters;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,16 +44,8 @@ typedef struct{
 //  Enter description of return values (if any).
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//Wrapper functions for read and write
-int8_t user_spi_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
-int8_t user_spi_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
 
-void delay(uint32_t period);
 
 void thread_imu_start(void *param);
-
-//configuration functions for accelerometer and gyroscope
-int8_t accel_config(struct bmi08x_dev *bmi088dev, configuration_data_t * configParams, int8_t rslt);
-int8_t gyro_config(struct bmi08x_dev *bmi088dev, configuration_data_t * configParams, int8_t rslt);
 
 #endif // SENSOR_AG_H

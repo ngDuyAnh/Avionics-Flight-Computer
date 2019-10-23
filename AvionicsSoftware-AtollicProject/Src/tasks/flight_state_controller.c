@@ -123,7 +123,7 @@ void sm_STATE_LAUNCHPAD(necessary_parameters parameters)
 }
 void sm_STATE_LAUNCHPAD_ARMED(necessary_parameters parameters)
 {
-	if(parameters.imu_reading.data_acc.x < 10892)
+	if(parameters.imu_reading.accel.x < 10892)
 		return;
 	
 	buzz(250);
@@ -188,8 +188,8 @@ void sm_STATE_IN_FLIGHT_PRE_APOGEE(necessary_parameters parameters)
 	{
 		
 		uint64_t acc_mag =
-			pow(parameters.imu_reading.data_acc.x, 2) + pow(parameters.imu_reading.data_acc.y, 2) +
-			pow(parameters.imu_reading.data_acc.z, 2);
+            pow(parameters.imu_reading.accel.x, 2) + pow(parameters.imu_reading.accel.y, 2) +
+            pow(parameters.imu_reading.accel.z, 2);
 		if(acc_mag < 1 && parameters.total_filtered_altitude > 9000.0)
 		{
 			//5565132 = 3 * 1362^2 (aprox 0.5 g on all direction)
@@ -302,9 +302,9 @@ void sm_STATE_IN_FLIGHT_POST_MAIN(necessary_parameters parameters)
 		}
 	}
 	
-	if((pow(parameters.imu_reading.data_gyro.x, 2) +
-		pow(parameters.imu_reading.data_gyro.y, 2) +
-		pow(parameters.imu_reading.data_gyro.z, 2)) < 63075)
+	if((pow(parameters.imu_reading.gyro.x, 2) +
+        pow(parameters.imu_reading.gyro.y, 2) +
+        pow(parameters.imu_reading.gyro.z, 2)) < 63075)
 	{
 		//If the gyro readings are all less than ~4.4 deg/sec and the altitude is not changing then the rocket has probably landed.
 		if(parameters.alt_count > 200){

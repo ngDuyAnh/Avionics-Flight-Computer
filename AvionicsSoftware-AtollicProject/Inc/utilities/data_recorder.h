@@ -19,12 +19,12 @@ static inline void process_imu_data(imu_sensor_data imu_reading, uint8_t* dest, 
 	// Make sure time doesn't overwrite type and event bits.
 	uint32_t header = (ACC_TYPE | GYRO_TYPE) + (timestamp & 0x0FFF);
 	write_24(header,                  &dest[0]);
-	write_16(imu_reading.data_acc.x,  &dest[3]);
-	write_16(imu_reading.data_acc.y,  &dest[5]);
-	write_16(imu_reading.data_acc.z,  &dest[7]);
-	write_16(imu_reading.data_gyro.x, &dest[9]);
-	write_16(imu_reading.data_gyro.y, &dest[11]);
-	write_16(imu_reading.data_gyro.z, &dest[13]);
+	write_16(imu_reading.accel.x, &dest[3]);
+	write_16(imu_reading.accel.y, &dest[5]);
+	write_16(imu_reading.accel.z, &dest[7]);
+	write_16(imu_reading.gyro.x, &dest[9]);
+	write_16(imu_reading.gyro.y, &dest[11]);
+	write_16(imu_reading.gyro.z, &dest[13]);
 }
 
 static inline float process_bmp_data_and_return_altitude(pressure_sensor_data bmp_reading, uint8_t * dest, float ref_pres, float ref_alt)

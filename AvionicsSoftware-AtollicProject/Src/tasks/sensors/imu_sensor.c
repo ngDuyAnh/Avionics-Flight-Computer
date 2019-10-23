@@ -24,17 +24,17 @@
 #include "hardwareDefs.h"
 #include "configuration.h"
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// DEFINITIONS AND MACROS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+//Wrapper functions for read and write
+int8_t user_spi_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
+int8_t user_spi_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// ENUMS AND ENUM TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void delay(uint32_t period);
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// STRUCTS AND STRUCT TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//configuration functions for accelerometer and gyroscope
+int8_t accel_config(struct bmi08x_dev *bmi088dev, configuration_data_t * configParams, int8_t rslt);
+int8_t gyro_config(struct bmi08x_dev *bmi088dev, configuration_data_t * configParams, int8_t rslt);
+
 struct bmi08x_dev bmi088dev = {
         .accel_id = 0,
         .gyro_id = 1,
@@ -82,10 +82,9 @@ void thread_imu_start(void *param){
 
 	//Get the parameters.
 	thread_imu_parameters * params = (thread_imu_parameters *)param;
-	QueueHandle_t  queue = params->imu_queue;
-	UART_HandleTypeDef * uart_ptr = params->huart;
+	QueueHandle_t  queue = params->queue;
 
-	configuration_data_t * configParams = params->flightCompConfig;
+	configuration_data_t * configParams = params->configuration_data;
 
 
 	TickType_t prevTime;
@@ -139,14 +138,14 @@ void thread_imu_start(void *param){
 
 	while(1){
 
-		rslt = bmi08a_get_data(&dataStruct.data_acc, &bmi088dev);
-		rslt = bmi08g_get_data(&dataStruct.data_gyro, &bmi088dev);
+		rslt = bmi08a_get_data(&dataStruct.accel, &bmi088dev);
+		rslt = bmi08g_get_data(&dataStruct.gyro, &bmi088dev);
 		dataStruct.time_ticks = xTaskGetTickCount();
 
 		xQueueSend(queue,&dataStruct,1);
 
 		//char data_str[100];
-		//sprintf(data_str,"x: %d y: %d z: %d  | Rx: %d Ry: %d Rz: %d, at time %lu",dataStruct.data_acc.x,dataStruct.data_acc.y,dataStruct.data_acc.z,dataStruct.data_gyro.x,dataStruct.data_gyro.y,dataStruct.data_gyro.z,dataStruct.time_ticks);
+		//sprintf(data_str,"x: %d y: %d z: %d  | Rx: %d Ry: %d Rz: %d, at time %lu",dataStruct.accel.x,dataStruct.accel.y,dataStruct.accel.z,dataStruct.gyro.x,dataStruct.gyro.y,dataStruct.gyro.z,dataStruct.time_ticks);
 		//sprintf(data_str,"i %d",dataStruct.time_ticks);
 		//transmit_line(uart_ptr,data_str);
 

@@ -36,7 +36,6 @@ UART_HandleTypeDef huart6_ptr; //global var to be passed to thread_command_line_
 SPI_HandleTypeDef spi_handle; /**< SPI handle. */
 
 configuration_data_t app_configuration_data;
-Flash flash;
 
 thread_imu_parameters				thread_imu_params ;
 thread_data_recorder_parameters		thread_data_recorder_params;
@@ -86,7 +85,7 @@ int main(void){
 	//  vQueueAddToRegistry(imuQueue_h,"imu");
 	//  vQueueAddToRegistry(bmpQueue_h,"bmp");
 
-    flash = flash_initialize();
+	Flash flash = flash_initialize();
 	if(flash == NULL)
 	{
         Error_Handler();
@@ -95,7 +94,7 @@ int main(void){
 	transmit_line(&huart6_ptr,"Flash ID read successful\n");
 	//Initialize and get the flight computer parameters.
 
-	app_configuration_data.values.flash = &flash;
+	app_configuration_data.values.flash = flash;
 
 	read_config(&app_configuration_data);
 
@@ -124,7 +123,7 @@ int main(void){
         app_configuration_data.values.state = STATE_IN_FLIGHT_PRE_APOGEE;
 	}
 
-	uint32_t end_Address = flash_scan(&flash);
+	uint32_t end_Address = flash_scan(flash);
 	sprintf(lines,"end address :%ld \n",end_Address);
 	transmit_line(&huart6_ptr,lines);
     app_configuration_data.values.end_data_address = end_Address;
@@ -133,7 +132,7 @@ int main(void){
 	transmit_line(&huart6_ptr,"Recovery GPIO pins setup.");
 	
 	
-	thread_data_recorder_params.flash_ptr = &flash;
+	thread_data_recorder_params.flash_ptr = flash;
 	thread_data_recorder_params.IMU_data_queue = imuQueue_h;
 	thread_data_recorder_params.PRES_data_queue= bmpQueue_h;
 	thread_data_recorder_params.uart = &huart6_ptr;
@@ -144,11 +143,11 @@ int main(void){
 	thread_pressure_sensor_params.flightCompConfig = &app_configuration_data;
 	
 	thread_imu_params.huart = &huart6_ptr;
-	thread_imu_params.imu_queue = imuQueue_h;
-	thread_imu_params.flightCompConfig = &app_configuration_data;
+	thread_imu_params.queue = imuQueue_h;
+	thread_imu_params.configuration_data = &app_configuration_data;
 
 	//thread_cli_parameters thread_cli_params;
-	thread_cli_params.flash = &flash;
+	thread_cli_params.flash = flash;
 	thread_cli_params.huart = &huart6_ptr;
 	thread_cli_params.flightCompConfig = &app_configuration_data;
 
@@ -160,7 +159,7 @@ int main(void){
 	thread_cli_params.startupTaskHandle = NULL;
 	
 	thread_data_recorder_params.timerTask_h = &tasks.timerTask_h;
-	tasks.flash_ptr = &flash;
+	tasks.flash_ptr = flash;
 	tasks.huart_ptr = &huart6_ptr;
 	tasks.flightCompConfig = &app_configuration_data;
 
