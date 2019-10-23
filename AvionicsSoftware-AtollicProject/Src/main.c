@@ -34,7 +34,7 @@
 osThreadId defaultTaskHandle;
 UART_HandleTypeDef huart6_ptr; //global var to be passed to thread_command_line_interface_start
 
-configuration_data_t flightCompConfig;
+configuration_data_t app_configuration_data;
 SPI_HandleTypeDef flash_spi;
 Flash flash;
 
@@ -64,12 +64,12 @@ int main(void){
 	SystemClock_Config();
 
 	/* Initialize all configured peripherals */
-	MX_GPIO_Init(); //GPIO MUST be firstly initialized
+	MX_GPIO_Init(); // GPIO MUST be firstly initialized
 	
-	MX_HAL_UART6_Init(&huart6_ptr); //UART uses GPIO pin 2 & 3
+	MX_HAL_UART6_Init(&huart6_ptr); // UART uses GPIO pin 2 & 3
 	transmit_line(&huart6_ptr,"UMSATS ROCKETRY FLIGHT COMPUTER");
-
-	buzzerInit();
+    
+    buzzerInit();
 	//buzz(500);
 
 	QueueHandle_t imuQueue_h = xQueueCreate(10,sizeof(imu_sensor_data));
@@ -90,44 +90,44 @@ int main(void){
 
 	FlashStatus flash_stat =flash_initialize(&flash);
 	if(flash_stat != FLASH_OK){
-	  while(1);
+	 // while(1);
 	}
 	transmit_line(&huart6_ptr,"Flash ID read successful\n");
 	//Initialize and get the flight computer parameters.
 
-	flightCompConfig.values.flash = &flash;
+	app_configuration_data.values.flash = &flash;
 
-	read_config(&flightCompConfig);
+	read_config(&app_configuration_data);
 
 	char lines[50];
-	sprintf(lines,"ID :%d \n",flightCompConfig.values.id);
+	sprintf(lines, "ID :%d \n", app_configuration_data.values.id);
 	transmit_line(&huart6_ptr,lines);
 
-	if(flightCompConfig.values.id != ID){
+	if(app_configuration_data.values.id != ID){
 		transmit_line(&huart6_ptr,"No config found in flash, reseting to default.\n");
-		init_config(&flightCompConfig);
-		write_config(&flightCompConfig);
+		init_config(&app_configuration_data);
+		write_config(&app_configuration_data);
 	}
 
-	read_config(&flightCompConfig);
+	read_config(&app_configuration_data);
 
-	if(IS_POST_MAIN(flightCompConfig.values.flags)){
-
-		flightCompConfig.values.state = STATE_IN_FLIGHT_POST_MAIN;
+	if(IS_POST_MAIN(app_configuration_data.values.flags)){
+        
+        app_configuration_data.values.state = STATE_IN_FLIGHT_POST_MAIN;
 	}
-	else if(IS_POST_DROGUE(flightCompConfig.values.flags)){
-
-		flightCompConfig.values.state = STATE_IN_FLIGHT_POST_APOGEE;
+	else if(IS_POST_DROGUE(app_configuration_data.values.flags)){
+        
+        app_configuration_data.values.state = STATE_IN_FLIGHT_POST_APOGEE;
 	}
-	else if(IS_PRE_DROGUE(flightCompConfig.values.flags)){
-
-		flightCompConfig.values.state = STATE_IN_FLIGHT_PRE_APOGEE;
+	else if(IS_PRE_DROGUE(app_configuration_data.values.flags)){
+        
+        app_configuration_data.values.state = STATE_IN_FLIGHT_PRE_APOGEE;
 	}
 
 	uint32_t end_Address = flash_scan(&flash);
 	sprintf(lines,"end address :%ld \n",end_Address);
 	transmit_line(&huart6_ptr,lines);
-	flightCompConfig.values.end_data_address = end_Address;
+    app_configuration_data.values.end_data_address = end_Address;
 
 	recovery_init();
 	transmit_line(&huart6_ptr,"Recovery GPIO pins setup.");
@@ -137,37 +137,37 @@ int main(void){
 	thread_data_recorder_params.IMU_data_queue = imuQueue_h;
 	thread_data_recorder_params.PRES_data_queue= bmpQueue_h;
 	thread_data_recorder_params.uart = &huart6_ptr;
-	thread_data_recorder_params.flightCompConfig = &flightCompConfig;
+	thread_data_recorder_params.flightCompConfig = &app_configuration_data;
 	
 	thread_pressure_sensor_params.huart = &huart6_ptr;
 	thread_pressure_sensor_params.bmp388_queue =bmpQueue_h;
-	thread_pressure_sensor_params.flightCompConfig = &flightCompConfig;
+	thread_pressure_sensor_params.flightCompConfig = &app_configuration_data;
 	
 	thread_imu_params.huart = &huart6_ptr;
 	thread_imu_params.imu_queue = imuQueue_h;
-	thread_imu_params.flightCompConfig = &flightCompConfig;
+	thread_imu_params.flightCompConfig = &app_configuration_data;
 
 	//thread_cli_parameters thread_cli_params;
 	thread_cli_params.flash = &flash;
 	thread_cli_params.huart = &huart6_ptr;
-	thread_cli_params.flightCompConfig = &flightCompConfig;
+	thread_cli_params.flightCompConfig = &app_configuration_data;
 
 	tasks.loggingTask_h = NULL;
 	tasks.bmpTask_h		= NULL;
 	tasks.imuTask_h		= NULL;
-	tasks.cli_h	= NULL;
+	tasks.cli_h	        = NULL;
 	tasks.timerTask_h	= NULL;
 	thread_cli_params.startupTaskHandle = NULL;
 	
 	thread_data_recorder_params.timerTask_h = &tasks.timerTask_h;
 	tasks.flash_ptr = &flash;
 	tasks.huart_ptr = &huart6_ptr;
-	tasks.flightCompConfig = &flightCompConfig;
+	tasks.flightCompConfig = &app_configuration_data;
 
-	if(!IS_IN_FLIGHT(flightCompConfig.values.flags))
+	if(!IS_IN_FLIGHT(app_configuration_data.values.flags))
 	{
-		flightCompConfig.values.state = STATE_LAUNCHPAD;
-		//init_bmp(&flightCompConfig);
+        app_configuration_data.values.state = STATE_LAUNCHPAD;
+		//init_bmp(&app_configuration_data);
 		char imu_good = testIMU();
 		char bmp_good = testpress();
 	
@@ -183,7 +183,7 @@ int main(void){
 		{
 			buzz(500);
 			HAL_Delay(500);
-			flightCompConfig.values.state = STATE_CLI;
+            app_configuration_data.values.state = STATE_CLI;
 		}
 	}
 
@@ -193,12 +193,12 @@ int main(void){
 	/* definition and creation of defaultTask */
 	osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
 	defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-
+ 
 
 	if(xTaskCreate(thread_timer_start,     /* Pointer to the function that implements the task */
 				   "timer", /* Text name for the task. This is only to facilitate debugging */
 				   1000,         /* Stack depth - small microcontrollers will use much less stack than this */
-				   NULL,    /* pointer to the huart object */
+				   (void*) &app_configuration_data, /* pointer to the huart object */
 				   1,             /* This task will run at priorirt 2. */
 				   &tasks.timerTask_h         /* This example does not use the task handle. */
 	) == -1){
