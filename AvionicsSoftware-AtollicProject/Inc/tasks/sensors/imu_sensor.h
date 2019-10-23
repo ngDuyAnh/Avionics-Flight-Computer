@@ -16,7 +16,7 @@
 #include "bmi08x.h"
 #include <inttypes.h>
 #include "forward_declarations.h"
-#include "cmsis_os.h"
+#include "cmsis_os.h" // needs to be ported into .c file
 
 #define	ACC_LENGTH	6		//Length of a accelerometer measurement in bytes.
 #define	GYRO_LENGTH	6		//Length of a gyroscope measurement in bytes.
