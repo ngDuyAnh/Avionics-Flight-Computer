@@ -13,8 +13,9 @@
 #ifndef FLASH_H
 #define FLASH_H
 
-
+#include <stdio.h>
 #include <inttypes.h>
+
 /**
  * So far flash.h must depend on SPI.h because it initializes SPI_HandleTypeDef
  * @todo: maybe in the future we can use a pointer instead then?
@@ -183,6 +184,6 @@ uint8_t flash_get_status_register(Flash p_flash);
  * The address value (32 bits)
  * @see https://github.com/UMSATS/Avionics-2019/
  */
-uint32_t flash_scan(Flash p_flash);
+size_t flash_scan(Flash p_flash);
 
 #endif // FLASH_H

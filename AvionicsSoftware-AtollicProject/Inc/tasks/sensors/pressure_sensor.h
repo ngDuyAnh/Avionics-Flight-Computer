@@ -16,10 +16,10 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #include <inttypes.h>
-#include "forward_declarations.h"
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "bmp3.h"
+#include <stdbool.h>
+#include "configuration.h"
+#include "UART.h"
+
 
 #define	PRES_LENGTH	3		//Length of a pressure measurement in bytes.
 #define	TEMP_LENGTH	3		//Length of a temperature measurement in bytes.
@@ -27,27 +27,26 @@
 #define TIMEOUT 100 // milliseconds
 
 //Groups a time stamp with the reading.
-typedef struct pressure_sensor_data{
-	bmp3_data_t data;
+typedef struct pressure_sensor_data
+{
 	uint32_t time_ticks; //time of sensor reading in ticks.
+	/*! Compensated temperature */
+	int64_t temperature;
+	/*! Compensated pressure */
+	uint64_t pressure;
 } pressure_sensor_data;
 
-typedef union {
-	float float_val;
-	uint32_t byte_val;
-} altitude_data;
 
 //Parameters for thread_pressure_sensor_start.
 typedef struct{
-	UART_HandleTypeDef * huart;
-	QueueHandle_t	bmp388_queue;
+	UART huart;
 	configuration_data_t *flightCompConfig;
-} thread_pressure_sensor_parameters;
+} pressure_sensor_thread_parameters;
 
 
-void init_bmp(configuration_data_t * configParams);
-void calibrate_bmp(configuration_data_t * configParams);
-altitude_data calculate_altitude(float pressure, float temperature, float ref_pres, float ref_alt);
+bool pressure_sensor_init(configuration_data_t * parameters);
+void pressure_sensor_calibrate(configuration_data_t * configParams);
+
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -58,8 +57,11 @@ altitude_data calculate_altitude(float pressure, float temperature, float ref_pr
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void thread_pressure_sensor_start(void *pvParameters);
-
+void thread_pressure_sensor_start(void const *pvParameters);
+bool pressure_sensor_test(void);
+bool pressure_sensor_read(pressure_sensor_data * buffer, uint8_t data_rate);
+void pressure_sensor_data_to_bytes(pressure_sensor_data reading, uint8_t * bytes);
+float pressure_sensor_calculate_altitude(pressure_sensor_data * reading);
 
 
 #endif // PRESSURE_SENSOR_BMP3_H

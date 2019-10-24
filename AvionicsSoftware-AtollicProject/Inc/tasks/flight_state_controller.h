@@ -18,13 +18,11 @@
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#include <string.h> 				// For memcpy
 #include <math.h>
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "task.h"
-#include "forward_declarations.h"
 #include "flash.h"
+#include "UART.h"
+#include "configuration.h"
+
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
@@ -43,11 +41,6 @@
 #define POWER_FAIL			0x002000
 #define	OVERCURRENT_EVENT	0x001000
 
-#define HEADER_SIZE 3
-
-
-
-
 
 typedef enum{
 
@@ -57,18 +50,11 @@ typedef enum{
 } BufferSelection_t;
 
 typedef struct{
-
 	Flash flash_ptr;
-	UART_HandleTypeDef * uart;
-	configuration_data_t *flightCompConfig;
-
-	//Queues
-	QueueHandle_t IMU_data_queue;	//For holding accelerometer and gyroscope readings.
-	QueueHandle_t PRES_data_queue;	//For holding pressure and temp. readings.
-
-	TaskHandle_t *timerTask_h;
-
-}thread_data_recorder_parameters;
+	UART uart;
+	configuration_data_t *configuration_data;
+	void* timer_thread_handle;
+}flight_state_controller_thread_parameters;
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -81,6 +67,6 @@ typedef struct{
 // Returns:
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void thread_flight_state_controller_start(void * params);
+void thread_flight_state_controller_start(void const* params);
 
 #endif // DATA_LOGGING_H

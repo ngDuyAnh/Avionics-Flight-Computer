@@ -20,28 +20,8 @@
 #include "cmsis_os.h"
 #include "configuration.h"
 #include "flash.h"
-#include "stm32f4xx_hal_uart_io.h"
-#include "hardwareDefs.h"
+#include "hardware_definitions.h"
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// DEFINITIONS AND MACROS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// ENUMS AND ENUM TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// STRUCTS AND STRUCT TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// FUNCTION PROTOTYPES
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  This task will check if the memory is empty and erase it if it is not.
@@ -51,24 +31,19 @@
 //
 // Returns:
 //
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-static void eraseFlash(startParams * params);
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// FUNCTIONS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-static void eraseFlash(startParams * params){
+static void eraseFlash(startup_thread_parameters * params){
 
 	  HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
 
 	  FlashStatus stat;
 
 	  Flash flash = params->flash_ptr;
-	  UART_HandleTypeDef * huart = params->huart_ptr;
-	  configuration_data_t * config = params->flightCompConfig;
+	  UART  huart = params->huart_ptr;
+	  configuration_data_t * config = params->configuration_data;
 
 	  uint8_t dataRX[256];
-	  transmit_line(huart,"Checking flash memory...");
+	  uart_transmit_line(huart,"Checking flash memory...");
 	 // Read the first page of memory. If its empty, assume the whole memory is empty.
 	  stat = flash_read_page(flash,config->values.start_data_address,dataRX,256);
 
@@ -83,13 +58,13 @@ static void eraseFlash(startParams * params){
 	  }
 
 	  if(good == 0xFFFF){
-		  		  transmit_line(huart,"flash empty.");
+		  		  uart_transmit_line(huart,"flash empty.");
 		  		  HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
 
 	  }else{
 
 
-		  transmit_line(huart,"flash not empty.");
+		  uart_transmit_line(huart,"flash not empty.");
 		  //Erase the whole flash. This could take up to 2 minutes.
 	  	  //stat = erase_device(flash);
 		  uint32_t address = FLASH_START_ADDRESS;
@@ -127,7 +102,7 @@ static void eraseFlash(startParams * params){
 
 		  if(empty == 0xFFFF){
 
-			  transmit_line(huart,"Flash Erased Success!");
+			  uart_transmit_line(huart,"Flash Erased Success!");
 			  HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
 			  HAL_Delay(1000);
 			  HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
@@ -136,23 +111,23 @@ static void eraseFlash(startParams * params){
 	  }
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void thread_startup_start(void * pvParams){
 
-	  startParams * sp = (startParams *) pvParams;
+void thread_startup_start(void const* pvParams){
 
-	  TaskHandle_t dataLoggingTask_h = sp->loggingTask_h;
-	  TaskHandle_t bmpTask_h = sp->bmpTask_h;
-	  TaskHandle_t imuTask_h = sp->imuTask_h;
-	  TaskHandle_t cliTask_h = sp->cli_h;
-	  Flash flash = sp->flash_ptr;
-	  UART_HandleTypeDef * huart = sp->huart_ptr;
-	  configuration_data_t * config = sp->flightCompConfig;
+	startup_thread_parameters * sp = (startup_thread_parameters *) pvParams;
 
-	  vTaskSuspend(cliTask_h);
-	  vTaskSuspend(imuTask_h);
-	  vTaskSuspend(bmpTask_h);
-	  vTaskSuspend(dataLoggingTask_h);
+	osThreadId dataLoggingTask_h = sp->flight_state_controller_thread_handle;
+	osThreadId bmpTask_h = sp->pressure_sensor_thread_handle;
+	osThreadId imuTask_h = sp->imu_thread_handle;
+	osThreadId cliTask_h = sp->cli_thread_params;
+	Flash flash = sp->flash_ptr;
+	UART huart = sp->huart_ptr;
+	configuration_data_t * config = sp->configuration_data;
+
+	osThreadSuspend(cliTask_h);
+	osThreadSuspend(imuTask_h);
+	osThreadSuspend(bmpTask_h);
+	osThreadSuspend(dataLoggingTask_h);
 
 	  while(1){
 
@@ -160,33 +135,33 @@ void thread_startup_start(void * pvParams){
 
 			  HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
 			  config->values.state = STATE_CLI;
-			  vTaskResume(cliTask_h);
-			  vTaskSuspend(NULL);
+			  osThreadResume(cliTask_h);
+			  osThreadSuspend(NULL);
 
 		  }else{
-				
+
 			  if(!IS_IN_FLIGHT(config->values.flags)){
 
 				  uint32_t count = 0;
-				  uint32_t delay = 2000;
+				  uint32_t delay_ms = 2000;
 				  uint8_t state = 0;
 
 				  uint32_t time = config->values.initial_time_to_wait;
 
 				  while(count<time){
 
-					  vTaskDelay(pdMS_TO_TICKS(delay));
+					  vTaskDelay(pdMS_TO_TICKS(delay_ms));
 					  HAL_GPIO_TogglePin(USR_LED_PORT,USR_LED_PIN);
-					  count += delay;
+					  count += delay_ms;
 
 					  if(count > (time/2) && state ==0){
 
-						  delay = 1000;
+						  delay_ms = 1000;
 						  state = 1;
 					  }
 					  else if( count > (3*(time/4)) && state == 1){
 
-						  delay = 500;
+						  delay_ms = 500;
 						  state = 2;
 					  }
 
@@ -195,10 +170,10 @@ void thread_startup_start(void * pvParams){
 			  	  eraseFlash(sp);
 			  }
 
-			  vTaskResume(dataLoggingTask_h);
-			  vTaskResume(imuTask_h);
-			  vTaskResume(bmpTask_h);
-			  vTaskSuspend(NULL);
+			  osThreadResume(dataLoggingTask_h);
+			  osThreadResume(imuTask_h);
+			  osThreadResume(bmpTask_h);
+			  osThreadSuspend(NULL);
 		  }
 	  }
 

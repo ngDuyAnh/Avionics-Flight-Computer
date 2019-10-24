@@ -264,7 +264,7 @@
 			<resource resourceType="PROJECT" workspacePath="/test"/>
 		</configuration>
 		<configuration configurationName="Release">
-			<resource resourceType="PROJECT" workspacePath="/test"/>
+			<resource resourceType="PROJECT" workspacePath="/imu_sensor_test"/>
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>

@@ -18,7 +18,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "stm32f4xx_hal_uart_io.h"
 #include "configuration.h"
 
 #include "flash.h"
@@ -27,6 +26,7 @@
 #include "bmp3_defs.h"
 #include "bmi08x_defs.h"
 #include "recovery.h"
+#include "UART.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
@@ -69,7 +69,7 @@ uint16_t delay_ematch_menu_fire = 10000;
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void configure(char* command, thread_cli_parameters * params);
+void configure(char* command, cli_thread_parameters * params);
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  menu for ematch options.
@@ -77,9 +77,9 @@ void configure(char* command, thread_cli_parameters * params);
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void ematch(char* command, thread_cli_parameters * params);
+void ematch(char* command, cli_thread_parameters * params);
 
-void memory_menu(char* command, thread_cli_parameters * params);
+void memory_menu(char* command, cli_thread_parameters * params);
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  display introduction about xtract program
@@ -87,7 +87,7 @@ void memory_menu(char* command, thread_cli_parameters * params);
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void intro(UART_HandleTypeDef * uart); //display on start up
+void intro(UART  uart); //display on start up
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  display help menu, including short description of all available commands
@@ -95,7 +95,7 @@ void intro(UART_HandleTypeDef * uart); //display on start up
 // Returns:
 //  Enter description of return values (if any).
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void help(UART_HandleTypeDef * uart); //display help menu
+void help(UART  uart); //display help menu
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -104,35 +104,33 @@ void help(UART_HandleTypeDef * uart); //display help menu
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void cli_read(thread_cli_parameters * params);
+void cli_read(cli_thread_parameters * params);
 
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTIONS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void thread_command_line_interface_start(void *pvParameters){
-
-	thread_cli_parameters * params = (thread_cli_parameters *)pvParameters;
-
-	UART_HandleTypeDef * uart = params->huart;
-
+void thread_command_line_interface_start(void const *pvParameters)
+{
+	cli_thread_parameters * params = (cli_thread_parameters *)pvParameters;
+	UART uart = params->huart;
 	menuState_t state = MAIN_MENU;
 	intro(uart); //display help on start up
-	char *cmd_buf = (char*) malloc(sizeof(char) * BUFFER_SIZE); //command buffer
+	char * cmd_buf = (char*) malloc(sizeof(char) * BUFFER_SIZE); //command buffer
 	state = MAIN_MENU;
 	/* As per most FreeRTOS tasks, this task is implemented in an infinite loop. */
 	while(1){
-		transmit(uart, ">> ");
-		cmd_buf = receive_command(uart); //puts input into buffrx
+		uart_transmit(uart, ">> ");
+		cmd_buf = uart_receive_command(uart); //puts input into buffrx
 		task_cli_execute_command(cmd_buf, params, &state); //handles command sitting in buffrx
 	}
-} //vTaskUART_CLI END
+}
 
-void task_cli_execute_command(char* command, thread_cli_parameters * params, menuState_t * state){
+void task_cli_execute_command(char* command, cli_thread_parameters * params, menuState_t * state){
 
 
-	UART_HandleTypeDef * uart = params->huart;
+	UART  uart = params->huart;
 	configuration_data_t * config = params->flightCompConfig;
 	TaskHandle_t startupTaskHandle = params->startupTaskHandle;
 
@@ -148,7 +146,7 @@ void task_cli_execute_command(char* command, thread_cli_parameters * params, men
 	else if((strcmp(command, "config") == 0 && *state == MAIN_MENU )|| *state == CONFIG_MENU){
 
 		if(strcmp(command,"return")==0){
-			transmit_line(uart,"Returning to main menu");
+			uart_transmit_line(uart,"Returning to main menu");
 			*state = MAIN_MENU;
 		}else{
 			*state = CONFIG_MENU;
@@ -158,7 +156,7 @@ void task_cli_execute_command(char* command, thread_cli_parameters * params, men
 	else if((strcmp(command, "ematch") == 0 && *state == MAIN_MENU) || *state == EMATCH_MENU){
 		*state = EMATCH_MENU;
 		if(strcmp(command,"return")==0){
-			transmit_line(uart,"Returning to main menu");
+			uart_transmit_line(uart,"Returning to main menu");
 			*state = MAIN_MENU;
 		}else{
 			*state = EMATCH_MENU;
@@ -168,7 +166,7 @@ void task_cli_execute_command(char* command, thread_cli_parameters * params, men
 	else if((strcmp(command, "mem") == 0 && *state == MAIN_MENU )|| *state == MEM_MENU){
 		*state = MEM_MENU;
 		if(strcmp(command,"return")==0){
-			transmit_line(uart,"Returning to main menu");
+			uart_transmit_line(uart,"Returning to main menu");
 			*state = MAIN_MENU;
 		}else{
 			*state = MEM_MENU;
@@ -189,21 +187,21 @@ void task_cli_execute_command(char* command, thread_cli_parameters * params, men
 	}
 	else{
 		sprintf(output, "Command [%s] not recognized.", command);
-		transmit_line(uart, output);
+		uart_transmit_line(uart, output);
 	}
 
 }
 
-void intro(UART_HandleTypeDef * uart){
+void intro(UART  uart){
 
-	transmit_line(uart, "========== Welcome to Xtract ==========\r\n"
+	uart_transmit_line(uart, "========== Welcome to Xtract ==========\r\n"
 				"This is a command line interface tool made by the Avionics subdivison of the Rockets team.\r\n\r\n"
 				"Here are some commands to get you started:");
 	help(uart);
 }
 
-void help(UART_HandleTypeDef * uart){
-	transmit_line(uart, "Commands:\r\n"
+void help(UART  uart){
+	uart_transmit_line(uart, "Commands:\r\n"
 					"\t[help] - displays the help menu and more commands\r\n"
 					"\t[read] - Downloads flight data\r\n"
 					"\t[config] - Setup flight computer\r\n"
@@ -215,15 +213,15 @@ void help(UART_HandleTypeDef * uart){
 }
 
 
-void memory_menu(char* command, thread_cli_parameters * params){
+void memory_menu(char* command, cli_thread_parameters * params){
 
-	UART_HandleTypeDef * uart = params->huart;
+	UART  uart = params->huart;
 	Flash flash = params->flash;
 
 	char output [256];
 	if(strcmp(command, "help") == 0 || strcmp(command, "mem") == 0){
 
-		transmit_line(uart, "Commands:\r\n"
+		uart_transmit_line(uart, "Commands:\r\n"
 						"\t[help] - displays the help menu and more commands\r\n"
 						"\t[return] - Return to main menu\r\n"
 						"\t[a] - Read 256 bytes (hex address 0-7FFFFF).\r\n"
@@ -250,7 +248,7 @@ void memory_menu(char* command, thread_cli_parameters * params){
 
 
 			sprintf(output,"Reading 256 bytes starting at address %ld ...",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 
 			uint8_t data_rx[FLASH_PAGE_SIZE];
 
@@ -273,7 +271,7 @@ void memory_menu(char* command, thread_cli_parameters * params){
 				sprintf(output,"Failed:");
 
 			}
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 
 			int i;
 			for(i=0;i<FLASH_PAGE_SIZE;i++){
@@ -281,16 +279,16 @@ void memory_menu(char* command, thread_cli_parameters * params){
 
 				if((i+1)%16 == 0){
 					sprintf(output,"0x%02X ",data_rx[i]);
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 				}
 				else{
 					sprintf(output,"0x%02X ",data_rx[i]);
-					transmit(uart,output);
+					uart_transmit(uart,output);
 				}
 
 
 			}
-				transmit_line(uart,"\r\n");
+				uart_transmit_line(uart,"\r\n");
 		}
 
 
@@ -301,7 +299,7 @@ void memory_menu(char* command, thread_cli_parameters * params){
 
 		uint32_t end_Address = flash_scan(flash);
 		sprintf(output,"end address :%ld \n",end_Address);
-		transmit_line(uart,output);
+		uart_transmit_line(uart,output);
 
 		}
 	else if (command[0] == 'c'){
@@ -309,7 +307,7 @@ void memory_menu(char* command, thread_cli_parameters * params){
 			uint8_t dataRX[FLASH_PAGE_SIZE];
 
 			sprintf(output,"Erasing data section ...");
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 
 			  uint32_t address = FLASH_START_ADDRESS;
 			  FlashStatus stat;
@@ -331,9 +329,9 @@ void memory_menu(char* command, thread_cli_parameters * params){
 					  vTaskDelay(pdMS_TO_TICKS(1));
 				  }
 
-				  HAL_GPIO_TogglePin(USR_LED_PORT,USR_LED_PIN);
+//				  HAL_GPIO_TogglePin(USR_LED_PORT,USR_LED_PIN);
 					sprintf(output,"Erasing sector %ld ...",address);
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 			  }
 
 			  flash_read_page(flash,FLASH_START_ADDRESS,dataRX,256);
@@ -348,7 +346,7 @@ void memory_menu(char* command, thread_cli_parameters * params){
 
 			  if(empty == 0xFFFF){
 
-				  transmit_line(uart,"Flash Erased Success!");
+				  uart_transmit_line(uart,"Flash Erased Success!");
 			  }
 
 			if(stat == FLASH_OK){
@@ -358,7 +356,7 @@ void memory_menu(char* command, thread_cli_parameters * params){
 				sprintf(output,"Failed:");
 
 			}
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 
 
 
@@ -372,16 +370,16 @@ void memory_menu(char* command, thread_cli_parameters * params){
 
 }
 
-void ematch(char* command, thread_cli_parameters * params){
+void ematch(char* command, cli_thread_parameters * params){
 
-	UART_HandleTypeDef * uart = params->huart;
+	UART  uart = params->huart;
 
 	char output [256];
 
 
 	if(strcmp(command, "help") == 0 || strcmp(command, "ematch") == 0){
 
-		transmit_line(uart, "E-Matches:\r\n"
+		uart_transmit_line(uart, "E-Matches:\r\n"
 						"\t[help] - displays the help menu and more commands\r\n"
 						"\t[return] - Return to main menu\r\n"
 						"\t[a] - Check continuity Drogue\r\n"
@@ -392,7 +390,7 @@ void ematch(char* command, thread_cli_parameters * params){
 						"\t[f] - Enable Main\r\n"
 						"\t[g] - Fire Drogue (delayed)\r\n"
 						"\t[i] - Fire Main   (delayed)\r\n"
-						"\t[j] - Set delay (5-60)\r\n "
+						"\t[j] - Set delay_ms (5-60)\r\n "
 						);
 
 	}
@@ -401,85 +399,85 @@ void ematch(char* command, thread_cli_parameters * params){
 	}
 	else if (command[0] == 'a'){
 
-		recoverySelect_t event = DROGUE;
-		continuityStatus_t cont = check_continuity(event);
+		RecoverySelect event = DROGUE;
+		RecoveryContinuityStatus cont = recovery_check_continuity(event);
 
 		 if(cont == OPEN_CIRCUIT){
 			 sprintf(output,"No continuity was detected on the drogue circuit.\n");
-			 transmit_line(uart,output);
+			 uart_transmit_line(uart,output);
 		 }
 		 else{
 			 sprintf(output,"Continuity was detected on the drogue circuit.\n");
-			 transmit_line(uart,output);
+			 uart_transmit_line(uart,output);
 		 }
 
 		}
 	else if (command[0] == 'b'){
 
-		recoverySelect_t event = MAIN;
-		continuityStatus_t cont = check_continuity(event);
+		RecoverySelect event = MAIN;
+		RecoveryContinuityStatus cont = recovery_check_continuity(event);
 
 		 if(cont == OPEN_CIRCUIT){
 			 sprintf(output,"No continuity was detected on the main circuit.\n");
-			 transmit_line(uart,output);
+			 uart_transmit_line(uart,output);
 		 }
 		 else{
 			 sprintf(output,"Continuity was detected on the main circuit.\n");
-			 transmit_line(uart,output);
+			 uart_transmit_line(uart,output);
 		 }
 
 		}
 	else if (command[0] == 'c'){
 
-		recoverySelect_t event = DROGUE;
-		overcurrentStatus_t over = check_overcurrent(event);
+		RecoverySelect event = DROGUE;
+		RecoveryOverCurrentStatus over = recovery_check_overcurrent(event);
 
 		 if(over == NO_OVERCURRENT){
 			 sprintf(output,"No overcurrent was detected on the drogue circuit.\n");
-			 transmit_line(uart,output);
+			 uart_transmit_line(uart,output);
 		 }
 		 else{
 			 sprintf(output,"Overcurrent was detected on the drogue circuit.\n");
-			 transmit_line(uart,output);
+			 uart_transmit_line(uart,output);
 		 }
 
 		}
 	else if (command[0] == 'd'){
 
-		recoverySelect_t event = MAIN;
-		overcurrentStatus_t over = check_overcurrent(event);
+		RecoverySelect event = MAIN;
+		RecoveryOverCurrentStatus over = recovery_check_overcurrent(event);
 
 		 if(over == NO_OVERCURRENT){
 			 sprintf(output,"No overcurrent was detected on the main circuit.\n");
-			 transmit_line(uart,output);
+			 uart_transmit_line(uart,output);
 		 }
 		 else{
 			 sprintf(output,"Overcurrent was detected on the main circuit.\n");
-			 transmit_line(uart,output);
+			 uart_transmit_line(uart,output);
 		 }
 
 		}
 	else if (command[0] == 'e'){
 
-		recoverySelect_t event = DROGUE;
-		enable_mosfet(event);
+		RecoverySelect event = DROGUE;
+		recovery_enable_mosfet(event);
 		sprintf(output,"DROGUE DEPLOYMENT CIRCUIT IS NOW ARMED!.\n");
-		 transmit_line(uart,output);
+		 uart_transmit_line(uart,output);
 		}
 	else if (command[0] == 'f'){
 
-		recoverySelect_t event = MAIN;
-		enable_mosfet(event);
+		RecoverySelect event = MAIN;
+		recovery_enable_mosfet(event);
 		sprintf(output,"MAIN DEPLOYMENT CIRCUIT IS NOW ARMED!.\n");
-		transmit_line(uart,output);
+		uart_transmit_line(uart,output);
 
 		}
 	else if (command[0] == 'g'){
 
-			recoverySelect_t event = DROGUE;
+			RecoverySelect event = DROGUE;
 
 			sprintf(output,"DROGUE WILL FIRE IN %d SECONDS!.\n",delay_ematch_menu_fire/1000);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 
 			int time_left = delay_ematch_menu_fire;
 
@@ -488,16 +486,16 @@ void ematch(char* command, thread_cli_parameters * params){
 				vTaskDelay(pdMS_TO_TICKS(1000));
 				time_left -= (1000);
 				sprintf(output,"DROGUE WILL FIRE IN %d SECONDS!.\n",time_left/1000);
-				transmit_line(uart,output);
+				uart_transmit_line(uart,output);
 			}
-			activate_mosfet(event);
+			recovery_activate_mosfet(event);
 		}
 	else if (command[0] == 'i'){
 
-		recoverySelect_t event = MAIN;
+		RecoverySelect event = MAIN;
 
 		sprintf(output,"MAIN WILL FIRE IN %d SECONDS!.\n",delay_ematch_menu_fire/1000);
-		transmit_line(uart,output);
+		uart_transmit_line(uart,output);
 
 		int time_left = delay_ematch_menu_fire;
 
@@ -506,9 +504,9 @@ void ematch(char* command, thread_cli_parameters * params){
 			vTaskDelay(pdMS_TO_TICKS(1000));
 			time_left -= (1000);
 			sprintf(output,"MAIN WILL FIRE IN %d SECONDS!.\n",time_left/1000);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 		}
-			activate_mosfet(event);
+			recovery_activate_mosfet(event);
 
 		}
 	else if (command[0] == 'j'){
@@ -522,8 +520,8 @@ void ematch(char* command, thread_cli_parameters * params){
 		if(value>5 && value<60){
 
 			delay_ematch_menu_fire = value *1000;
-			sprintf(output,"E-match fire delay set to %d.\n",value);
-			transmit_line(uart,output);
+			sprintf(output,"E-match fire delay_ms set to %d.\n",value);
+			uart_transmit_line(uart,output);
 		}
 
 		}
@@ -532,16 +530,16 @@ void ematch(char* command, thread_cli_parameters * params){
 
 }
 
-void configure(char* command, thread_cli_parameters * params){
+void configure(char* command, cli_thread_parameters * params){
 
-	UART_HandleTypeDef * uart = params->huart;
+	UART  uart = params->huart;
 	configuration_data_t * config = params->flightCompConfig;
 
 	char output [256];
 
 	if(strcmp(command, "help") == 0 || strcmp(command, "config") == 0){
 
-		transmit_line(uart, "Commands:\r\n"
+		uart_transmit_line(uart, "Commands:\r\n"
 						"\t[help] - displays the help menu and more commands\r\n"
 						"\t[return] - Return to main menu\r\n"
 						"\t[a] - Set data rate Hz(0-100)\r\n"
@@ -575,7 +573,7 @@ void configure(char* command, thread_cli_parameters * params){
 
 			sprintf(output,"Setting data rate to %d Hz.\n",value);
 
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.data_rate = 1000/value;
 
 		}
@@ -593,7 +591,7 @@ void configure(char* command, thread_cli_parameters * params){
 
 					sprintf(output,"Setting initial time to wait to %d ms.\n",value);
 
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.initial_time_to_wait = value;
 
 				}
@@ -610,12 +608,12 @@ void configure(char* command, thread_cli_parameters * params){
 
 		case 0:
 			sprintf(output,"Turning off flash recording.\n");
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.flags &= ~(0x02);
 			break;
 		case 1:
 			sprintf(output,"Turning on flash recording.\n");
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.flags |= (0x02);
 			break;
 
@@ -634,17 +632,17 @@ void configure(char* command, thread_cli_parameters * params){
 
 		case 0:
 			sprintf(output,"Setting accelerometer to no over-sampling .\n");
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_bw = BMI08X_ACCEL_BW_NORMAL;
 			break;
 		case 2:
 			sprintf(output,"Setting accelerometer to 2x over-sampling .\n");
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_bw = BMI08X_ACCEL_BW_OSR2;
 			break;
 		case 4:
 			sprintf(output,"Setting accelerometer to 4x over-sampling .\n");
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_bw = BMI08X_ACCEL_BW_OSR4;
 			break;
 		}
@@ -663,25 +661,25 @@ void configure(char* command, thread_cli_parameters * params){
 
 		case 3:
 			sprintf(output,"Setting accelerometer range to %d g .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_range = BMI088_ACCEL_RANGE_3G;
 			break;
 
 		case 6:
 			sprintf(output,"Setting accelerometer range to %d g .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_range = BMI088_ACCEL_RANGE_6G;
 			break;
 
 		case 12:
 			sprintf(output,"Setting accelerometer range to %d g .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_range = BMI088_ACCEL_RANGE_12G;
 			break;
 
 		case 24:
 			sprintf(output,"Setting accelerometer range to %d g .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_range = BMI088_ACCEL_RANGE_24G;
 			break;
 
@@ -700,49 +698,49 @@ void configure(char* command, thread_cli_parameters * params){
 
 		case 12:
 			sprintf(output,"Setting accelerometer odr to %d Hz .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_odr = BMI08X_ACCEL_ODR_12_5_HZ;
 			break;
 
 		case 25:
 			sprintf(output,"Setting accelerometer odr to %d Hz .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_odr = BMI08X_ACCEL_ODR_25_HZ;
 			break;
 
 		case 50:
 			sprintf(output,"Setting accelerometer odr to %d Hz .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_odr = BMI08X_ACCEL_ODR_50_HZ;
 			break;
 
 		case 100:
 			sprintf(output,"Setting accelerometer odr to %d Hz .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_odr = BMI08X_ACCEL_ODR_100_HZ;
 			break;
 
 		case 200:
 			sprintf(output,"Setting accelerometer odr to %d Hz .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_odr = BMI08X_ACCEL_ODR_200_HZ;
 			break;
 
 		case 400:
 			sprintf(output,"Setting accelerometer odr to %d Hz .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_odr = BMI08X_ACCEL_ODR_400_HZ;
 			break;
 
 		case 800:
 			sprintf(output,"Setting accelerometer odr to %d Hz .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_odr = BMI08X_ACCEL_ODR_800_HZ;
 			break;
 
 		case 1600:
 			sprintf(output,"Setting accelerometer odr to %d Hz .\n",value);
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.ac_odr = BMI08X_ACCEL_ODR_1600_HZ;
 			break;
 
@@ -759,56 +757,56 @@ void configure(char* command, thread_cli_parameters * params){
 
 		case 1:
 			sprintf(output,"Setting gyroscope to BW_32_ODR_100_HZ .\n" );
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.gy_odr = BMI08X_GYRO_BW_32_ODR_100_HZ;
 			config->values.gy_bw = BMI08X_GYRO_BW_32_ODR_100_HZ;
 			break;
 
 		case 2:
 			sprintf(output,"Setting gyroscope BW_64_ODR_200_HZ .\n" );
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.gy_odr = BMI08X_GYRO_BW_64_ODR_200_HZ;
 			config->values.gy_bw = BMI08X_GYRO_BW_64_ODR_200_HZ;
 			break;
 
 		case 3:
 			sprintf(output,"Setting gyroscope BW_12_ODR_100_HZ  .\n" );
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.gy_odr = BMI08X_GYRO_BW_12_ODR_100_HZ;
 			config->values.gy_bw = BMI08X_GYRO_BW_12_ODR_100_HZ;
 			break;
 
 		case 4:
 			sprintf(output,"Setting gyroscope BW_23_ODR_200_HZ  .\n" );
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.gy_odr = BMI08X_GYRO_BW_23_ODR_200_HZ;
 			config->values.gy_bw = BMI08X_GYRO_BW_23_ODR_200_HZ;
 			break;
 
 		case 5:
 			sprintf(output,"Setting gyroscope BW_47_ODR_400_HZ  .\n" );
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.gy_odr = BMI08X_GYRO_BW_47_ODR_400_HZ;
 			config->values.gy_bw = BMI08X_GYRO_BW_47_ODR_400_HZ;
 			break;
 
 		case 6:
 			sprintf(output,"Setting gyroscope BW_116_ODR_1000_HZ  .\n" );
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.gy_odr = BMI08X_GYRO_BW_116_ODR_1000_HZ;
 			config->values.gy_bw = BMI08X_GYRO_BW_116_ODR_1000_HZ;
 			break;
 
 		case 7:
 			sprintf(output,"Setting gyroscope BW_230_ODR_2000_HZ  .\n" );
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.gy_odr = BMI08X_GYRO_BW_230_ODR_2000_HZ;
 			config->values.gy_bw = BMI08X_GYRO_BW_230_ODR_2000_HZ;
 			break;
 
 		case 8:
 			sprintf(output,"Setting gyroscope BW_532_ODR_2000_HZ  .\n" );
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.gy_odr = BMI08X_GYRO_BW_532_ODR_2000_HZ;
 			config->values.gy_bw = BMI08X_GYRO_BW_532_ODR_2000_HZ;
 			break;
@@ -827,31 +825,31 @@ void configure(char* command, thread_cli_parameters * params){
 
 				case 125:
 					sprintf(output,"Setting gyroscope range to %d Hz .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.gy_range = BMI08X_GYRO_RANGE_125_DPS;
 					break;
 
 				case 250:
 					sprintf(output,"Setting gyroscope range to %d Hz .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.gy_range = BMI08X_GYRO_RANGE_250_DPS;
 					break;
 
 				case 500:
 					sprintf(output,"Setting gyroscope range to %d Hz .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.gy_range = BMI08X_GYRO_RANGE_500_DPS;
 					break;
 
 				case 1000:
 					sprintf(output,"Setting gyroscope range to %d Hz .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.gy_range = BMI08X_GYRO_RANGE_1000_DPS;
 					break;
 
 				case 2000:
 					sprintf(output,"Setting gyroscope range to %d Hz .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.gy_range = BMI08X_GYRO_RANGE_2000_DPS;
 					break;
 
@@ -871,37 +869,37 @@ void configure(char* command, thread_cli_parameters * params){
 
 				case 1:
 					sprintf(output,"Setting bmp odr to 1.5 Hz .\n" );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.bmp_odr = BMP3_ODR_1_5_HZ;
 					break;
 
 				case 12:
 					sprintf(output,"Setting bmp odr to 12.5 Hz .\n");
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.bmp_odr = BMP3_ODR_12_5_HZ;
 					break;
 
 				case 25:
 					sprintf(output,"Setting bmp odr to %d Hz .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.bmp_odr = BMP3_ODR_25_HZ;
 					break;
 
 				case 50:
 					sprintf(output,"Setting bmp odr to %d Hz .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.bmp_odr = BMP3_ODR_50_HZ;
 					break;
 
 				case 100:
 					sprintf(output,"Setting bmp odr to %d Hz .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.bmp_odr = BMP3_ODR_100_HZ;
 					break;
 
 				case 200:
 					sprintf(output,"Setting bmp odr to %d Hz .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.bmp_odr = BMP3_ODR_200_HZ;
 					break;
 
@@ -921,37 +919,37 @@ void configure(char* command, thread_cli_parameters * params){
 
 				case 0:
 					sprintf(output,"Setting pressure oversampling 0x .\n" );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.pres_os =  BMP3_NO_OVERSAMPLING;
 					break;
 
 				case 2:
 					sprintf(output,"Setting pressure oversampling 2x  .\n");
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.pres_os = BMP3_OVERSAMPLING_2X;
 					break;
 
 				case 4:
 					sprintf(output,"Setting pressure oversampling 4x .\n");
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.pres_os = BMP3_OVERSAMPLING_4X;
 					break;
 
 				case 8:
 					sprintf(output,"Setting pressure oversampling to 8x Hz .\n" );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.pres_os = BMP3_OVERSAMPLING_8X;
 					break;
 
 				case 16:
 					sprintf(output,"Setting pressure oversampling to 16x Hz .\n" );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.pres_os = BMP3_OVERSAMPLING_16X;
 					break;
 
 				case 32:
 					sprintf(output,"Setting pressure oversampling to 32x Hz .\n" );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.pres_os = BMP3_OVERSAMPLING_32X;
 					break;
 
@@ -969,37 +967,37 @@ void configure(char* command, thread_cli_parameters * params){
 
 				case 0:
 					sprintf(output,"Setting temperature oversampling 0x .\n" );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os =  BMP3_NO_OVERSAMPLING;
 					break;
 
 				case 2:
 					sprintf(output,"Setting temperature oversampling 2x  .\n");
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_OVERSAMPLING_2X;
 					break;
 
 				case 4:
 					sprintf(output,"Setting temperature oversampling 4x .\n");
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_OVERSAMPLING_4X;
 					break;
 
 				case 8:
 					sprintf(output,"Setting temperature oversampling to 8x Hz .\n" );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_OVERSAMPLING_8X;
 					break;
 
 				case 16:
 					sprintf(output,"Setting temperature oversampling to 16x Hz .\n" );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_OVERSAMPLING_16X;
 					break;
 
 				case 32:
 					sprintf(output,"Setting temperature oversampling to 32x Hz .\n" );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_OVERSAMPLING_32X;
 					break;
 
@@ -1020,50 +1018,50 @@ void configure(char* command, thread_cli_parameters * params){
 
 				case 0:
 					sprintf(output,"Setting bmp IIR filter coefficient to off .\n" );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os =  BMP3_IIR_FILTER_DISABLE;
 					break;
 
 				case 1:
 					sprintf(output,"Setting bmp IIR filter coefficient to %d .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os =  BMP3_IIR_FILTER_COEFF_1;
 					break;
 
 				case 3:
 					sprintf(output,"Setting bmp IIR filter coefficient to %d .\n",value);
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_IIR_FILTER_COEFF_3;
 					break;
 
 				case 7:
 					sprintf(output,"Setting bmp IIR filter coefficient to %d .\n",value);
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_IIR_FILTER_COEFF_7;
 					break;
 
 				case 15:
 					sprintf(output,"Setting bmp IIR filter coefficient to %d .\n" ,value);
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_IIR_FILTER_COEFF_15;
 					break;
 
 				case 31:
 					sprintf(output,"Setting bmp IIR filter coefficient to %d .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_IIR_FILTER_COEFF_31;
 					break;
 
 				case 63:
 					sprintf(output,"Setting bmp IIR filter coefficient to %d .\n",value);
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_IIR_FILTER_COEFF_63;
 					break;
 
 
 				case 127:
 					sprintf(output,"Setting bmp IIR filter coefficient to %d .\n",value );
-					transmit_line(uart,output);
+					uart_transmit_line(uart,output);
 					config->values.temp_os = BMP3_IIR_FILTER_COEFF_127;
 					break;
 		}
@@ -1072,19 +1070,19 @@ void configure(char* command, thread_cli_parameters * params){
 	else if (command[0] == 'm'){
 
 		sprintf(output,"The current settings (not in flash):");
-		transmit_line(uart,output);
+		uart_transmit_line(uart,output);
 
 		sprintf(output,"ID: %d \tIntitial Time To Wait: %ld \r\n",config->values.id,config->values.initial_time_to_wait);
-		transmit_line(uart,output);
+		uart_transmit_line(uart,output);
 
 		sprintf(output,"data rate: %d Hz \tSet to record: %d \r\n",1000/config->values.data_rate,IS_RECORDING(config->values.flags));
-		transmit_line(uart,output);
+		uart_transmit_line(uart,output);
 
 		sprintf(output,"start of data: %ld \tend of data: %ld \r\n",config->values.start_data_address,config->values.end_data_address);
-		transmit_line(uart,output);
+		uart_transmit_line(uart,output);
 
 		sprintf(output,"reference altitude: %ld \t reference pressure: %ld \r\n",(uint32_t)config->values.ref_alt,(uint32_t)config->values.ref_pres);
-		transmit_line(uart,output);
+		uart_transmit_line(uart,output);
 
 	}
 	else if (command[0] == 'n'){
@@ -1100,12 +1098,12 @@ void configure(char* command, thread_cli_parameters * params){
 
 		case 0:
 			sprintf(output,"Setting to not in flight.\n");
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.flags &= ~(0x1D);
 			break;
 		case 1:
 			sprintf(output,"Setting to in flight.\n");
-			transmit_line(uart,output);
+			uart_transmit_line(uart,output);
 			config->values.flags |= (0x01);
 			break;
 
@@ -1113,18 +1111,18 @@ void configure(char* command, thread_cli_parameters * params){
 	}
 	else{
 		sprintf(output, "Command [%s] not recognized.", command);
-		transmit_line(uart, output);
+		uart_transmit_line(uart, output);
 	}
 
 }
 
-void cli_read(thread_cli_parameters * params){
+void cli_read(cli_thread_parameters * params){
 
-	UART_HandleTypeDef * uart = params->huart;
+	UART  uart = params->huart;
 	Flash flash = params->flash;
 
-	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
-	transmit_line(uart, "Data transfer will start in 20 seconds. The LED will turn off when the transfer is complete.");
+//	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
+	uart_transmit_line(uart, "Data transfer will start in 20 seconds. The LED will turn off when the transfer is complete.");
 
 	uint8_t buffer[256*5]; 	//Read 5 pages from flash at a time;
 
@@ -1133,7 +1131,7 @@ void cli_read(thread_cli_parameters * params){
 
 	vTaskDelay(pdMS_TO_TICKS(1000*10));	//Delay 10 seconds
 
-	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
+//	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
 	uint32_t endAddress = flash_scan(flash);
 	while (bytesRead < endAddress){
 
@@ -1150,7 +1148,7 @@ void cli_read(thread_cli_parameters * params){
 		if(empty == (256*5)){
 			break;
 		}
-		transmit_bytes(uart,buffer,256*5);
+		uart_transmit_bytes(uart,buffer,256*5);
 
 		currentAddress += (256*5);
 		currentAddress = currentAddress % FLASH_SIZE_BYTES;
@@ -1158,5 +1156,5 @@ void cli_read(thread_cli_parameters * params){
 		bytesRead += 256*5;
 		vTaskDelay(1);
 	}
-	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
 }

@@ -14,27 +14,26 @@
 // - Created.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#include "forward_declarations.h"
 #include "flash.h"
+#include "UART.h"
 
 typedef enum{
-
 	MAIN_MENU,
 	READ_MENU,
 	CONFIG_MENU,
 	EMATCH_MENU,
 	MEM_MENU,
 	SAVE_MENU
-
 } menuState_t;
 
-typedef struct{
-	UART_HandleTypeDef *huart;
+typedef struct
+{
+	UART huart;
 	Flash flash;
 	configuration_data_t *flightCompConfig;
-	TaskHandle_t startupTaskHandle;
-	
-}thread_cli_parameters;
+	void* startupTaskHandle;
+
+}cli_thread_parameters;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -43,7 +42,7 @@ typedef struct{
 // Returns:
 //   VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void thread_command_line_interface_start(void *pvParameters);
+void thread_command_line_interface_start(void const *pvParameters);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -54,6 +53,6 @@ void thread_command_line_interface_start(void *pvParameters);
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void task_cli_execute_command(char* command, thread_cli_parameters * params, menuState_t* state);
+void task_cli_execute_command(char * command, cli_thread_parameters * params, menuState_t* state);
 
 #endif // XTRACT_H

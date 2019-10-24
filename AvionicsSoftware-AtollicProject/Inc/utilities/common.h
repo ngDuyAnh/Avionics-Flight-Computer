@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <string.h>
 
 static inline void write_32(uint32_t src, uint8_t * dest)
 {
@@ -41,7 +42,7 @@ static inline uint32_t read_24(const uint8_t * src)
 		   ((((uint8_t) src[3]) << 0) & 0xFF);
 }
 
-uint16_t read_16(const uint8_t * src)
+static inline uint16_t read_16(const uint8_t * src)
 {
 	return ((((uint8_t) src[0]) << 8) & 0xFF) |
 		   ((((uint8_t) src[1]) << 0) & 0xFF);
@@ -59,6 +60,17 @@ static inline void clear_buffer(uint8_t * buffer, size_t size)
 {
 	for(size_t i = 0; i < size; i++)
 		buffer[i] = 0;
+}
+
+static inline void float2bytes(float float_variable, uint8_t bytes_temp[4])
+{
+	union {
+		float a;
+		unsigned char bytes[4];
+	} thing;
+	
+	thing.a = float_variable;
+	memcpy(bytes_temp, thing.bytes, 4);
 }
 
 #endif //AVIONICS_COMMON_H

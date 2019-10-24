@@ -21,7 +21,6 @@
 #include "configuration.h"
 #include "bmi08x_defs.h"
 #include "bmp3_defs.h"
-#include "flash.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -59,10 +58,7 @@ ConfigStatus init_config(configuration_data_t* configuration){
 	configuration->values.temp_os = TEMP_OS;
 	configuration->values.pres_os = PRES_OS;
 	configuration->values.iir_coef = BMP_IIR;
-
-	configuration->values.ref_alt = GND_ALT;
-	configuration->values.ref_pres = GND_PRES;
-
+	
 	configuration->values.state = STATE_LAUNCHPAD;
 
 	ConfigStatus result = CONFIG_OK;

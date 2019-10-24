@@ -13,28 +13,38 @@
 // 2019-03-29 by Benjamin Zacharias
 // - Created.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-#include "bmi08x.h"
 #include <inttypes.h>
+#include <stdbool.h>
 #include "forward_declarations.h"
-#include "cmsis_os.h" // needs to be ported into .c file
+#include "configuration.h"
+#include "UART.h"
 
-#define	ACC_LENGTH	6		//Length of a accelerometer measurement in bytes.
-#define	GYRO_LENGTH	6		//Length of a gyroscope measurement in bytes.
+#define	ACC_LENGTH	6		// Length of a accelerometer measurement in bytes.
+#define	GYRO_LENGTH	6		// Length of a gyroscope measurement in bytes.
+
 
 //Groups both sensor readings and a time stamp.
-typedef struct imu_sensor_data{
-
-	struct bmi08x_sensor_data	accel;
-	struct bmi08x_sensor_data	gyro;
+typedef struct imu_sensor_data
+{
+	int16_t	acc_x;
+	int16_t	acc_y;
+	int16_t	acc_z;
+	
+	int16_t	gyro_x;
+	int16_t	gyro_y;
+	int16_t	gyro_z;
+	
 	uint32_t time_ticks;	//time of sensor reading in ticks.
+	
 }imu_sensor_data;
 
-//Parameters for thread_imu_start.
+
+
+//Parameters for imu_thread_start.
 typedef struct{
-	UART_HandleTypeDef * huart;
-	QueueHandle_t queue;
+	UART huart;
 	configuration_data_t *configuration_data;
-} thread_imu_parameters;
+} imu_sensor_thread_parameters;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -44,8 +54,11 @@ typedef struct{
 //  Enter description of return values (if any).
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+bool imu_sensor_test();
+bool imu_sensor_init(configuration_data_t * parameters);
+void imu_thread_start(void const *param);
+bool imu_read(imu_sensor_data * buffer, uint8_t data_rate);
+void imu_sensor_data_to_bytes(imu_sensor_data reading, uint8_t* bytes, uint32_t timestamp);
 
-
-void thread_imu_start(void *param);
 
 #endif // SENSOR_AG_H

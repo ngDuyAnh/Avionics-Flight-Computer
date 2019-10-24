@@ -16,17 +16,20 @@
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#include "stm32f4xx_hal_uart_io.h"
+#include "UART.h"
 #include <string.h>
 #include <stdlib.h>
 #include "main.h"
 
+#include "FreeRTOS.h"
+#include "portable.h"
+#include "hardware_definitions.h"
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t bufftx[BUFFER_SIZE] = ""; //transmit buffer
+uint8_t bufftx[BUFFER_SIZE] = ""; //uart_transmit buffer
 uint8_t buffrx[BUFFER_SIZE] = ""; //receive buffer
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,98 +62,118 @@ static void Error_Handler_UART(void);
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTIONS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void MX_HAL_UART2_Init(UART_HandleTypeDef* uart){
+UART UART_Port2_Init(void)
+{
+	HAL_Init();
 	__HAL_RCC_USART2_CLK_ENABLE();
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	// GPIO uses pins 2 & 3
 
 	/* Setup UART2 TX Pin */
-	  GPIO_InitStruct.Pin = GPIO_PIN_2; //USART_TX_Pin
-	  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-	  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = GPIO_PIN_2; //USART_TX_Pin
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	   /* Setup UART2 RX Pin */
-	   GPIO_InitStruct.Pin = GPIO_PIN_3; //USART_RX_Pin
-	   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	   GPIO_InitStruct.Pull = GPIO_NOPULL;
-	   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	   GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-	   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	/* Setup UART2 RX Pin */
+	GPIO_InitStruct.Pin = GPIO_PIN_3; //USART_RX_Pin
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	   /* Create UART struct */
-	   uart->Instance = USART2;
-	   uart->Init.BaudRate = 9600;
-	   uart->Init.WordLength = UART_WORDLENGTH_8B;
-	   uart->Init.StopBits = UART_STOPBITS_1;
-	   uart->Init.Parity = UART_PARITY_NONE;
-	   uart->Init.Mode = UART_MODE_TX_RX;
-	   uart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	   uart->Init.OverSampling = UART_OVERSAMPLING_16;
-	   if (HAL_UART_Init(uart) != HAL_OK)
-	   {
-	 	  Error_Handler_UART();
-	   }
+	/* Create UART struct */
+	UART_HandleTypeDef* uart = (UART_HandleTypeDef*)pvPortMalloc(sizeof(UART_HandleTypeDef));
+	if(uart == NULL)
+	{
+		return NULL;
+	}
+
+	uart->Instance = USART2;
+	uart->Init.BaudRate = 9600;
+	uart->Init.WordLength = UART_WORDLENGTH_8B;
+	uart->Init.StopBits = UART_STOPBITS_1;
+	uart->Init.Parity = UART_PARITY_NONE;
+	uart->Init.Mode = UART_MODE_TX_RX;
+	uart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	uart->Init.OverSampling = UART_OVERSAMPLING_16;
+	if (HAL_UART_Init(uart) != HAL_OK)
+	{
+		Error_Handler_UART();
+	}
+
+	return uart;
 }
 
-void MX_HAL_UART6_Init(UART_HandleTypeDef* uart){
+UART UART_Port6_Init(void)
+{
 	__HAL_RCC_USART6_CLK_ENABLE();
-	GPIO_InitTypeDef GPIO_InitStruct;
+GPIO_InitTypeDef GPIO_InitStruct;
 
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	/* Setup UART6 TX Pin */
-	  GPIO_InitStruct.Pin = UART_TX_PIN; //USART_TX_Pin
-	  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  GPIO_InitStruct.Alternate = GPIO_AF8_USART6;
-	  HAL_GPIO_Init(UART_TX_PORT, &GPIO_InitStruct);
+__HAL_RCC_GPIOA_CLK_ENABLE();
+/* Setup UART6 TX Pin */
+	GPIO_InitStruct.Pin = UART_TX_PIN; //USART_TX_Pin
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.Alternate = GPIO_AF8_USART6;
+	HAL_GPIO_Init(UART_TX_PORT, &GPIO_InitStruct);
 
-	   /* Setup UART6 RX Pin */
-	   GPIO_InitStruct.Pin = UART_RX_PIN; //USART_RX_Pin
-	   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	   GPIO_InitStruct.Pull = GPIO_NOPULL;
-	   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	   GPIO_InitStruct.Alternate = GPIO_AF8_USART6;
-	   HAL_GPIO_Init(UART_RX_PORT, &GPIO_InitStruct);
+	/* Setup UART6 RX Pin */
+	GPIO_InitStruct.Pin = UART_RX_PIN; //USART_RX_Pin
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.Alternate = GPIO_AF8_USART6;
+	HAL_GPIO_Init(UART_RX_PORT, &GPIO_InitStruct);
 
-	   /* Create UART struct */
-	   uart->Instance = USART6;
-	   uart->Init.BaudRate = 115200;
-	   uart->Init.WordLength = UART_WORDLENGTH_8B;
-	   uart->Init.StopBits = UART_STOPBITS_1;
-	   uart->Init.Parity = UART_PARITY_NONE;
-	   uart->Init.Mode = UART_MODE_TX_RX;
-	   uart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	   uart->Init.OverSampling = UART_OVERSAMPLING_16;
-	   if (HAL_UART_Init(uart) != HAL_OK)
-	   {
-	 	  Error_Handler_UART();
-	   }
+	/* Create UART struct */
+
+	UART_HandleTypeDef* uart = (UART_HandleTypeDef*)pvPortMalloc(sizeof(UART_HandleTypeDef));
+	if(uart == NULL)
+	{
+	return NULL;
+	}
+
+	uart->Instance = USART6;
+	uart->Init.BaudRate = 115200;
+	uart->Init.WordLength = UART_WORDLENGTH_8B;
+	uart->Init.StopBits = UART_STOPBITS_1;
+	uart->Init.Parity = UART_PARITY_NONE;
+	uart->Init.Mode = UART_MODE_TX_RX;
+	uart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	uart->Init.OverSampling = UART_OVERSAMPLING_16;
+	if (HAL_UART_Init(uart) != HAL_OK)
+	{
+		Error_Handler_UART();
+	}
+
+	return uart;
 }
 
-void transmit(UART_HandleTypeDef* uart, char* message){
-	int i;
-
-	for(i = 0; i < strlen(message); i++){
+void uart_transmit(UART uart, const char * message)
+{
+	for(size_t i = 0; i < strlen(message); i++){
 		bufftx[i] = (uint8_t) message[i];
 	}
 
-	if(HAL_UART_Transmit(uart, (uint8_t*)bufftx, sizeof(uint8_t) * (i), TIMEOUT_MAX) != HAL_OK){
+	if(HAL_UART_Transmit(uart, (uint8_t*)bufftx, sizeof(uint8_t) * (strlen(message)), TIMEOUT_MAX) != HAL_OK){
 					//Do something meaningful here...
 	}
 }
 
-void transmit_line(UART_HandleTypeDef* uart, char* message){
-	int i;
-
+void uart_transmit_line(UART uart, const char * message)
+{
+	size_t i;
 	//convert to uint8_t array
 	for(i = 0; i < strlen(message); i++){
 		bufftx[i] = (uint8_t) message[i];
 	}
+
 	bufftx[i++] = '\r';
 	bufftx[i++] = '\n';
 	bufftx[i++] = '\0';
@@ -160,7 +183,7 @@ void transmit_line(UART_HandleTypeDef* uart, char* message){
 	}
 }
 
-void transmit_bytes(UART_HandleTypeDef* uart, uint8_t *bytes,uint16_t numBytes){
+void uart_transmit_bytes(UART uart, uint8_t * bytes, uint16_t numBytes){
 
 	if(HAL_UART_Transmit(uart, bytes, numBytes, TIMEOUT_MAX) != HAL_OK){
 					//Do something meaningful here...
@@ -168,9 +191,9 @@ void transmit_bytes(UART_HandleTypeDef* uart, uint8_t *bytes,uint16_t numBytes){
 	}
 }
 
-char* receive_command(UART_HandleTypeDef* uart){
+char* uart_receive_command(UART uart){
 	uint8_t c; //key pressed character
-	int i;
+	size_t i;
 
 	c = '\0'; //clear out character received
 	buffrx[0] = '\0'; //clear out receive buffer
@@ -211,7 +234,7 @@ char* receive_command(UART_HandleTypeDef* uart){
 	}
 	buffrx[i] = '\0'; //string terminator added to the end of the message
 
-	return (char*) buffrx;
+	return (char*)buffrx;
 }
 
 static void Error_Handler_UART(void)

@@ -184,7 +184,7 @@
 
 /* Definition of the Ethernet driver buffers size and count */   
 #define ETH_RX_BUF_SIZE                ETH_MAX_PACKET_SIZE /* buffer size for receive               */
-#define ETH_TX_BUF_SIZE                ETH_MAX_PACKET_SIZE /* buffer size for transmit              */
+#define ETH_TX_BUF_SIZE                ETH_MAX_PACKET_SIZE /* buffer size for uart_transmit              */
 #define ETH_RXBUFNB                    ((uint32_t)4U)       /* 4 Rx buffers of size ETH_RX_BUF_SIZE  */
 #define ETH_TXBUFNB                    ((uint32_t)4U)       /* 4 Tx buffers of size ETH_TX_BUF_SIZE  */
 
@@ -192,9 +192,9 @@
 
 /* DP83848_PHY_ADDRESS Address*/ 
 #define DP83848_PHY_ADDRESS           0x01U
-/* PHY Reset delay these values are based on a 1 ms Systick interrupt*/ 
+/* PHY Reset delay_ms these values are based on a 1 ms Systick interrupt*/
 #define PHY_RESET_DELAY                 ((uint32_t)0x000000FFU)
-/* PHY Configuration delay */
+/* PHY Configuration delay_ms */
 #define PHY_CONFIG_DELAY                ((uint32_t)0x00000FFFU)
 
 #define PHY_READ_TO                     ((uint32_t)0x0000FFFFU)

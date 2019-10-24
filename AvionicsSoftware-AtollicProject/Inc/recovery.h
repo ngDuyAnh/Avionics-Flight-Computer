@@ -30,37 +30,18 @@
 typedef enum {
 	DROGUE,
 	MAIN
-
-} recoverySelect_t;
+} RecoverySelect;
 
 typedef enum{
-
 	OPEN_CIRCUIT,
 	SHORT_CIRCUIT
-
-}continuityStatus_t;
+}RecoveryContinuityStatus;
 
 typedef enum{
-
 	NO_OVERCURRENT,
 	OVERCURRENT
-}overcurrentStatus_t;
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// STRUCTS AND STRUCT TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+}RecoveryOverCurrentStatus;
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// TYPEDEFS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// CONSTANTS
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
-// FUNCTION PROTOTYPES
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Sets up the GPIO pins for the recovery functions.
@@ -77,7 +58,7 @@ void recovery_init();
 // Returns:
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void enable_mosfet(recoverySelect_t recov_event);
+void recovery_enable_mosfet(RecoverySelect recov_event);
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -89,7 +70,7 @@ void enable_mosfet(recoverySelect_t recov_event);
 // Returns:
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void activate_mosfet(recoverySelect_t recov_event);
+void recovery_activate_mosfet(RecoverySelect recov_event);
 
 
 
@@ -98,17 +79,17 @@ void activate_mosfet(recoverySelect_t recov_event);
 //  Checks the continuity for the specified recovery circuit .
 //
 // Returns:
-//	A continuityStatus_t of OPEN_CIRCUIT or SHORT_CIRCUIT.
+//	A RecoveryContinuityStatus of OPEN_CIRCUIT or SHORT_CIRCUIT.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-continuityStatus_t check_continuity(recoverySelect_t recov_event);
+RecoveryContinuityStatus recovery_check_continuity(RecoverySelect recov_event);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Checks the overcurrent flag for the specified recovery circuit .
 //
 // Returns:
-//	A continuityStatus_t of NO_OVERCURRENT or OVERCURRENT.
+//	A RecoveryContinuityStatus of NO_OVERCURRENT or OVERCURRENT.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-overcurrentStatus_t check_overcurrent(recoverySelect_t recov_event);
+RecoveryOverCurrentStatus recovery_check_overcurrent(RecoverySelect recov_event);
 
 #endif // RECOVERY_H

@@ -2,3 +2,6 @@
 .settings/language.settings.xml
 *.LAUNCH
 ./.idea
+.cproject
+AvionicsSoftware-AtollicProject/.mxproject
+AvionicsSoftware-AtollicProject/.cproject

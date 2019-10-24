@@ -17,53 +17,21 @@
 #define SPI_H
 
 #include <inttypes.h>
-#include "stm32f4xx_hal.h"
-#include "stm32f4xx_hal_spi.h"
-#include "hardwareDefs.h"
 
-
-#define SPI1_CS_PIN		FLASH_SPI_CS_PIN
-#define SPI1_CS_PORT	FLASH_SPI_CS_PORT
-
-#define SPI2_CS_PIN		PRES_SPI_CS_PIN
-#define SPI2_CS_PORT	PRES_SPI_CS_PORT
-
-//Right now the timeout value is used to select between chip selects.
-//We should really find a better way to do this!
-//Currently only works with the send and receive functions.
-//timeout=10 for acc
-//timeout=other for gyro
-#define SPI3_CS1_PIN	IMU_SPI_ACC_CS_PIN
-#define SPI3_CS1_PORT	IMU_SPI_ACC_CS_PORT
-
-#define SPI3_CS2_PIN	IMU_SPI_GYRO_CS_PIN
-#define SPI3_CS2_PORT	IMU_SPI_GYRO_CS_PORT
-
+typedef void* SPI;
 // Description:
 //  This function initializes the SPI1 interface.
-//
-// Parameters:
-//     hspi		       A reference used to refer to the SPI interface.
-void spi1_init(SPI_HandleTypeDef *hspi);
+SPI spi1_init();
 
 
 // Description:
 //  This function initializes the SPI2 interface.
-//
-// Parameters:
-//     hspi		       A reference used to refer to the SPI interface.
-void spi2_init(SPI_HandleTypeDef *hspi);
+SPI spi2_init();
 
 
 // Description:
 //  This function initializes the SPI3 interface.
-//
-// Parameters:
-//     hspi		       A reference used to refer to the SPI interface.
-void spi3_init(SPI_HandleTypeDef *hspi);
-
-
-
+SPI spi3_init();
 
 // Description:
 //  This function reads one or more bytes over the SPI bus, by sending multiple address bytes
@@ -76,7 +44,7 @@ void spi3_init(SPI_HandleTypeDef *hspi);
 //     rx_buffer        A pointer to where the received bytes should be stored
 //     rx_buffer_size   The number of bytes being  received.
 //     timeout          The timeout value in milliseconds.
-void spi_receive(SPI_HandleTypeDef hspi,uint8_t *addr_buffer,uint8_t addr_buffer_size,uint8_t *rx_buffer,uint16_t rx_buffer_size, uint32_t timeout);
+void spi_receive(SPI hspi,uint8_t *addr_buffer,uint8_t addr_buffer_size,uint8_t *rx_buffer,uint16_t rx_buffer_size, uint32_t timeout);
 
 
 // Description:
@@ -90,7 +58,7 @@ void spi_receive(SPI_HandleTypeDef hspi,uint8_t *addr_buffer,uint8_t addr_buffer
 //     tx_buffer       	A pointer to the bytes to send.
 //     size            	The number of bytes being sent.
 //     timeout         	The timeout value in milliseconds.
-void spi_send(SPI_HandleTypeDef hspi, uint8_t *reg_addr,uint8_t reg_addr_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t timeout);
+void spi_send(SPI hspi, uint8_t *reg_addr,uint8_t reg_addr_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t timeout);
 
 
 // Description: DO NOT USE. Will be deleted in future versions of the code!
@@ -104,7 +72,7 @@ void spi_send(SPI_HandleTypeDef hspi, uint8_t *reg_addr,uint8_t reg_addr_size, u
 //     total_size      The number of bytes being sent and received. (# of bytes read + 1)
 //     timeout         The timeout value in milliseconds.
 
-void spi_read(SPI_HandleTypeDef hspi,uint8_t *addr_buffer,uint8_t *rx_buffer,uint16_t total_size, uint32_t timeout);
+void spi_read(SPI hspi,uint8_t *addr_buffer,uint8_t *rx_buffer,uint16_t total_size, uint32_t timeout);
 
 
 // Description:  DO NOT USE! Will be deleted in future versions of the code!
@@ -117,7 +85,7 @@ void spi_read(SPI_HandleTypeDef hspi,uint8_t *addr_buffer,uint8_t *rx_buffer,uin
 //     tx_buffer       A pointer to the bytes to send.
 //     size            The number of bytes being sent.
 //     timeout         The timeout value in milliseconds.
-void spi_transmit(SPI_HandleTypeDef hspi, uint8_t *reg_addr, uint8_t *tx_buffer,uint16_t size, uint32_t timeout);
+void spi_transmit(SPI hspi, uint8_t *reg_addr, uint8_t *tx_buffer,uint16_t total_size, uint32_t timeout);
 
 #endif /* SPI_H_ */
 

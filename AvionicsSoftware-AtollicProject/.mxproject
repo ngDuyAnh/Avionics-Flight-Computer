@@ -1,7 +1,7 @@
 [PreviousGenFiles]
 HeaderPath=C:/Users/Joseph Howarth/Documents/UMSATS/Avionics_software/test/Inc
 HeaderFiles=FreeRTOSConfig.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;
-SourcePath=C:/Users/Joseph Howarth/Documents/UMSATS/Avionics_software/test/Src
+SourcePath=C:/Users/Joseph Howarth/Documents/UMSATS/Avionics_software/imu_sensor_test/Src
 SourceFiles=freertos.c;stm32f4xx_it.c;stm32f4xx_hal_msp.c;stm32f4xx_hal_timebase_tim.c;main.c;
 
 [PreviousLibFiles]

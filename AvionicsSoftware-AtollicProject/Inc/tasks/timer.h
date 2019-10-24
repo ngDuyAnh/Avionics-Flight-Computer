@@ -18,14 +18,14 @@
 #define TIME_INTERVAL2 155000	//150 seconds
 #define TIME_INTERVAL3 3000 //3s
 #define TIME_INTERVAL4 200	//200ms
-//input for timer: default user button
+//input for timer_thread_handle: default user button
 //TODO use official pin variables from a file
 #define INPUT_PIN GPIO_PIN_13
 #define INPUT_PORT GPIOC
-//output1 for timer: default on board LD2
+//output1 for timer_thread_handle: default on board LD2
 #define OUTPUT1_PIN GPIO_PIN_5
 #define OUTPUT1_PORT GPIOA
-//output2 for timer: right now is the same as output 1
+//output2 for timer_thread_handle: right now is the same as output 1
 #define OUTPUT2_PIN GPIO_PIN_5
 #define OUTPUT2_PORT GPIOA
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -39,6 +39,6 @@
 //  Enter description of return values (if any).
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 void Timer_GPIO_Init(void);
-void thread_timer_start(void *param);
+void thread_timer_start(void const *param);
 
 #endif // TIMER_H

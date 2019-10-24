@@ -14,15 +14,11 @@
 // - Created.
 
 #include <inttypes.h>
-#include "stm32f4xx.h"
-#include "stm32f4xx_hal.h"
-#include "stm32f4xx_hal_gpio.h"
-#include "stm32f4xx_hal_uart.h"
-#include "stm32f4xx_hal_conf.h"
-#include "hardwareDefs.h"
 
 #define TIMEOUT_MAX 0xFFFF
 #define BUFFER_SIZE 2048
+
+typedef void* UART;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -38,7 +34,7 @@
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void MX_HAL_UART2_Init(UART_HandleTypeDef* uart);
+UART UART_Port2_Init(void);
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -54,7 +50,7 @@ void MX_HAL_UART2_Init(UART_HandleTypeDef* uart);
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void MX_HAL_UART6_Init(UART_HandleTypeDef* uart);
+UART UART_Port6_Init(void);
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -62,39 +58,39 @@ void MX_HAL_UART6_Init(UART_HandleTypeDef* uart);
 //  Transmit message to UART port. Does not add new line to message.
 //
 // Parameters:
-//  UART_HandleTypeDef* uart - UART port to transmit to
+//  UART uart - UART port to uart_transmit to
 //  char* message - the message you wish to send, ending string with null character ('\0')
 //
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void transmit(UART_HandleTypeDef* uart, char* message);
+void uart_transmit(UART uart, const char * message);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Transmit message to UART port. Adds new line characters to end of message.
 //
 // Parameters:
-//  UART_HandleTypeDef* uart - UART port to transmit to
+//  UART uart - UART port to uart_transmit to
 //  char* message - the message you wish to send, ending string with null character ('\0')
 //
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void transmit_line(UART_HandleTypeDef* uart, char* message);
+void uart_transmit_line(UART uart, const char * message);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Transmit bytes to UART port.
 //
 // Parameters:
-//  UART_HandleTypeDef* uart - UART port to transmit to
+//  UART uart - UART port to uart_transmit to
 //  uint8_t* bytes - A pointer to the bytes you want to send.
 //
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void transmit_bytes(UART_HandleTypeDef* uart, uint8_t *bytes, uint16_t numBytes);
+void uart_transmit_bytes(UART uart, uint8_t * bytes, uint16_t numBytes);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -102,11 +98,11 @@ void transmit_bytes(UART_HandleTypeDef* uart, uint8_t *bytes, uint16_t numBytes)
 //  Receive message from UART port. Prints back what the user is typing so that they can see it. Their message ends when they press enter.
 //
 // Parameters:
-//  UART_HandleTypeDef* uart - UART port to transmit to
+//  UART uart - UART port to uart_transmit to
 //
 // Returns:
 //  Pointer to character array containing user entered message
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-char* receive_command(UART_HandleTypeDef* uart);
+char* uart_receive_command(UART uart);
 
 #endif //STM32F4XX_HAL_UART_CLI_H

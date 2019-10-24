@@ -18,8 +18,7 @@
 #include "recovery.h"
 #include "cmsis_os.h"
 #include "configuration.h"
-#include "hardwareDefs.h"
-#include "stm32f4xx_hal.h"
+#include "hardware_definitions.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
@@ -83,7 +82,7 @@ void recovery_init(){
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void enable_mosfet(recoverySelect_t recov_event){
+void recovery_enable_mosfet(RecoverySelect recov_event){
 
 	if(recov_event == MAIN){
 		//Active low.
@@ -97,7 +96,7 @@ void enable_mosfet(recoverySelect_t recov_event){
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void activate_mosfet(recoverySelect_t recov_event){
+void recovery_activate_mosfet(RecoverySelect recov_event){
 
 	if(recov_event == MAIN){
 
@@ -136,10 +135,10 @@ void activate_mosfet(recoverySelect_t recov_event){
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-continuityStatus_t check_continuity(recoverySelect_t recov_event){
+RecoveryContinuityStatus recovery_check_continuity(RecoverySelect recov_event){
 
 	GPIO_PinState result = GPIO_PIN_RESET;//Should the default be to read open or closed circuit???
-	continuityStatus_t cont;
+	RecoveryContinuityStatus cont;
 
 	if(recov_event == MAIN){
 		result = HAL_GPIO_ReadPin(RECOV_MAIN_CONTINUITY_PORT,RECOV_MAIN_CONTINUITY_PIN);
@@ -159,10 +158,10 @@ continuityStatus_t check_continuity(recoverySelect_t recov_event){
 }
 
 
-overcurrentStatus_t check_overcurrent(recoverySelect_t recov_event){
+RecoveryOverCurrentStatus recovery_check_overcurrent(RecoverySelect recov_event){
 
 	GPIO_PinState result = GPIO_PIN_RESET;//Should the default be to read open or closed circuit???
-	overcurrentStatus_t overcurrent;
+	RecoveryOverCurrentStatus overcurrent;
 
 	if(recov_event == MAIN){
 		result = HAL_GPIO_ReadPin(RECOV_MAIN_OVERCURRENT_PORT,RECOV_MAIN_OVERCURRENT_PIN);
