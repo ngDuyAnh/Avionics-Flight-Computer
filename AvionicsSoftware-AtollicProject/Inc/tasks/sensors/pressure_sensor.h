@@ -18,7 +18,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include "configuration.h"
-#include "UART.h"
+#include "protocols/UART.h"
 
 
 #define	PRES_LENGTH	3		//Length of a pressure measurement in bytes.

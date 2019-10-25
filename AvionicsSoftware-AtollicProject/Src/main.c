@@ -17,7 +17,7 @@
 #include <tasks/startup.h>
 
 #include "STM32.h"
-#include "UART.h"
+#include "protocols/UART.h"
 #include "buzzer.h"
 #include "flash.h"
 

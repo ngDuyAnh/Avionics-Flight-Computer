@@ -16,7 +16,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include "configuration.h"
-#include "UART.h"
+#include "protocols/UART.h"
 
 #define	ACC_LENGTH	6		// Length of a accelerometer measurement in bytes.
 #define	GYRO_LENGTH	6		// Length of a gyroscope measurement in bytes.

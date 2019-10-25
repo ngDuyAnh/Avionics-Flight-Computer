@@ -17,7 +17,7 @@
 
 #include "flash.h"
 #include "hardware_definitions.h"
-#include "SPI.h"
+#include "protocols/SPI.h"
 
 
 struct flash_t

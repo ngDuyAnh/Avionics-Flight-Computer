@@ -33,14 +33,8 @@ void stm32_delay(__uint32_t ms)
 
 void stm32_led_blink()
 {
-	if(HAL_GPIO_ReadPin(USR_PB_PORT,USR_PB_PIN))
-	{
-		HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
-	}
-	else
-	{
-		HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
-	}
+	HAL_GPIO_TogglePin(USR_LED_PORT,USR_LED_PIN);
+	stm32_delay(10);
 }
 
 STM32Status system_clock_config(void)
@@ -111,6 +105,5 @@ void stm32_error_handler(void)
     while (1)
     {
 		stm32_led_blink();
-		stm32_delay(10);
     }
 }

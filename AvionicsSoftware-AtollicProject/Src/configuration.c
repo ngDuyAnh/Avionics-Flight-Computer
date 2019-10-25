@@ -19,8 +19,8 @@
 
 
 #include "configuration.h"
-#include "bmi08x_defs.h"
-#include "bmp3_defs.h"
+#include "external/sensors/bmi08x_defs.h"
+#include "external/sensors/bmp3_defs.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:

@@ -19,9 +19,9 @@
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include "tasks/sensors/imu_sensor.h"
-#include "bmi088.h"
-#include "SPI.h"
-#include "bmi08x.h"
+#include "external/sensors/bmi088.h"
+#include "protocols/SPI.h"
+#include "external/sensors/bmi08x.h"
 #include "configuration.h"
 #include "hardware_definitions.h"
 #include "cmsis_os.h"

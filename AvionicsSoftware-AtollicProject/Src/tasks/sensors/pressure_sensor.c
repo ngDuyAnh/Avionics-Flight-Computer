@@ -17,18 +17,14 @@
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include "tasks/sensors/pressure_sensor.h"
-#include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
 
-#include "bmp3.h"
+#include "external/sensors/bmp3.h"
 #include "cmsis_os.h"
-#include "SPI.h"
+#include "protocols/SPI.h"
 #include "configuration.h"
-#include "UART.h"
-
-#include "FreeRTOS.h"
-#include "queue.h"
+#include "protocols/UART.h"
 #include "utilities/common.h"
 
 #define INTERNAL_ERROR -127

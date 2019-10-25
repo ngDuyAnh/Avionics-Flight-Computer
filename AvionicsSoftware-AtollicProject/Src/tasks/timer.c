@@ -19,7 +19,7 @@
 #include "buzzer.h"
 #include "recovery.h"
 #include "configuration.h"
-#include "UART.h"
+#include "protocols/UART.h"
 #include "hardware_definitions.h"
 
 static UART uart;

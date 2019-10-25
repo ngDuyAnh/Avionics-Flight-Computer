@@ -20,7 +20,7 @@
 
 #include <math.h>
 #include "flash.h"
-#include "UART.h"
+#include "protocols/UART.h"
 #include "configuration.h"
 
 

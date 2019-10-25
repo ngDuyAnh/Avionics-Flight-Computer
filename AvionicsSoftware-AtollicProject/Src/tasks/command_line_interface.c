@@ -23,10 +23,10 @@
 #include "flash.h"
 #include "tasks/command_line_interface.h"
 #include "cmsis_os.h"
-#include "bmp3_defs.h"
-#include "bmi08x_defs.h"
+#include "external/sensors/bmp3_defs.h"
+#include "external/sensors/bmi08x_defs.h"
 #include "recovery.h"
-#include "UART.h"
+#include "protocols/UART.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
