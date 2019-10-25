@@ -15,7 +15,6 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include <inttypes.h>
 #include <stdbool.h>
-#include "forward_declarations.h"
 #include "configuration.h"
 #include "UART.h"
 
