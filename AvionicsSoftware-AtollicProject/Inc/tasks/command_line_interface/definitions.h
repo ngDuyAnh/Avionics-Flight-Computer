@@ -52,7 +52,7 @@
             char *PROGRAM[2] = {"execute", strtok(__command, "\x20")};                     \
             char *ARGUMENTS = strtok(NULL, "");                                            \
 
-#define OPT_CASE_FUNC(literal_I, literal_C, section_name, function_name, args)         \
+#define OPT_CASE_FUNC(literal_I, literal_C, section_name, function_name, args)             \
             case literal_I:                                                                \
             case literal_C:                                                                \
                 OPT_FUNCTION_FOR(section_name, function_name)(args);                       \
