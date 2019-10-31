@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 #include <stdio.h>
-#include <tasks/startup.h>
+#include <tasks/app_threads_controller.h>
 
 #include "stm32/STM32.h"
 #include "protocols/UART.h"
@@ -27,7 +27,7 @@
 
 #include "tasks/sensors/imu_sensor.h"
 #include "tasks/sensors/pressure_sensor.h"
-#include "tasks/command_line_interface.h"
+#include "tasks/command_line_interface/controller.h"
 #include "tasks/flight_state_controller.h"
 #include "tasks/timer.h"
 #include "cmsis_os.h"
@@ -107,15 +107,21 @@ int main(void)
 	thread_flight_state_controller_params.uart = huart6;
 	thread_flight_state_controller_params.configuration_data = &app_configuration_data;
 	
+	
 	thread_pressure_sensor_params.huart = huart6;
 	thread_pressure_sensor_params.flightCompConfig = &app_configuration_data;
+	pressure_sensor_init(&app_configuration_data);
+	
 	
 	thread_imu_params.huart = huart6;
 	thread_imu_params.configuration_data = &app_configuration_data;
+	imu_sensor_init(&app_configuration_data);
+	
 	
 	thread_cli_params.flash = flash;
 	thread_cli_params.huart = huart6;
-	thread_cli_params.flightCompConfig = &app_configuration_data;
+	thread_cli_params.application_configurations = &app_configuration_data;
+	task_command_line_controller_init(&thread_cli_params);
 	
 	thread_startup_parameters.flight_state_controller_thread_handle = NULL;
 	thread_startup_parameters.pressure_sensor_thread_handle			= NULL;
@@ -126,16 +132,6 @@ int main(void)
 	
 	if(!IS_IN_FLIGHT(app_configuration_data.values.flags))
 	{
-		if(!imu_sensor_init(&app_configuration_data))
-		{
-			stm32_error_handler();
-		}
-		
-		if(!pressure_sensor_init(&app_configuration_data))
-		{
-			stm32_error_handler();
-		}
-		
 		app_configuration_data.values.state = STATE_LAUNCHPAD;
 		if(imu_sensor_test() && pressure_sensor_test())
 		{
@@ -168,8 +164,8 @@ int main(void)
 		stm32_error_handler();
 	}
 	
-	osThreadDef(cli, thread_command_line_interface_start, osPriorityAboveNormal, 1, 1000);
-	if(NULL == (thread_startup_parameters.cli_thread_params = osThreadCreate(osThread(cli), &thread_cli_params))){
+	osThreadDef(cli, thread_command_line_controller_start, osPriorityAboveNormal, 1, 1000);
+	if(NULL == (thread_startup_parameters.cli_thread_params = osThreadCreate(osThread(cli), NULL))){
 		stm32_error_handler();
 	}
 
@@ -178,7 +174,7 @@ int main(void)
 		stm32_error_handler();
 	}
 	
-	osThreadDef(startup, thread_startup_start, osPriorityAboveNormal, 1, 1000);
+	osThreadDef(startup, app_threads_controller_start, osPriorityAboveNormal, 1, 1000);
 	if(NULL == (thread_cli_params.startupTaskHandle = osThreadCreate(osThread(startup), &app_configuration_data))){
 		stm32_error_handler();
 	}

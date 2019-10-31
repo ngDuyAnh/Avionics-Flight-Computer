@@ -15,12 +15,14 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-#include "tasks/startup.h"
+#include "tasks/app_threads_controller.h"
 
 #include "cmsis_os.h"
 #include "configuration.h"
 #include "flash.h"
 #include "hardware_definitions.h"
+#include "stm32/STM32.h"
+#include "tasks/command_line_interface/controller.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -112,7 +114,7 @@ static void eraseFlash(startup_thread_parameters * params){
 }
 
 
-void thread_startup_start(void const* pvParams){
+void app_threads_controller_start(void const* pvParams){
 
 	startup_thread_parameters * sp = (startup_thread_parameters *) pvParams;
 

@@ -31,10 +31,10 @@ void stm32_delay(__uint32_t ms)
 	HAL_Delay(ms);
 }
 
-void stm32_led_blink()
+void stm32_led_blink(uint32_t ms)
 {
 	HAL_GPIO_TogglePin(USR_LED_PORT,USR_LED_PIN);
-	stm32_delay(10);
+	stm32_delay(ms);
 }
 
 STM32Status system_clock_config(void)
@@ -104,6 +104,6 @@ void stm32_error_handler(void)
 	/* User can add his own implementation to report the HAL error return state */
     while (1)
     {
-		stm32_led_blink();
+		stm32_led_blink(50);
     }
 }

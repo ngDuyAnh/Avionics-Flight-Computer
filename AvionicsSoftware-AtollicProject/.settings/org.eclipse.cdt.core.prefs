@@ -1,4 +1,7 @@
 eclipse.preferences.version=1
+environment/project/com.atollic.truestudio.exe.debug.1518366166/FLAGS/delimiter=\:
+environment/project/com.atollic.truestudio.exe.debug.1518366166/FLAGS/operation=append
+environment/project/com.atollic.truestudio.exe.debug.1518366166/FLAGS/value=-Wunused-variable
 environment/project/com.atollic.truestudio.exe.debug.1518366166/TOOLCHAIN_PATH/delimiter=;
 environment/project/com.atollic.truestudio.exe.debug.1518366166/TOOLCHAIN_PATH/operation=replace
 environment/project/com.atollic.truestudio.exe.debug.1518366166/TOOLCHAIN_PATH/value="C\:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.2.0\\ARMTools\\bin"

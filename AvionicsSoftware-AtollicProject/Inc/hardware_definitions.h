@@ -16,6 +16,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "FreeRTOS.h"
+#include "cmsis_os.h"
 
 //User LED(red)
 #define USR_LED_PIN				GPIO_PIN_5

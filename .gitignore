@@ -1,7 +1,8 @@
 /Debug/
 .settings/language.settings.xml
 *.LAUNCH
-./.idea
+/.idea
 .cproject
 AvionicsSoftware-AtollicProject/.mxproject
 AvionicsSoftware-AtollicProject/.cproject
+AvionicsSoftware-AtollicProject/.settings

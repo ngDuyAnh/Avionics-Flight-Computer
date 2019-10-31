@@ -11,6 +11,9 @@
  */
 
 #include <stdint.h>
+#include <configuration.h>
+#include <stm32/STM32.h>
+#include "tasks/command_line_interface/controller.h"
 
 #include "FreeRTOS.h"
 #include "portable.h"
@@ -70,8 +73,7 @@ FlashStatus execute_command(Flash flash, uint32_t address, uint8_t command)
 		if(command == FLASH_BULK_ERASE_COMMAND)
 		{
 			enable_write(flash);
-			uint8_t _command = FLASH_BULK_ERASE_COMMAND;
-			spi_send(flash->spi_handle, &_command, 1, NULL, 0, 10);
+			spi_send(flash->spi_handle, &command, 1, NULL, 0, 10);
 			return FLASH_OK;
 		}
 		else

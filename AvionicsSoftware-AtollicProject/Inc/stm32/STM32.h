@@ -16,7 +16,7 @@ typedef enum
 STM32Status stm32_init(void);
 void stm32_error_handler(void);
 void stm32_delay(uint32_t ms);
-void stm32_led_blink();
+void stm32_led_blink(uint32_t ms);
 
 
 #endif //AVIONICS_STM32_H
