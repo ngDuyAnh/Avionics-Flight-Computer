@@ -4,6 +4,20 @@
 #include "external/sensors/bmp3_defs.h"
 #include "external/sensors/bmi08x_defs.h"
 
+CREATE_OPT_DEFAULT_FUNCTION(configure, default_behaviour)
+{
+    sprintf(__s_output, "Command [%s] not recognized.", arguments);
+    uart_transmit_line(__s_uart, arguments);
+    
+    return true;
+}
+
+CREATE_OPT_ERROR_FUNCTION(configure, error_behaviour)
+{
+    // TODO: do something
+}
+
+
 OPTION_NEW_TOOL_IMPL(configure)
 {
     EXPAND_ARGUMENTS_STRING(ARGUMENTS_STRING);
@@ -27,24 +41,24 @@ OPTION_NEW_TOOL_IMPL(configure)
         
         switch(opt)
         {
-            COMMAND_CASE_FUNC(300, 'h', configure, h, optarg);
-            COMMAND_CASE_FUNC(301, 'a', configure, a, optarg);
-            COMMAND_CASE_FUNC(302, 'b', configure, b, optarg);
-            COMMAND_CASE_FUNC(303, 'c', configure, c, optarg);
-            COMMAND_CASE_FUNC(304, 'd', configure, d, optarg);
-            COMMAND_CASE_FUNC(305, 'e', configure, e, optarg);
-            COMMAND_CASE_FUNC(306, 'f', configure, f, optarg);
-            COMMAND_CASE_FUNC(307, 'g', configure, g, optarg);
-            COMMAND_CASE_FUNC(308, 'i', configure, i, optarg);
-            COMMAND_CASE_FUNC(309, 'j', configure, j, optarg);
-            COMMAND_CASE_FUNC(310, 'k', configure, k, optarg);
-            COMMAND_CASE_FUNC(311, 'l', configure, l, optarg);
-            COMMAND_CASE_FUNC(312, 'm', configure, m, optarg);
-            COMMAND_CASE_FUNC(313, 'n', configure, n, optarg);
+            OPT_CASE_FUNC(300, 'h', configure, h, optarg);
+            OPT_CASE_FUNC(301, 'a', configure, a, optarg);
+            OPT_CASE_FUNC(302, 'b', configure, b, optarg);
+            OPT_CASE_FUNC(303, 'c', configure, c, optarg);
+            OPT_CASE_FUNC(304, 'd', configure, d, optarg);
+            OPT_CASE_FUNC(305, 'e', configure, e, optarg);
+            OPT_CASE_FUNC(306, 'f', configure, f, optarg);
+            OPT_CASE_FUNC(307, 'g', configure, g, optarg);
+            OPT_CASE_FUNC(308, 'i', configure, i, optarg);
+            OPT_CASE_FUNC(309, 'j', configure, j, optarg);
+            OPT_CASE_FUNC(310, 'k', configure, k, optarg);
+            OPT_CASE_FUNC(311, 'l', configure, l, optarg);
+            OPT_CASE_FUNC(312, 'm', configure, m, optarg);
+            OPT_CASE_FUNC(313, 'n', configure, n, optarg);
             
             // Add more commands
-            ERROR_CASE;
-            DEFAULT_CASE(optarg, __s_uart, __s_output);
+            OPT_ERROR_FUNC  (configure,  error_behaviour,   ARGUMENTS_STRING);
+            OPT_DEFAULT_FUNC(configure, default_behaviour,  ARGUMENTS_STRING);
         }
         
         // restoring optind

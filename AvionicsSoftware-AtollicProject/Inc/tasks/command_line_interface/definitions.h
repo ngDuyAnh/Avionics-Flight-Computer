@@ -52,28 +52,33 @@
             char *PROGRAM[2] = {"execute", strtok(__command, "\x20")};                     \
             char *ARGUMENTS = strtok(NULL, "");                                            \
 
-#define COMMAND_CASE_FUNC(literal_I, literal_C, section_name, function_name, args)         \
+#define OPT_CASE_FUNC(literal_I, literal_C, section_name, function_name, args)         \
             case literal_I:                                                                \
             case literal_C:                                                                \
                 OPT_FUNCTION_FOR(section_name, function_name)(args);                       \
             break                                                                          \
 
-#define COMMAND_CASE_TOOL(literal_I, literal_C, section_name, args)                        \
+#define OPT_CASE_MODULE(literal_I, literal_C, section_name, args)                          \
             case literal_I:                                                                \
             case literal_C:                                                                \
                 OPTION_TOOL_MAIN_FUNCTION(section_name)(args);                             \
             break                                                                          \
 
-#define ERROR_CASE                                                                         \
+#define OPT_ERROR_FUNC(module_name, function_name, arguments)                              \
             case '?':                                                                      \
+                module_name##_##function_name##_error_function(arguments);                 \
             break                                                                          \
 
-#define DEFAULT_CASE(command, uart, output)                                                \
+#define OPT_DEFAULT_FUNC(module_name, function_name, arguments)                            \
             default:                                                                       \
-                sprintf(output, "Command [%s] not recognized.", command);                  \
-                uart_transmit_line(uart, output);                                          \
-                return false;                                                              \
-                
+                return module_name##_##function_name##_default_function(arguments);        \
+   
+#define CREATE_OPT_DEFAULT_FUNCTION(module_name, function_name)                            \
+            bool module_name##_##function_name##_default_function(const char* arguments)   \
+
+#define CREATE_OPT_ERROR_FUNCTION(module_name, function_name)                              \
+            void module_name##_##function_name##_error_function(const char* arguments)     \
+            
 #define EXPAND_ARGUMENTS_STRING(ARGUMENT_STRING)                                           \
             char* __tokens[MAX_ARGUMENTS_LENGTH];                                          \
             uint8_t argc = 0;                                                              \

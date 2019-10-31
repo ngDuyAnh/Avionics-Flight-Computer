@@ -4,6 +4,21 @@
 #include "recovery.h"
 #include "hardware_definitions.h"
 
+
+CREATE_OPT_DEFAULT_FUNCTION(ematch, default_behaviour)
+{
+    sprintf(__s_output, "Command [%s] not recognized.", arguments);
+    uart_transmit_line(__s_uart, arguments);
+    
+    return true;
+}
+
+CREATE_OPT_ERROR_FUNCTION(ematch, error_behaviour)
+{
+    // TODO: do something
+}
+
+
 OPTION_NEW_TOOL_IMPL(ematch)
 {
     EXPAND_ARGUMENTS_STRING(ARGUMENTS_STRING);
@@ -27,20 +42,20 @@ OPTION_NEW_TOOL_IMPL(ematch)
         
         switch(opt)
         {
-            COMMAND_CASE_FUNC(300, 'h', ematch, h, optarg);
-            COMMAND_CASE_FUNC(301, 'a', ematch, a, optarg);
-            COMMAND_CASE_FUNC(302, 'b', ematch, b, optarg);
-            COMMAND_CASE_FUNC(303, 'c', ematch, c, optarg);
-            COMMAND_CASE_FUNC(304, 'd', ematch, d, optarg);
-            COMMAND_CASE_FUNC(305, 'e', ematch, e, optarg);
-            COMMAND_CASE_FUNC(306, 'f', ematch, f, optarg);
-            COMMAND_CASE_FUNC(307, 'g', ematch, g, optarg);
-            COMMAND_CASE_FUNC(308, 'i', ematch, i, optarg);
-            COMMAND_CASE_FUNC(309, 'j', ematch, j, optarg);
+            OPT_CASE_FUNC(300, 'h', ematch, h, optarg);
+            OPT_CASE_FUNC(301, 'a', ematch, a, optarg);
+            OPT_CASE_FUNC(302, 'b', ematch, b, optarg);
+            OPT_CASE_FUNC(303, 'c', ematch, c, optarg);
+            OPT_CASE_FUNC(304, 'd', ematch, d, optarg);
+            OPT_CASE_FUNC(305, 'e', ematch, e, optarg);
+            OPT_CASE_FUNC(306, 'f', ematch, f, optarg);
+            OPT_CASE_FUNC(307, 'g', ematch, g, optarg);
+            OPT_CASE_FUNC(308, 'i', ematch, i, optarg);
+            OPT_CASE_FUNC(309, 'j', ematch, j, optarg);
             
             // Add more commands
-            ERROR_CASE;
-            DEFAULT_CASE(optarg, __s_uart, __s_output);
+            OPT_ERROR_FUNC  (ematch,  error_behaviour,   ARGUMENTS_STRING);
+            OPT_DEFAULT_FUNC(ematch, default_behaviour,  ARGUMENTS_STRING);
         }
         
         // restoring optind

@@ -25,6 +25,89 @@
 #include "stm32/STM32.h"
 #include "configuration.h"
 
+CREATE_OPT_DEFAULT_FUNCTION(general, default_behaviour)
+{
+    sprintf(__s_output, "Command [%s] not recognized.", arguments);
+    uart_transmit_line(__s_uart, arguments);
+    
+    return true;
+}
+
+CREATE_OPT_ERROR_FUNCTION(general, error_behaviour)
+{
+    // TODO: do something
+}
+
+
+bool task_command_line_controller_execute_command(const char *command)
+{
+    EXTRACT_PROGRAM_NAME_AND_ARGUMENTS(command);
+    int option_index = 0;
+
+    optind = 0; /* resetting the optind */
+    int temp_optind = optind;
+    while (1)
+    {
+        int opt = getopt_long(2, PROGRAM, GENERAL_ARG_OPTIONS.SHORT, GENERAL_ARG_OPTIONS.LONG, &option_index);
+        
+        if(opt == -1)
+            break;
+        
+        // saving optind
+        temp_optind = optind;
+        
+        switch(opt)
+        {
+            OPT_CASE_FUNC(302, 'h', general, help, ARGUMENTS);
+            OPT_CASE_FUNC(305, 's', general, save, ARGUMENTS);
+            OPT_CASE_FUNC(306, 'S', general, start, ARGUMENTS);
+            
+            OPT_CASE_MODULE(300, 'c', configure, ARGUMENTS);
+            OPT_CASE_MODULE(301, 'e', ematch,    ARGUMENTS);
+            OPT_CASE_MODULE(303, 'm', mem,       ARGUMENTS);
+            OPT_CASE_MODULE(304, 'r', read,      ARGUMENTS);
+            // Add more commands
+            
+            OPT_ERROR_FUNC  (configure, error_behaviour,   command);
+            OPT_DEFAULT_FUNC(configure, default_behaviour, command);
+        }
+        
+        // restoring optind
+        optind = temp_optind;
+    }
+    
+    return true;
+}
+
+
+
+// ----- Case functions implementation ----- //
+OPTION_FUNCTION_IMPL(general, help)
+{
+    uart_transmit_line(__s_uart, GENERAL_USAGE);
+    return true;
+}
+
+OPTION_FUNCTION_IMPL(general, save)
+{
+    write_config(__application_configurations);
+    
+    return true;
+}
+
+OPTION_FUNCTION_IMPL(general, start)
+{
+    __application_configurations->values.state = STATE_LAUNCHPAD_ARMED;
+    vTaskResume(__startupTaskHandle);
+    vTaskSuspend(NULL);
+    
+    return true;
+}
+
+
+
+
+
 
 void task_command_line_controller_init(cli_thread_parameters *_parameters)
 {
@@ -66,69 +149,10 @@ void task_command_line_controller_println(char *line)
     uart_transmit_line(__s_uart, line);
 }
 
-bool task_command_line_controller_execute_command(const char *command)
-{
-    EXTRACT_PROGRAM_NAME_AND_ARGUMENTS(command);
-    int option_index = 0;
-
-    optind = 0; /* resetting the optind */
-    int temp_optind = optind;
-    while (1)
-    {
-        int opt = getopt_long(2, PROGRAM, GENERAL_ARG_OPTIONS.SHORT, GENERAL_ARG_OPTIONS.LONG, &option_index);
-        
-        if(opt == -1)
-            break;
-        
-        // saving optind
-        temp_optind = optind;
-        
-        switch(opt)
-        {
-            COMMAND_CASE_FUNC(302, 'h', general, help,  ARGUMENTS);
-            COMMAND_CASE_FUNC(305, 's', general, save,  ARGUMENTS);
-            COMMAND_CASE_FUNC(306, 'S', general, start, ARGUMENTS);
-            
-            COMMAND_CASE_TOOL(300, 'c', configure, ARGUMENTS);
-            COMMAND_CASE_TOOL(301, 'e', ematch, ARGUMENTS);
-            COMMAND_CASE_TOOL(303, 'm', mem,    ARGUMENTS);
-            COMMAND_CASE_TOOL(304, 'r', read,   ARGUMENTS);
-            // Add more commands
-            
-            ERROR_CASE;
-            DEFAULT_CASE(command, __s_uart, __s_output);
-        }
-        
-        // restoring optind
-        optind = temp_optind;
-    }
-    
-    return true;
-}
 
 
-// ----- Case functions implementation ----- //
-OPTION_FUNCTION_IMPL(general, help)
-{
-    uart_transmit_line(__s_uart, GENERAL_USAGE);
-    return true;
-}
 
-OPTION_FUNCTION_IMPL(general, save)
-{
-    write_config(__application_configurations);
-    
-    return true;
-}
 
-OPTION_FUNCTION_IMPL(general, start)
-{
-    __application_configurations->values.state = STATE_LAUNCHPAD_ARMED;
-    vTaskResume(__startupTaskHandle);
-    vTaskSuspend(NULL);
-    
-    return true;
-}
 
 #endif // CLI_CONTROLLER_SRC
 

@@ -28,7 +28,7 @@
 #define FLASH_ENABLE_WRITE_COMMAND    0x06 // Write Enable
 #define FLASH_PP_COMMAND              0x02 // Page Program Command (write)
 #define FLASH_READ_COMMAND            0x03
-#define FLASH_ERASE_SEC_COMMAND       xD8
+#define FLASH_ERASE_SEC_COMMAND       0xD8
 #define FLASH_ERASE_PARAM_SEC_COMMAND 0x20
 #define FLASH_GET_STATUS_REG_COMMAND  0x05
 #define FLASH_BULK_ERASE_COMMAND      0x60 // Command to erase the whole device.

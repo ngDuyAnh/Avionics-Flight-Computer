@@ -6,7 +6,18 @@
 #include <stdlib.h>
 
 
+CREATE_OPT_DEFAULT_FUNCTION(mem, default_behaviour)
+{
+    sprintf(__s_output, "Command [%s] not recognized.", arguments);
+    uart_transmit_line(__s_uart, arguments);
+    
+    return true;
+}
 
+CREATE_OPT_ERROR_FUNCTION(mem, error_behaviour)
+{
+    // TODO: do something
+}
 
 
 OPTION_NEW_TOOL_IMPL(mem)
@@ -32,15 +43,16 @@ OPTION_NEW_TOOL_IMPL(mem)
         
         switch(opt)
         {
-            COMMAND_CASE_FUNC(300, 'h', mem, h, optarg);
-            COMMAND_CASE_FUNC(301, 'a', mem, a, optarg);
-            COMMAND_CASE_FUNC(302, 'b', mem, b, optarg);
-            COMMAND_CASE_FUNC(303, 'c', mem, c, optarg);
-            COMMAND_CASE_FUNC(304, 'd', mem, d, optarg);
-            COMMAND_CASE_FUNC(305, 'e', mem, e, optarg);
+            OPT_CASE_FUNC(300, 'h', mem, h, optarg);
+            OPT_CASE_FUNC(301, 'a', mem, a, optarg);
+            OPT_CASE_FUNC(302, 'b', mem, b, optarg);
+            OPT_CASE_FUNC(303, 'c', mem, c, optarg);
+            OPT_CASE_FUNC(304, 'd', mem, d, optarg);
+            OPT_CASE_FUNC(305, 'e', mem, e, optarg);
             // Add more commands
-            ERROR_CASE;
-            DEFAULT_CASE(optarg, __s_uart, __s_output);
+            
+            OPT_ERROR_FUNC  (mem,  error_behaviour,   ARGUMENTS_STRING);
+            OPT_DEFAULT_FUNC(mem, default_behaviour,  ARGUMENTS_STRING);
         }
         
         // restoring optind
