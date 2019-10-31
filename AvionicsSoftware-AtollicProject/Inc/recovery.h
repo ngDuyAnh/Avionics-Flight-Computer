@@ -22,25 +22,28 @@
 // DEFINITIONS AND MACROS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#define EMATCH_ON_TIME		50
+#define EMATCH_ON_TIME                50
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ENUMS AND ENUM TYPEDEFS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-typedef enum {
-	DROGUE,
-	MAIN
+typedef enum
+{
+    DROGUE,
+    MAIN
 } RecoverySelect;
 
-typedef enum{
-	OPEN_CIRCUIT,
-	SHORT_CIRCUIT
-}RecoveryContinuityStatus;
+typedef enum
+{
+    OPEN_CIRCUIT,
+    SHORT_CIRCUIT
+} RecoveryContinuityStatus;
 
-typedef enum{
-	NO_OVERCURRENT,
-	OVERCURRENT
-}RecoveryOverCurrentStatus;
+typedef enum
+{
+    NO_OVERCURRENT,
+    OVERCURRENT
+} RecoveryOverCurrentStatus;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -50,7 +53,6 @@ typedef enum{
 //  Enter description of return values (if any).
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 void recovery_init();
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Enables the mosfet driver for the specified recovery event .
@@ -59,36 +61,30 @@ void recovery_init();
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 void recovery_enable_mosfet(RecoverySelect recov_event);
-
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Activates the mosfet driver for the specified recovery event.
-//	The driver will be activated for the number of ms specified by the constant EMATCH_ON_TIME.
+//        The driver will be activated for the number of ms specified by the constant EMATCH_ON_TIME.
 //  The driver will be disabled after and must be re-enabled be fore every call of this function.
 //
 // Returns:
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 void recovery_activate_mosfet(RecoverySelect recov_event);
-
-
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Checks the continuity for the specified recovery circuit .
 //
 // Returns:
-//	A RecoveryContinuityStatus of OPEN_CIRCUIT or SHORT_CIRCUIT.
+//        A RecoveryContinuityStatus of OPEN_CIRCUIT or SHORT_CIRCUIT.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 RecoveryContinuityStatus recovery_check_continuity(RecoverySelect recov_event);
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Checks the overcurrent flag for the specified recovery circuit .
 //
 // Returns:
-//	A RecoveryContinuityStatus of NO_OVERCURRENT or OVERCURRENT.
+//        A RecoveryContinuityStatus of NO_OVERCURRENT or OVERCURRENT.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 RecoveryOverCurrentStatus recovery_check_overcurrent(RecoverySelect recov_event);
 

@@ -14,20 +14,20 @@
 // - Created.
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#define TIME_INTERVAL1 30000 // drogue 30 seconds.
-#define TIME_INTERVAL2 155000	//150 seconds
-#define TIME_INTERVAL3 3000 //3s
-#define TIME_INTERVAL4 200	//200ms
+#define TIME_INTERVAL1      30000  // drogue 30 seconds.
+#define TIME_INTERVAL2      155000 //150 seconds
+#define TIME_INTERVAL3      3000   //3s
+#define TIME_INTERVAL4      200    //200ms
 //input for timer_thread_handle: default user button
 //TODO use official pin variables from a file
-#define INPUT_PIN GPIO_PIN_13
-#define INPUT_PORT GPIOC
+#define INPUT_PIN          GPIO_PIN_13
+#define INPUT_PORT         GPIOC
 //output1 for timer_thread_handle: default on board LD2
-#define OUTPUT1_PIN GPIO_PIN_5
-#define OUTPUT1_PORT GPIOA
+#define OUTPUT1_PIN        GPIO_PIN_5
+#define OUTPUT1_PORT       GPIOA
 //output2 for timer_thread_handle: right now is the same as output 1
-#define OUTPUT2_PIN GPIO_PIN_5
-#define OUTPUT2_PORT GPIOA
+#define OUTPUT2_PIN        GPIO_PIN_5
+#define OUTPUT2_PORT       GPIOA
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------

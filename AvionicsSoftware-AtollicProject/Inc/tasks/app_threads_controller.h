@@ -21,18 +21,16 @@
 #include "protocols/UART.h"
 #include "configuration.h"
 
-typedef struct{
-	
-	void* flight_state_controller_thread_handle ;
-	void* pressure_sensor_thread_handle ;
-	void* imu_thread_handle ;
-	void* cli_thread_params;
-	void* timer_thread_handle;
-
-	Flash flash_ptr;
-	UART huart_ptr;
-	configuration_data_t * configuration_data;
-
+typedef struct
+{
+    void                    *flight_state_controller_thread_handle ;
+    void                    *pressure_sensor_thread_handle ;
+    void                    *imu_thread_handle ;
+    void                    *cli_thread_params;
+    void                    *timer_thread_handle;
+    configuration_data_t    *configuration_data;
+    Flash                   flash_ptr;
+    UART                    huart_ptr;
 }startup_thread_parameters;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -40,12 +38,12 @@ typedef struct{
 //  This function will be the first task to run when the flight computer is powered on.
 //
 //As of right now, if S2 is not pressed the task will wait for an amount of time specified in the configuration
-//	header file, and will then erase the flash memory and start the IMU, BMP and data logging
-//	tasks.
+//        header file, and will then erase the flash memory and start the IMU, BMP and data logging
+//        tasks.
 //
-//	If S2 is pressed then the xtract task will be started.
+//        If S2 is pressed then the xtract task will be started.
 //
-//	Should be passed a populated startup_thread_parameters struct as the parameter.
+//        Should be passed a populated startup_thread_parameters struct as the parameter.
 //
 // Returns:
 //

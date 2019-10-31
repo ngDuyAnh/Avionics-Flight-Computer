@@ -18,31 +18,30 @@
 #include "configuration.h"
 #include "protocols/UART.h"
 
-#define	ACC_LENGTH	6		// Length of a accelerometer measurement in bytes.
-#define	GYRO_LENGTH	6		// Length of a gyroscope measurement in bytes.
+#define ACC_LENGTH  6 // Length of a accelerometer measurement in bytes.
+#define GYRO_LENGTH 6 // Length of a gyroscope measurement in bytes.
 
 
 //Groups both sensor readings and a time stamp.
 typedef struct imu_sensor_data
 {
-	int16_t	acc_x;
-	int16_t	acc_y;
-	int16_t	acc_z;
-	
-	int16_t	gyro_x;
-	int16_t	gyro_y;
-	int16_t	gyro_z;
-	
-	uint32_t time_ticks;	//time of sensor reading in ticks.
-	
+    int16_t    acc_x;
+    int16_t    acc_y;
+    int16_t    acc_z;
+    
+    int16_t    gyro_x;
+    int16_t    gyro_y;
+    int16_t    gyro_z;
+    
+    uint32_t   time_ticks; // time of sensor reading in ticks.
 }imu_sensor_data;
 
 
 
 //Parameters for imu_thread_start.
 typedef struct{
-	UART huart;
-	configuration_data_t *configuration_data;
+    UART huart;
+    configuration_data_t *configuration_data;
 } imu_sensor_thread_parameters;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -53,11 +52,11 @@ typedef struct{
 //  Enter description of return values (if any).
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool imu_sensor_test();
-bool imu_sensor_init(configuration_data_t * parameters);
-void imu_thread_start(void const *param);
-bool imu_read(imu_sensor_data * buffer, uint8_t data_rate);
-void imu_sensor_data_to_bytes(imu_sensor_data reading, uint8_t* bytes, uint32_t timestamp);
+bool imu_sensor_test            ();
+bool imu_sensor_init            (configuration_data_t * parameters);
+void imu_thread_start           (void const *param);
+bool imu_read                   (imu_sensor_data * buffer, uint8_t data_rate);
+void imu_sensor_data_to_bytes   (imu_sensor_data reading, uint8_t* bytes, uint32_t timestamp);
 
 
 #endif // SENSOR_AG_H

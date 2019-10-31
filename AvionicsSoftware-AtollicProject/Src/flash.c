@@ -40,15 +40,15 @@ typedef struct flash_t* Flash;
  */
 FlashStatus enable_write(Flash flash)
 {
-	uint8_t status_reg = flash_get_status_register(flash);
-	if(FLASH_IS_DEVICE_BUSY(status_reg)){
-		return FLASH_BUSY;
-	}
-	else{
-		uint8_t command = FLASH_ENABLE_WRITE_COMMAND;
-		spi_transmit(flash->spi_handle, &command, NULL, 1, 10);
-		return FLASH_OK;
-	}
+    uint8_t status_reg = flash_get_status_register(flash);
+    if(FLASH_IS_DEVICE_BUSY(status_reg)){
+        return FLASH_BUSY;
+    }
+    else{
+        uint8_t command = FLASH_ENABLE_WRITE_COMMAND;
+        spi_transmit(flash->spi_handle, &command, NULL, 1, 10);
+        return FLASH_OK;
+    }
 }
 
 /**
@@ -64,81 +64,81 @@ FlashStatus enable_write(Flash flash)
  */
 FlashStatus execute_command(Flash flash, uint32_t address, uint8_t command)
 {
-	uint8_t status_reg = flash_get_status_register(flash);
-	if(FLASH_IS_DEVICE_BUSY(status_reg)){
-		return FLASH_BUSY;
-	}
-	else{
-		enable_write(flash);
-		if(command == FLASH_BULK_ERASE_COMMAND)
-		{
-			enable_write(flash);
-			spi_send(flash->spi_handle, &command, 1, NULL, 0, 10);
-			return FLASH_OK;
-		}
-		else
-		{
-			uint8_t command_address[] =
-				{
-					(command),
-					(address & (FLASH_HIGH_BYTE_MASK_24B)) >> 16,
-					(address & (FLASH_MID_BYTE_MASK_24B)) >> 8 ,
-					(address & (FLASH_LOW_BYTE_MASK_24B))
-				};
+    uint8_t status_reg = flash_get_status_register(flash);
+    if(FLASH_IS_DEVICE_BUSY(status_reg)){
+        return FLASH_BUSY;
+    }
+    else{
+        enable_write(flash);
+        if(command == FLASH_BULK_ERASE_COMMAND)
+        {
+            enable_write(flash);
+            spi_send(flash->spi_handle, &command, 1, NULL, 0, 10);
+            return FLASH_OK;
+        }
+        else
+        {
+            uint8_t command_address[] =
+                {
+                    (command),
+                    (address & (FLASH_HIGH_BYTE_MASK_24B)) >> 16,
+                    (address & (FLASH_MID_BYTE_MASK_24B))  >> 8 ,
+                    (address & (FLASH_LOW_BYTE_MASK_24B))
+                };
 
-			spi_send(flash->spi_handle, command_address, 4, NULL, 0, 10);
-			return FLASH_OK;
-		};
-	}
+            spi_send(flash->spi_handle, command_address, 4, NULL, 0, 10);
+            return FLASH_OK;
+        };
+    }
 }
 
 
 
 uint8_t flash_get_status_register(Flash p_flash)
 {
-	uint8_t command = FLASH_GET_STATUS_REG_COMMAND;
-	uint8_t status_reg;
-	spi_receive(p_flash->spi_handle, &command, 1, &status_reg, 1, 10);
-	return status_reg;
+    uint8_t command = FLASH_GET_STATUS_REG_COMMAND;
+    uint8_t status_reg;
+    spi_receive(p_flash->spi_handle, &command, 1, &status_reg, 1, 10);
+    return status_reg;
 }
 
 
 FlashStatus flash_erase_sector(Flash p_flash, uint32_t address)
 {
-	return execute_command(p_flash, address, FLASH_ERASE_SEC_COMMAND);
+    return execute_command(p_flash, address, FLASH_ERASE_SEC_COMMAND);
 }
 
 FlashStatus flash_erase_param_sector(Flash p_flash, uint32_t address)
 {
-	return execute_command(p_flash, address, FLASH_ERASE_PARAM_SEC_COMMAND);
+    return execute_command(p_flash, address, FLASH_ERASE_PARAM_SEC_COMMAND);
 }
 
 FlashStatus flash_program_page(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
 {
-	return execute_command(p_flash, address, FLASH_PP_COMMAND);
+    return execute_command(p_flash, address, FLASH_PP_COMMAND);
 }
 
 FlashStatus flash_read_page(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
 {
-	return execute_command(p_flash, address, FLASH_READ_COMMAND);
+    return execute_command(p_flash, address, FLASH_READ_COMMAND);
 }
 
 FlashStatus flash_erase_device(Flash flash)
 {
-	return execute_command(flash, 0, FLASH_BULK_ERASE_COMMAND);
+    return execute_command(flash, 0, FLASH_BULK_ERASE_COMMAND);
 }
 
 FlashStatus flash_check_id(Flash p_flash)
 {
-	uint8_t command = FLASH_READ_ID_COMMAND;
-	uint8_t id[3] = {0, 0, 0};
+    uint8_t command = FLASH_READ_ID_COMMAND;
+    uint8_t id[3] = {0, 0, 0};
 
-	spi_receive(p_flash->spi_handle, (uint8_t *) &command, 1, id, 3, 10);
-	if((id[0] == FLASH_MANUFACTURER_ID) && (id[1] == FLASH_DEVICE_ID_MSB) && (id[2] == FLASH_DEVICE_ID_LSB)){
-		return FLASH_OK;
-	}
+    spi_receive(p_flash->spi_handle, (uint8_t *) &command, 1, id, 3, 10);
+    if((id[0] == FLASH_MANUFACTURER_ID) && (id[1] == FLASH_DEVICE_ID_MSB) && (id[2] == FLASH_DEVICE_ID_LSB)){
+        return FLASH_OK;
+    }
 
-	return FLASH_ERROR;
+    return FLASH_ERROR;
 }
 
 
@@ -150,75 +150,75 @@ Flash flash_initialize()
         return NULL;
     }
 
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	//This configures the write protect pin(Active Low).
-	GPIO_InitStruct.Pin = FLASH_WP_PIN;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-	GPIO_InitStruct.Alternate = 0;
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    //This configures the write protect pin(Active Low).
+    GPIO_InitStruct.Pin = FLASH_WP_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    GPIO_InitStruct.Alternate = 0;
 
-	HAL_GPIO_Init(FLASH_WP_PORT, &GPIO_InitStruct);
+    HAL_GPIO_Init(FLASH_WP_PORT, &GPIO_InitStruct);
 
-	GPIO_InitTypeDef GPIO_InitStruct2 = {0};
-	//This configures the hold pin(Active Low).
-	GPIO_InitStruct2.Pin = FLASH_HOLD_PIN;
-	GPIO_InitStruct2.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct2.Pull = GPIO_NOPULL;
-	GPIO_InitStruct2.Speed = GPIO_SPEED_FREQ_MEDIUM;
-	GPIO_InitStruct2.Alternate = 0;
+    GPIO_InitTypeDef GPIO_InitStruct2 = {0};
+    //This configures the hold pin(Active Low).
+    GPIO_InitStruct2.Pin = FLASH_HOLD_PIN;
+    GPIO_InitStruct2.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct2.Pull = GPIO_NOPULL;
+    GPIO_InitStruct2.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    GPIO_InitStruct2.Alternate = 0;
 
-	HAL_GPIO_Init(FLASH_HOLD_PORT, &GPIO_InitStruct2);
+    HAL_GPIO_Init(FLASH_HOLD_PORT, &GPIO_InitStruct2);
 
-	HAL_GPIO_WritePin(FLASH_WP_PORT, FLASH_WP_PIN, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(FLASH_HOLD_PORT, FLASH_HOLD_PIN, GPIO_PIN_SET);
-	//Set up the SPI interface
-	spi1_init(&flash->spi_handle);
+    HAL_GPIO_WritePin(FLASH_WP_PORT, FLASH_WP_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(FLASH_HOLD_PORT, FLASH_HOLD_PIN, GPIO_PIN_SET);
+    //Set up the SPI interface
+    spi1_init(&flash->spi_handle);
 
-	HAL_GPIO_WritePin(FLASH_SPI_CS_PORT, FLASH_SPI_CS_PIN, GPIO_PIN_SET);
-	
-	if(FLASH_ERROR == flash_check_id(flash))
-	{
-		return NULL;
-	}
-	
-	return flash;
+    HAL_GPIO_WritePin(FLASH_SPI_CS_PORT, FLASH_SPI_CS_PIN, GPIO_PIN_SET);
+    
+    if(FLASH_ERROR == flash_check_id(flash))
+    {
+        return NULL;
+    }
+    
+    return flash;
 }
 
 size_t flash_scan(Flash p_flash)
 {
-	size_t result = 0;
-	uint8_t dataRX[256];
-	size_t i;
-	int j;
-	i = FLASH_START_ADDRESS;
-	while(i < FLASH_SIZE_BYTES)
-	{
-		FlashStatus status;
-		for(j = 0; j < 256; j++){
-			dataRX[j] = 0;
-		}
+    size_t result = 0;
+    uint8_t dataRX[256];
+    size_t i;
+    int j;
+    i = FLASH_START_ADDRESS;
+    while(i < FLASH_SIZE_BYTES)
+    {
+        FlashStatus status;
+        for(j = 0; j < 256; j++){
+            dataRX[j] = 0;
+        }
 
-		status = flash_read_page(p_flash, i, dataRX, 256);
-		uint16_t empty = 0xFFFF;
-		for(j = 0; j < 256; j++)
-		{
-			if(dataRX[j] != 0xFF){
-				empty--;
-			}
-		}
+        status = flash_read_page(p_flash, i, dataRX, 256);
+        uint16_t empty = 0xFFFF;
+        for(j = 0; j < 256; j++)
+        {
+            if(dataRX[j] != 0xFF){
+                empty--;
+            }
+        }
 
-		if(empty == 0xFFFF)
-		{
-			result = i;
-			break;
-		}
+        if(empty == 0xFFFF)
+        {
+            result = i;
+            break;
+        }
 
-		i = i + 256;
-	}
+        i = i + 256;
+    }
 
-	if(result == 0) result = FLASH_SIZE_BYTES;
-	return result;
+    if(result == 0) result = FLASH_SIZE_BYTES;
+    return result;
 }

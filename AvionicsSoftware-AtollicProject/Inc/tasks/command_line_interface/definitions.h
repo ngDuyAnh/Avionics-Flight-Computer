@@ -87,8 +87,8 @@
             char **argv = __tokens;                                                        \
             
 
-const static int MAX_ARGUMENTS_LENGTH    = 32;
-const static int MAX_COMMAND_LENGTH        = 64;
+const static int MAX_ARGUMENTS_LENGTH       = 32;
+const static int MAX_COMMAND_LENGTH         = 64;
 
 
 typedef bool(*opt_arg_function_p)(char *);
@@ -98,15 +98,15 @@ typedef struct option_function option_function;
 
 typedef struct option_function
 {
-    opt_arg_function_p definition;
-    const char * name;
+    opt_arg_function_p  definition;
+    const char          *name;
 } option_function;
 
 struct option_and_function
 {
-    const opt_arg_long_option  *LONG;
-    const opt_arg_short_option *SHORT;
-    const option_function  *const FUNCTIONS;
+    const opt_arg_long_option       *LONG;
+    const opt_arg_short_option      *SHORT;
+    const option_function           *const FUNCTIONS;
 };
 
 
