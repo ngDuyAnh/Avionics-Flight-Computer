@@ -33,11 +33,9 @@ set(OBJDUMP                     ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-
 set(SIZE                        ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-size)
 
 
-#SET(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32F401RE_FLASH.ld)
-
 SET(CMAKE_C_FLAGS "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=gnu11")
 #
-SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,-gc-sections,--print-memory-usage -T $${LINKER_SCRIPT}")
+SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wmissing-prototypes -Wmissing-declarations -Wl,-gc-sections,--print-memory-usage -T $${LINKER_SCRIPT}")
 SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-gc-sections -T ${LINKER_SCRIPT}")
 
 add_definitions(-DSTM32F401xE)

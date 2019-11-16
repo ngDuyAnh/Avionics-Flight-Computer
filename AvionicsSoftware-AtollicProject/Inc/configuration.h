@@ -52,8 +52,8 @@
 #define GND_PRES                        101325
 
 //Macros to get flags.
-#define IS_IN_FLIGHT(x)                 ((x>>0)&0x01)
-#define IS_RECORDING(x)                 ((x>>1)&0x01)
+#define CONFIGURATION_IS_IN_FLIGHT(x)   ((x>>0)&0x01)
+#define CONFIGURATION_IS_RECORDING(x)   ((x>>1)&0x01)
 #define CONFIGURATION_IS_PRE_DROGUE(x)  ((x>>2)&0x01)
 #define CONFIGURATION_IS_POST_DROGUE(x) ((x>>3)&0x01)
 #define CONFIGURATION_IS_POST_MAIN(x)   ((x>>4)&0x01)

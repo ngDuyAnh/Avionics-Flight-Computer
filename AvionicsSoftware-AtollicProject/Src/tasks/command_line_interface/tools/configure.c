@@ -526,7 +526,7 @@ OPTION_FUNCTION_IMPL(configure, m)
     uart_transmit_line(__s_uart, __s_output);
     
     sprintf(__s_output, "data rate: %d Hz \tSet to record: %d \r\n", 1000 / __application_configurations->values.data_rate,
-            IS_RECORDING(__application_configurations->values.flags));
+			CONFIGURATION_IS_RECORDING(__application_configurations->values.flags));
     uart_transmit_line(__s_uart, __s_output);
     
     sprintf(__s_output, "start of data: %i \tend of data: %i \r\n", __application_configurations->values.start_data_address, __application_configurations->values.end_data_address);

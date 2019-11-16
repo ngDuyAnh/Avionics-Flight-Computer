@@ -10,10 +10,10 @@
 #include <getopt.h>
 
 #include "tasks/command_line_interface/definitions.h"
-#include "tasks/command_line_interface/tools/configure.h"
-#include "tasks/command_line_interface/tools/ematch.h"
-#include "tasks/command_line_interface/tools/mem.h"
-#include "tasks/command_line_interface/tools/read.h"
+//#include "tasks/command_line_interface/tools/configure.h"
+//#include "tasks/command_line_interface/tools/ematch.h"
+//#include "tasks/command_line_interface/tools/mem.h"
+//#include "tasks/command_line_interface/tools/read.h"
 
 #include "external/sensors/bmp3_defs.h"
 #include "external/sensors/bmi08x_defs.h"
@@ -68,8 +68,8 @@ bool task_command_line_controller_execute_command(const char *command)
             OPT_CASE_MODULE(304, 'r', read,      ARGUMENTS);
             // Add more commands
             
-            OPT_ERROR_FUNC  (configure, error_behaviour,   command);
-            OPT_DEFAULT_FUNC(configure, default_behaviour, command);
+//            OPT_ERROR_FUNC  (configure, error_behaviour,   command);
+//            OPT_DEFAULT_FUNC(configure, default_behaviour, command);
         }
         
         // restoring optind
@@ -129,7 +129,7 @@ void task_command_line_controller_init(cli_thread_parameters *_parameters)
 void thread_command_line_controller_start(void const *pvParameters)
 {
     if(false == __initialized){
-        stm32_error_handler();
+        stm32_error_handler(__FILE__, __LINE__);
     }
     
     uart_transmit_line(__s_uart, INTRO_USAGE);

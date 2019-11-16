@@ -100,7 +100,7 @@ void GPIO_init(void)
     HAL_GPIO_Init(USR_PB_PORT,&GPIO_InitStruct2);
 }
 
-void stm32_error_handler(void)
+void stm32_error_handler(const char* file, uint32_t line)
 {
     /* User can add his own implementation to report the HAL error return state */
     while (1)

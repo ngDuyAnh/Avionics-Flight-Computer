@@ -15,6 +15,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <tasks/app_threads_controller.h>
+#include <stm32f401xe.h>
 
 #include "stm32/STM32.h"
 #include "protocols/UART.h"
@@ -39,13 +40,13 @@ int main(void)
     STM32Status board_status = stm32_init();
     if(board_status != STM32_OK)
     {
-        stm32_error_handler();
+        stm32_error_handler(__FILE__, __LINE__);
     }
     
     UART huart6 = UART_Port6_Init();
     if(huart6 == NULL)
     {
-        stm32_error_handler();
+        stm32_error_handler(__FILE__, __LINE__);
     }
     
     uart_transmit_line(huart6, "UMSATS ROCKETRY FLIGHT COMPUTER");
@@ -53,7 +54,7 @@ int main(void)
     Flash flash = flash_initialize();
     if(flash == NULL)
     {
-        stm32_error_handler();
+        stm32_error_handler(__FILE__, __LINE__);
     }
     app_configuration_data.values.flash = flash;
     
@@ -130,7 +131,7 @@ int main(void)
     thread_startup_parameters.timer_thread_handle                   = NULL;
     thread_cli_params.startupTaskHandle                             = NULL;
     
-    if(!IS_IN_FLIGHT(app_configuration_data.values.flags))
+    if(!CONFIGURATION_IS_IN_FLIGHT(app_configuration_data.values.flags))
     {
         app_configuration_data.values.state = STATE_LAUNCHPAD;
         if(imu_sensor_test() && pressure_sensor_test())
@@ -151,32 +152,32 @@ int main(void)
     
     osThreadDef(timer, thread_timer_start, osPriorityAboveNormal, 1, 1000);
     if(NULL == (thread_startup_parameters.timer_thread_handle = osThreadCreate(osThread(timer), &app_configuration_data))){
-        stm32_error_handler();
+        stm32_error_handler(__FILE__, __LINE__);
     }
     
     osThreadDef(imu, imu_thread_start, osPriorityHigh, 1, 1000);
     if(NULL == (thread_startup_parameters.imu_thread_handle = osThreadCreate(osThread(imu), &app_configuration_data))){
-        stm32_error_handler();
+        stm32_error_handler(__FILE__, __LINE__);
     }
     
     osThreadDef(flight_state_controller, thread_flight_state_controller_start, osPriorityHigh, 1, 1000);
     if(NULL == (thread_startup_parameters.flight_state_controller_thread_handle = osThreadCreate(osThread(flight_state_controller), &thread_flight_state_controller_params))){
-        stm32_error_handler();
+        stm32_error_handler(__FILE__, __LINE__);
     }
     
     osThreadDef(cli, thread_command_line_controller_start, osPriorityAboveNormal, 1, 1000);
     if(NULL == (thread_startup_parameters.cli_thread_params = osThreadCreate(osThread(cli), NULL))){
-        stm32_error_handler();
+        stm32_error_handler(__FILE__, __LINE__);
     }
 
     osThreadDef(pressure_sensor, thread_pressure_sensor_start, osPriorityAboveNormal, 1, 1000);
     if(NULL == (thread_startup_parameters.pressure_sensor_thread_handle = osThreadCreate(osThread(pressure_sensor), &app_configuration_data))){
-        stm32_error_handler();
+        stm32_error_handler(__FILE__, __LINE__);
     }
     
     osThreadDef(startup, app_threads_controller_start, osPriorityAboveNormal, 1, 1000);
     if(NULL == (thread_cli_params.startupTaskHandle = osThreadCreate(osThread(startup), &app_configuration_data))){
-        stm32_error_handler();
+        stm32_error_handler(__FILE__, __LINE__);
     }
     
     //Start with all tasks suspended except starter task.
@@ -191,7 +192,7 @@ int main(void)
     osKernelStart();
     
     /* We should never get here as control is now taken by the scheduler */
-    stm32_error_handler();
+    stm32_error_handler(__FILE__, __LINE__);
 }
 
 /**

@@ -376,17 +376,15 @@ void thread_flight_state_controller_start(void const *params)
         .landed_counter                  = 0,
         .running                         = 1
     };
-
-    uint8_t running = 1;
-
-    if(IS_IN_FLIGHT(parameters.config_data->values.flags)){
+    
+    if(CONFIGURATION_IS_IN_FLIGHT(parameters.config_data->values.flags)){
         parameters.flash_address = parameters.config_data->values.end_data_address;
     }
     
     //Make sure the measurement starts empty.
     clear_buffer(parameters.measurement.data, sizeof(data_measurement));
 
-    if(!IS_IN_FLIGHT(parameters.config_data->values.flags)){
+    if(!CONFIGURATION_IS_IN_FLIGHT(parameters.config_data->values.flags)){
         check_recovery_circuit(parameters.config_data);
     }
 
@@ -406,7 +404,7 @@ void thread_flight_state_controller_start(void const *params)
         clear_buffer(parameters.measurement.data, sizeof(data_measurement));
         parameters.measurement_length = 0;
 
-        if(!running){
+        if(!parameters.running){
             vTaskSuspend(NULL);
         }
     };
@@ -569,7 +567,7 @@ void fill_buffer_and_or_write_to_flash(necessary_parameters parameters)
         if(parameters.buffer_selection == 0)
         {
             //We just switched to A so uart_transmit B.
-            if(IS_RECORDING(parameters.config_data->values.flags))
+            if(CONFIGURATION_IS_RECORDING(parameters.config_data->values.flags))
             {
                 FlashStatus stat_f = flash_program_page(parameters.flash, parameters.flash_address,
                                                         parameters.data_bufferB, DATA_BUFFER_SIZE);
@@ -596,7 +594,7 @@ void fill_buffer_and_or_write_to_flash(necessary_parameters parameters)
         {
             //We just switched to B so uart_transmit A
 
-            if(IS_RECORDING(parameters.config_data->values.flags))
+            if(CONFIGURATION_IS_RECORDING(parameters.config_data->values.flags))
             {
                 FlashStatus stat_f2 = flash_program_page(parameters.flash, parameters.flash_address,
                                                          parameters.data_bufferA, DATA_BUFFER_SIZE);

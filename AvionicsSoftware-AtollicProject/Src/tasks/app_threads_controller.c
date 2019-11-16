@@ -142,7 +142,7 @@ void app_threads_controller_start(void const* pvParams)
         }
         else
         {
-            if(!IS_IN_FLIGHT(config->values.flags))
+            if(!CONFIGURATION_IS_IN_FLIGHT(config->values.flags))
             {
                 uint32_t count = 0;
                 uint32_t delay_ms = 2000;

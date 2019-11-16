@@ -14,7 +14,7 @@ typedef enum
 
 
 STM32Status stm32_init          (void);
-void        stm32_error_handler (void);
+void        stm32_error_handler (const char* file, uint32_t line);
 void        stm32_delay         (uint32_t ms);
 void        stm32_led_blink     (uint32_t ms);
 

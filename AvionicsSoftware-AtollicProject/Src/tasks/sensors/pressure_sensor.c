@@ -210,7 +210,7 @@ void thread_pressure_sensor_start(void const*pvParameters)
         vTaskDelayUntil(&prevTime, configParams->values.data_rate);
     }
     
-    if(!IS_IN_FLIGHT(configParams->values.flags))
+    if(!CONFIGURATION_IS_IN_FLIGHT(configParams->values.flags))
     {
         get_sensor_data(s_bmp3_sensor->bmp_ptr, &sensor_data);
         dataStruct.pressure = sensor_data.pressure;
