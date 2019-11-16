@@ -68,6 +68,20 @@ add_library(RTOS_LIB
             Middlewares/Third_Party/FreeRTOS/Source/timers.c
             )
 
+add_library(SPIFFS
+            src/fs/params_test.h
+            src/fs/spiffs.h
+            src/fs/spiffs_cache.c
+            src/fs/spiffs_check.c
+            src/fs/spiffs_config.h
+            src/fs/spiffs_gc.c
+            src/fs/spiffs_hydrogen.c
+            src/fs/spiffs_nucleus.c
+            src/fs/spiffs_nucleus.h
+            src/fs/fs.h
+            src/fs/fs.c
+            )
+
 file(GLOB_RECURSE USER_SRC "src/*.c")
 file(GLOB_RECURSE HAL_SRC "Drivers/STM32F4xx_HAL_Driver/Src/*.c")
 
@@ -94,7 +108,7 @@ add_executable(${PROJECT_NAME}.elf
                 ${LINKER_SCRIPT}
                 )
 
-target_link_libraries(${PROJECT_NAME}.elf CMSIS_LIB RTOS_LIB)
+target_link_libraries(${PROJECT_NAME}.elf CMSIS_LIB RTOS_LIB SPIFFS)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${PROJECT_SOURCE_DIR}/build/${PROJECT_NAME}.map")
 set(HEX_FILE ${PROJECT_SOURCE_DIR}/build/${PROJECT_NAME}.hex)

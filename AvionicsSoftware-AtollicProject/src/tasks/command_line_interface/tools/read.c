@@ -19,7 +19,7 @@ OPTION_NEW_TOOL_IMPL(read)
     uint32_t endAddress = flash_scan(__flash);
     while(bytesRead < endAddress)
     {
-        flash_read_page(__flash, currentAddress, buffer, 256 * 5);
+		flash_read(__flash, currentAddress, buffer, 256 * 5);
         
         uint16_t empty = 0;
         for(uint16_t i = 0; i < 256 * 5; i++)

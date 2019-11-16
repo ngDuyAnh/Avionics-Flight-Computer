@@ -149,7 +149,9 @@ void sm_STATE_LAUNCHPAD_ARMED(necessary_parameters parameters)
 
         if((parameters.buffer_index_curr + 256) < buff_end)
         {
-            FlashStatus stat_f2 = flash_program_page(parameters.flash, parameters.flash_address, &parameters.launchpadBuffer[parameters.buffer_index_curr], DATA_BUFFER_SIZE);
+            FlashStatus stat_f2 = flash_write(parameters.flash, parameters.flash_address,
+											  &parameters.launchpadBuffer[parameters.buffer_index_curr],
+											  DATA_BUFFER_SIZE);
             while(FLASH_IS_DEVICE_BUSY(stat_f2))
             {
                 stat_f2 = flash_get_status_register(parameters.flash);
@@ -163,8 +165,8 @@ void sm_STATE_LAUNCHPAD_ARMED(necessary_parameters parameters)
             memcpy(&buff_temp, &parameters.launchpadBuffer[parameters.buffer_index_curr], buff_end - parameters.buffer_index_curr);
             memcpy(&buff_temp[buff_end - parameters.buffer_index_curr], &parameters.launchpadBuffer, DATA_BUFFER_SIZE - (buff_end - parameters.buffer_index_curr));
 
-            FlashStatus stat_f2 = flash_program_page(parameters.flash, parameters.flash_address, buff_temp,
-                                                     DATA_BUFFER_SIZE);
+            FlashStatus stat_f2 = flash_write(parameters.flash, parameters.flash_address, buff_temp,
+											  DATA_BUFFER_SIZE);
             while(FLASH_IS_DEVICE_BUSY(stat_f2))
             {
                 stat_f2 = flash_get_status_register(parameters.flash);
@@ -569,8 +571,8 @@ void fill_buffer_and_or_write_to_flash(necessary_parameters parameters)
             //We just switched to A so uart_transmit B.
             if(CONFIGURATION_IS_RECORDING(parameters.config_data->values.flags))
             {
-                FlashStatus stat_f = flash_program_page(parameters.flash, parameters.flash_address,
-                                                        parameters.data_bufferB, DATA_BUFFER_SIZE);
+                FlashStatus stat_f = flash_write(parameters.flash, parameters.flash_address,
+												 parameters.data_bufferB, DATA_BUFFER_SIZE);
                 while(FLASH_IS_DEVICE_BUSY(stat_f))
                 {
                     stat_f = flash_get_status_register(parameters.flash);
@@ -596,8 +598,8 @@ void fill_buffer_and_or_write_to_flash(necessary_parameters parameters)
 
             if(CONFIGURATION_IS_RECORDING(parameters.config_data->values.flags))
             {
-                FlashStatus stat_f2 = flash_program_page(parameters.flash, parameters.flash_address,
-                                                         parameters.data_bufferA, DATA_BUFFER_SIZE);
+                FlashStatus stat_f2 = flash_write(parameters.flash, parameters.flash_address,
+												  parameters.data_bufferA, DATA_BUFFER_SIZE);
                 while(FLASH_IS_DEVICE_BUSY(stat_f2))
                 {
                     stat_f2 = flash_get_status_register(parameters.flash);

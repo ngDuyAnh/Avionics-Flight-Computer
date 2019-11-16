@@ -108,7 +108,7 @@ FlashStatus flash_check_id(Flash p_flash);
  * @note The address should be 3 bytes long (0x000000 to 0x7FFFFF).
  * @warning If the LSB of the address is not all 0, then data written past the page will wrap around!
  */
-FlashStatus flash_program_page(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes);
+FlashStatus flash_write(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes);
 /**
  * @brief
  * This reads from a specified location in the flash memory.
@@ -120,7 +120,7 @@ FlashStatus flash_program_page(Flash p_flash, uint32_t address, uint8_t *data_bu
  * @see https://github.com/UMSATS/Avionics-2019/
  * @note If the device is busy the function exits early and returns FLASH_BUSY.
  */
-FlashStatus flash_read_page(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes);
+FlashStatus flash_read(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes);
 /**
  * @brief
  * This erases a specified sector(64 kb) in the flash memory. Will take up to 2 seconds.

@@ -65,7 +65,8 @@ ConfigStatus read_config(configuration_data_t* configuration){
 
     ConfigStatus stat = CONFIG_ERROR;
 
-    FlashStatus result = flash_read_page(configuration->values.flash, 0x00000000,configuration->bytes, sizeof(configuration_data_t) - (sizeof(Flash*) + 4)); //The state variable is padded to 4 bytes!
+    FlashStatus result = flash_read(configuration->values.flash, 0x00000000, configuration->bytes,
+									sizeof(configuration_data_t) - (sizeof(Flash *) + 4)); //The state variable is padded to 4 bytes!
     
     if(result == FLASH_OK)
     {
@@ -91,7 +92,8 @@ ConfigStatus write_config(configuration_data_t* configuration){
 
     if(result == FLASH_OK)
     {
-        result = flash_program_page(configuration->values.flash,0x00000000,configuration->bytes, sizeof(configuration_data_t) - (sizeof(Flash*) + 4));
+        result = flash_write(configuration->values.flash, 0x00000000, configuration->bytes,
+							 sizeof(configuration_data_t) - (sizeof(Flash *) + 4));
         while(FLASH_IS_DEVICE_BUSY(flash_get_status_register(configuration->values.flash)))
         {
             stat = CONFIG_OK;

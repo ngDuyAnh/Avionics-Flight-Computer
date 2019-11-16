@@ -19,7 +19,7 @@
 
 #include "cmsis_os.h"
 #include "../configuration.h"
-#include "../flash.h"
+#include "flash.h"
 #include "../hardware_definitions.h"
 #include "../stm32/STM32.h"
 #include "command_line_interface/controller.h"
@@ -45,7 +45,7 @@ static void eraseFlash(startup_thread_parameters * params)
     uint8_t dataRX[256];
     uart_transmit_line(huart,"Checking flash memory...");
     // Read the first page of memory. If its empty, assume the whole memory is empty.
-    stat = flash_read_page(flash,config->values.start_data_address,dataRX,256);
+    stat = flash_read(flash, config->values.start_data_address, dataRX, 256);
     
     uint16_t good= 0xFFFF;
     
@@ -89,8 +89,8 @@ static void eraseFlash(startup_thread_parameters * params)
                 vTaskDelay(pdMS_TO_TICKS(1));
             }
         }
-        
-        flash_read_page(flash,FLASH_START_ADDRESS,dataRX,256);
+	
+		flash_read(flash, FLASH_START_ADDRESS, dataRX, 256);
         uint16_t empty = 0xFFFF;
         
         for(i=0;i<256;i++)

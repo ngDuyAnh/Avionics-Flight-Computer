@@ -11,9 +11,7 @@
  */
 
 #include <stdint.h>
-#include "configuration.h"
 #include "stm32/STM32.h"
-#include "tasks/command_line_interface/controller.h"
 
 #include "FreeRTOS.h"
 #include "portable.h"
@@ -113,12 +111,12 @@ FlashStatus flash_erase_param_sector(Flash p_flash, uint32_t address)
     return execute_command(p_flash, address, FLASH_ERASE_PARAM_SEC_COMMAND);
 }
 
-FlashStatus flash_program_page(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
+FlashStatus flash_write(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
 {
     return execute_command(p_flash, address, FLASH_PP_COMMAND);
 }
 
-FlashStatus flash_read_page(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
+FlashStatus flash_read(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
 {
     return execute_command(p_flash, address, FLASH_READ_COMMAND);
 }
@@ -201,7 +199,7 @@ size_t flash_scan(Flash p_flash)
             dataRX[j] = 0;
         }
 
-        status = flash_read_page(p_flash, i, dataRX, 256);
+        status = flash_read(p_flash, i, dataRX, 256);
         uint16_t empty = 0xFFFF;
         for(j = 0; j < 256; j++)
         {

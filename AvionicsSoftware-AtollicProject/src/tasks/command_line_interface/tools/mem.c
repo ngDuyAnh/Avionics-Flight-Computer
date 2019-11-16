@@ -85,7 +85,7 @@ OPTION_FUNCTION_IMPL(mem, a)
         
         uint8_t data_rx[FLASH_PAGE_SIZE];
         FlashStatus stat;
-        stat = flash_read_page(__flash, value, data_rx, FLASH_PAGE_SIZE);
+        stat = flash_read(__flash, value, data_rx, FLASH_PAGE_SIZE);
         
         uint8_t busy = stat;
         
@@ -168,8 +168,8 @@ OPTION_FUNCTION_IMPL(mem, c)
         sprintf(__s_output, "Erasing sector %i ...", address);
         uart_transmit_line(__s_uart, __s_output);
     }
-    
-    flash_read_page(__flash, FLASH_START_ADDRESS, dataRX, 256);
+	
+	flash_read(__flash, FLASH_START_ADDRESS, dataRX, 256);
     uint16_t empty = 0xFFFF;
     int i;
     for(i = 0; i < 256; i++)
