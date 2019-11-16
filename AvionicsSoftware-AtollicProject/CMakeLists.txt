@@ -7,8 +7,8 @@ set(CMAKE_C_COMPILER   "${CMAKE_SOURCE_DIR}/arm-tools-cube/bin")
 set(CMAKE_CXX_COMPILER "${CMAKE_SOURCE_DIR}/arm-tools-cube/bin")
 
 ### specify the cross compiler
-CMAKE_FORCE_C_COMPILER(${CMAKE_C_COMPILER}/arm-none-eabi-gcc     GNU)
-CMAKE_FORCE_CXX_COMPILER(${CMAKE_CXX_COMPILER}/arm-none-eabi-g++ GNU)
+CMAKE_FORCE_C_COMPILER(${CMAKE_C_COMPILER}/arm-none-eabi-gcc     GNU) # absolute path needs to be set accordingly
+CMAKE_FORCE_CXX_COMPILER(${CMAKE_CXX_COMPILER}/arm-none-eabi-g++ GNU) # absolute path needs to be set accordingly
 
 #SET(COMMON_FLAGS "-mcpu=cortex-m4 -mthumb -mthumb-interwork -mfloat-abi=soft -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0")
 SET(COMMON_FLAGS "-mcpu=cortex-m4 -mthumb -mthumb-interwork -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0")
@@ -26,11 +26,11 @@ SET(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 
-set(AS                          ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-as)
-set(AR                          ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-ar)
-set(OBJCOPY                     ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-objcopy)
-set(OBJDUMP                     ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-objdump)
-set(SIZE                        ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-size)
+set(AS                          ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-as) # absolute path needs to be set accordingly
+set(AR                          ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-ar) # absolute path needs to be set accordingly
+set(OBJCOPY                     ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-objcopy) # absolute path needs to be set accordingly
+set(OBJDUMP                     ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-objdump) # absolute path needs to be set accordingly
+set(SIZE                        ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-size) # absolute path needs to be set accordingly
 
 
 SET(CMAKE_C_FLAGS "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=gnu11")
@@ -45,7 +45,7 @@ add_definitions("-D__packed=__attribute__((__packed__))")
 
 set(CMAKE_C_FLAGS "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=gnu11")
 
-set(SYS_CALLS_SRC syscalls.c)
+set(SYS_CALLS_SRC sys/syscalls.c)
 
 add_library(CMSIS_LIB
             Drivers/CMSIS/Device/ST/STM32F4xx/Source/system_stm32f4xx.c
@@ -68,15 +68,14 @@ add_library(RTOS_LIB
             Middlewares/Third_Party/FreeRTOS/Source/timers.c
             )
 
-file(GLOB_RECURSE USER_SRC "Src/*.c")
+file(GLOB_RECURSE USER_SRC "src/*.c")
 file(GLOB_RECURSE HAL_SRC "Drivers/STM32F4xx_HAL_Driver/Src/*.c")
 
 
-include_directories(Inc)
 include_directories(Drivers/STM32F4xx_HAL_Driver/Inc)
 include_directories(Drivers/CMSIS/Include)
 include_directories(Drivers/CMSIS/Device/ST/STM32F4xx/Include)
-
+include_directories(src)
 include_directories(Middlewares/Third_Party/FreeRTOS/Source)
 include_directories(Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS)
 include_directories(Middlewares/Third_Party/FreeRTOS/Source/include)
