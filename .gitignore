@@ -1,3 +1,13 @@
 /Debug/
 .settings/language.settings.xml
 *.LAUNCH
+/.idea
+.cproject
+AvionicsSoftware-AtollicProject/.mxproject
+AvionicsSoftware-AtollicProject/.cproject
+AvionicsSoftware-AtollicProject/.settings
+openocd/
+cmake/
+build/
+cmake-build-debug/
+arm-tools-cube/
