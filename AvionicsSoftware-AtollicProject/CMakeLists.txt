@@ -1,14 +1,17 @@
 cmake_minimum_required(VERSION 3.7)
-INCLUDE(CMakeForceCompiler)
+#INCLUDE(CMakeForceCompiler)
 SET(CMAKE_SYSTEM_NAME Generic)
 SET(CMAKE_SYSTEM_VERSION 1)
 
-set(CMAKE_C_COMPILER   "${CMAKE_SOURCE_DIR}/arm-tools-cube/bin")
-set(CMAKE_CXX_COMPILER "${CMAKE_SOURCE_DIR}/arm-tools-cube/bin")
 
-### specify the cross compiler
-CMAKE_FORCE_C_COMPILER(${CMAKE_C_COMPILER}/arm-none-eabi-gcc     GNU) # absolute path needs to be set accordingly
-CMAKE_FORCE_CXX_COMPILER(${CMAKE_CXX_COMPILER}/arm-none-eabi-g++ GNU) # absolute path needs to be set accordingly
+########## --- Uncomment if cmake can't find compiler ---- #####
+#set(CMAKE_C_COMPILER   "${CMAKE_SOURCE_DIR}/arm-tools-cube/bin")
+#set(CMAKE_CXX_COMPILER "${CMAKE_SOURCE_DIR}/arm-tools-cube/bin")
+#
+#### specify the cross compiler
+#CMAKE_FORCE_C_COMPILER(${CMAKE_C_COMPILER}/arm-none-eabi-gcc     GNU) # absolute path needs to be set accordingly
+#CMAKE_FORCE_CXX_COMPILER(${CMAKE_CXX_COMPILER}/arm-none-eabi-g++ GNU) # absolute path needs to be set accordingly
+
 
 #SET(COMMON_FLAGS "-mcpu=cortex-m4 -mthumb -mthumb-interwork -mfloat-abi=soft -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0")
 SET(COMMON_FLAGS "-mcpu=cortex-m4 -mthumb -mthumb-interwork -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0")
