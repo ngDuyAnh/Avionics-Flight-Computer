@@ -2,7 +2,7 @@
 .settings/language.settings.xml
 *.LAUNCH
 /cmake-build-debug
-../.idea/
+.idea/
 .cproject
 .mxproject
 .project
