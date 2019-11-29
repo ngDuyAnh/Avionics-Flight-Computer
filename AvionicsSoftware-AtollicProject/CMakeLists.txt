@@ -1,14 +1,17 @@
 cmake_minimum_required(VERSION 3.7)
-INCLUDE(CMakeForceCompiler)
+#INCLUDE(CMakeForceCompiler)
 SET(CMAKE_SYSTEM_NAME Generic)
 SET(CMAKE_SYSTEM_VERSION 1)
 
-set(CMAKE_C_COMPILER   "${CMAKE_SOURCE_DIR}/arm-tools-cube/bin")
-set(CMAKE_CXX_COMPILER "${CMAKE_SOURCE_DIR}/arm-tools-cube/bin")
+SET(ARM_TOOLS_PATH "C:/ST/STM32CubeIDE_1.1.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-arm-embedded.7-2018-q2-update.win32_1.0.0.201904081647/tools/bin")  # absolute path needs to be set accordingly
+
+############ Uncomment if there is build error #############
+#set(CMAKE_C_COMPILER   "${ARM_TOOLS_PATH}")
+#set(CMAKE_CXX_COMPILER "${ARM_TOOLS_PATH}")
 
 ### specify the cross compiler
-CMAKE_FORCE_C_COMPILER(${CMAKE_C_COMPILER}/arm-none-eabi-gcc     GNU) # absolute path needs to be set accordingly
-CMAKE_FORCE_CXX_COMPILER(${CMAKE_CXX_COMPILER}/arm-none-eabi-g++ GNU) # absolute path needs to be set accordingly
+#CMAKE_FORCE_C_COMPILER(${ARM_TOOLS_PATH}/arm-none-eabi-gcc     GNU)
+#CMAKE_FORCE_CXX_COMPILER(${ARM_TOOLS_PATH}/arm-none-eabi-g++   GNU)
 
 #SET(COMMON_FLAGS "-mcpu=cortex-m4 -mthumb -mthumb-interwork -mfloat-abi=soft -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0")
 SET(COMMON_FLAGS "-mcpu=cortex-m4 -mthumb -mthumb-interwork -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0")
@@ -24,6 +27,12 @@ enable_language(ASM)
 SET(CMAKE_SYSTEM_NAME Generic)
 SET(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
+# Add -O0 to remove optimizations when using gcc
+IF(CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
 
 set(AS                          ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-as) # absolute path needs to be set accordingly
@@ -68,19 +77,19 @@ add_library(RTOS_LIB
             Middlewares/Third_Party/FreeRTOS/Source/timers.c
             )
 
-add_library(SPIFFS
-            src/fs/params_test.h
-            src/fs/spiffs.h
-            src/fs/spiffs_cache.c
-            src/fs/spiffs_check.c
-            src/fs/spiffs_config.h
-            src/fs/spiffs_gc.c
-            src/fs/spiffs_hydrogen.c
-            src/fs/spiffs_nucleus.c
-            src/fs/spiffs_nucleus.h
-            src/fs/fs.h
-            src/fs/fs.c
-            )
+#add_library(SPIFFS
+#            src/fs/params_test.h
+#            src/fs/spiffs.h
+#            src/fs/spiffs_cache.c
+#            src/fs/spiffs_check.c
+#            src/fs/spiffs_config.h
+#            src/fs/spiffs_gc.c
+#            src/fs/spiffs_hydrogen.c
+#            src/fs/spiffs_nucleus.c
+#            src/fs/spiffs_nucleus.h
+#            src/fs/fs.h
+#            src/fs/fs.c
+#            )
 
 file(GLOB_RECURSE USER_SRC "src/*.c")
 file(GLOB_RECURSE HAL_SRC "Drivers/STM32F4xx_HAL_Driver/Src/*.c")
@@ -108,7 +117,7 @@ add_executable(${PROJECT_NAME}.elf
                 ${LINKER_SCRIPT}
                 )
 
-target_link_libraries(${PROJECT_NAME}.elf CMSIS_LIB RTOS_LIB SPIFFS)
+target_link_libraries(${PROJECT_NAME}.elf CMSIS_LIB RTOS_LIB)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${PROJECT_SOURCE_DIR}/build/${PROJECT_NAME}.map")
 set(HEX_FILE ${PROJECT_SOURCE_DIR}/build/${PROJECT_NAME}.hex)
