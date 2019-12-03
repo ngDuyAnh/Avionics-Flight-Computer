@@ -1,17 +1,21 @@
 cmake_minimum_required(VERSION 3.5.1)
-include(CMakeForceCompiler)
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
 
-# Attolic ARM-Tools
-#set(ARM_TOOLS_DIR       "/opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/ARMTools/bin")
-#set(EABI_PREFIX         "arm-atollic-eabi")
+# -----ATTENTION----- These lines that are commented, are essential when building the project outside of the IDEs
+# -----If you want to build the project using cmake and make command then you MUST uncomment these lines!
+# -----However, that may be commented out when CLion is used, in fact they should be commented out, because
+# -----CLion has a bug that causes an infinite loop when trying to change the compiler in CMakeLists.txt
+include(CMakeForceCompiler)
 
-# STM32Cube ARM-Tools
-set(ARM_TOOLS_DIR       "/opt/st/stm32cubeide_1.0.2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.linux64_1.0.0.201904181610/tools/bin")
-set(EABI_PREFIX         "arm-none-eabi")
+# Attolic ARM-Tools   [You have to change this according your system]
+set(ARM_TOOLS_DIR       "/opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/ARMTools/bin")
+set(EABI_PREFIX         "arm-atollic-eabi")
 
-#set(CMAKE_MAKE_PROGRAM "/usr/bin/make")
+# STM32Cube ARM-Tools [You have to change this according your system]
+#set(ARM_TOOLS_DIR       "/opt/st/stm32cubeide_1.0.2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.linux64_1.0.0.201904181610/tools/bin")
+#set(EABI_PREFIX         "arm-none-eabi")
+
 set(CMAKE_C_COMPILER   "${ARM_TOOLS_DIR}")
 set(CMAKE_CXX_COMPILER "${ARM_TOOLS_DIR}")
 
@@ -19,18 +23,19 @@ set(CMAKE_CXX_COMPILER "${ARM_TOOLS_DIR}")
 CMAKE_FORCE_C_COMPILER  (${ARM_TOOLS_DIR}/${EABI_PREFIX}-gcc GNU) # absolute path needs to be set accordingly
 CMAKE_FORCE_CXX_COMPILER(${ARM_TOOLS_DIR}/${EABI_PREFIX}-g++ GNU) # absolute path needs to be set accordingly
 
+#### specify the other tools, may be commented out regardless of whether you use IDE or Vanila cmake muild method
+set(AS                   ${ARM_TOOLS_DIR}/${EABI_PREFIX}-gcc-as)  # absolute path needs to be set accordingly
+set(AR                   ${ARM_TOOLS_DIR}/${EABI_PREFIX}-gcc-ar)  # absolute path needs to be set accordingly
+set(OBJCOPY              ${ARM_TOOLS_DIR}/${EABI_PREFIX}-objcopy) # absolute path needs to be set accordingly
+set(OBJDUMP              ${ARM_TOOLS_DIR}/${EABI_PREFIX}-objdump) # absolute path needs to be set accordingly
+set(SIZE                 ${ARM_TOOLS_DIR}/${EABI_PREFIX}-size)    # absolute path needs to be set accordingly
+
 project(avionics C CXX ASM)
 enable_language(ASM)
 
 SET(CMAKE_SYSTEM_NAME Generic)
 SET(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_VERBOSE_MAKEFILE ON)
-
-set(AS                          ${ARM_TOOLS_DIR}/${EABI_PREFIX}-gcc-as)  # absolute path needs to be set accordingly
-set(AR                          ${ARM_TOOLS_DIR}/${EABI_PREFIX}-gcc-ar)  # absolute path needs to be set accordingly
-set(OBJCOPY                     ${ARM_TOOLS_DIR}/${EABI_PREFIX}-objcopy) # absolute path needs to be set accordingly
-set(OBJDUMP                     ${ARM_TOOLS_DIR}/${EABI_PREFIX}-objdump) # absolute path needs to be set accordingly
-set(SIZE                        ${ARM_TOOLS_DIR}/${EABI_PREFIX}-size)    # absolute path needs to be set accordingly
 
 SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wmissing-prototypes -Wmissing-declarations -Wl,-gc-sections,--print-memory-usage -T $${LINKER_SCRIPT}")
 
@@ -136,7 +141,7 @@ add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${PROJECT_NAME}.elf> ${BIN_FILE}
         COMMENT "Building ${HEX_FILE} \nBuilding ${BIN_FILE}")
 
-add_custom_target(UPLOAD
+add_custom_target(upload
         ${ARM_TOOLS_DIR}/${EABI_PREFIX}-gdb -iex "target remote tcp:localhost:3333"
         -iex "monitor program $<TARGET_FILE:${PROJECT_NAME}.elf>"
         -iex "monitor reset init"
