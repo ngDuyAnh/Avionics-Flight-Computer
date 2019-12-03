@@ -4,4 +4,4 @@
 .idea/
 build/
 Debug/
-./bin
+bin/
