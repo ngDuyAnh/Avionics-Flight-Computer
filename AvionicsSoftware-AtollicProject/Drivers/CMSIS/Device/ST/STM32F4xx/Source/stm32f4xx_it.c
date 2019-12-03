@@ -34,8 +34,8 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "../../../../../../src/main.h"
-#include "../../../../../../src/stm32/stm32f4xx_it.h"
+#include "main.h"
+#include "stm32/stm32f4xx_it.h"
 #include "cmsis_os.h"
 #include "stm32f4xx_hal.h"
 /* Private includes ----------------------------------------------------------*/
