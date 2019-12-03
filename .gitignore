@@ -5,3 +5,7 @@
 build/
 Debug/
 bin/
+.cproject
+.code_review_properties
+.mxproject
+.project
