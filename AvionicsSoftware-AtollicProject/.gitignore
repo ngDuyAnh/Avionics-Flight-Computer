@@ -3,3 +3,4 @@
 *.LAUNCH
 .idea/
 build/
+Debug/
