@@ -16,7 +16,7 @@ SET(CMAKE_SYSTEM_VERSION 1)
 #SET(COMMON_FLAGS "-mcpu=cortex-m4 -mthumb -mthumb-interwork -mfloat-abi=soft -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0")
 SET(COMMON_FLAGS "-mcpu=cortex-m4 -mthumb -mthumb-interwork -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0")
 SET(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -std=c++11")
-SET(CMAKE_C_FLAGS "${COMMON_FLAGS} -std=gnu99")
+SET(CMAKE_C_FLAGS "${COMMON_FLAGS} -std=gnu11")
 SET(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32F401RE_FLASH.ld)
 SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-gc-sections -T ${LINKER_SCRIPT}")
 
@@ -29,11 +29,11 @@ SET(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 
-set(AS                          ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-as) # absolute path needs to be set accordingly
-set(AR                          ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-ar) # absolute path needs to be set accordingly
-set(OBJCOPY                     ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-objcopy) # absolute path needs to be set accordingly
-set(OBJDUMP                     ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-objdump) # absolute path needs to be set accordingly
-set(SIZE                        ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-size) # absolute path needs to be set accordingly
+#set(AS                          ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-as) # absolute path needs to be set accordingly
+#set(AR                          ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-ar) # absolute path needs to be set accordingly
+#set(OBJCOPY                     ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-objcopy) # absolute path needs to be set accordingly
+#set(OBJDUMP                     ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-objdump) # absolute path needs to be set accordingly
+#set(SIZE                        ${CMAKE_SOURCE_DIR}/arm-tools-cube/bin/arm-none-eabi-size) # absolute path needs to be set accordingly
 
 
 SET(CMAKE_C_FLAGS "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=gnu11")
