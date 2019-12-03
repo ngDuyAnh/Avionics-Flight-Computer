@@ -3,9 +3,14 @@ include(CMakeForceCompiler)
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
 
-set(ARM_TOOLS_DIR       "/opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/ARMTools/bin")
-set(EABI_PREFIX         "arm-atollic-eabi")
-#set(CMAKE_MAKE_PROGRAM "/usr/bin/make")
+# Attolic ARM-Tools
+#set(ARM_TOOLS_DIR       "/opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/ARMTools/bin")
+#set(EABI_PREFIX         "arm-atollic-eabi")
+
+# STM32Cube ARM-Tools
+set(ARM_TOOLS_DIR       "/opt/st/stm32cubeide_1.0.2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.linux64_1.0.0.201904181610/tools/bin")
+set(EABI_PREFIX         "arm-none-eabi")
+
 set(CMAKE_C_COMPILER   "${ARM_TOOLS_DIR}")
 set(CMAKE_CXX_COMPILER "${ARM_TOOLS_DIR}")
 
