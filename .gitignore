@@ -3,7 +3,6 @@
 *.LAUNCH
 /cmake-build-debug
 .idea/
-.cproject
 .mxproject
 .project
 .code_review_properties
