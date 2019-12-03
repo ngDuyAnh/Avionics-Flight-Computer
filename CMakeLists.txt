@@ -43,11 +43,11 @@ add_definitions("-D__weak=__attribute__((weak))")
 add_definitions("-D__packed=__attribute__((__packed__))")
 
 
-set(CMAKE_C_FLAGS "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=gnu11 \
+set(CMAKE_C_FLAGS "-g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=gnu11 \
                    -specs=nano.specs -fstack-usage -fdata-sections -fdata-sections"
         )
 
-SET(CMAKE_CXX_FLAGS "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=c++11 \
+SET(CMAKE_CXX_FLAGS "-g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=c++11 \
                     -specs=nano.specs -fstack-usage -fdata-sections -fdata-sections"
         )
 
