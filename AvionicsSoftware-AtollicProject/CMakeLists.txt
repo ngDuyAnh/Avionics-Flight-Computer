@@ -3,8 +3,14 @@ include(CMakeForceCompiler)
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
 
-set(ARM_TOOLS_DIR       "/opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/ARMTools/bin")
-set(EABI_PREFIX         "arm-atollic-eabi")
+# Attolic ARM-Tools
+#set(ARM_TOOLS_DIR       "/opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/ARMTools/bin")
+#set(EABI_PREFIX         "arm-atollic-eabi")
+
+# STM32Cube ARM-Tools
+set(ARM_TOOLS_DIR       "/opt/st/stm32cubeide_1.0.2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.linux64_1.0.0.201904181610/tools/bin")
+set(EABI_PREFIX         "arm-none-eabi")
+
 #set(CMAKE_MAKE_PROGRAM "/usr/bin/make")
 set(CMAKE_C_COMPILER   "${ARM_TOOLS_DIR}")
 set(CMAKE_CXX_COMPILER "${ARM_TOOLS_DIR}")
@@ -43,11 +49,11 @@ add_definitions("-D__weak=__attribute__((weak))")
 add_definitions("-D__packed=__attribute__((__packed__))")
 
 
-set(CMAKE_C_FLAGS "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=gnu11 \
+set(CMAKE_C_FLAGS "-g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=gnu11 \
                    -specs=nano.specs -fstack-usage -fdata-sections -fdata-sections"
     )
 
-SET(CMAKE_CXX_FLAGS "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=c++11 \
+SET(CMAKE_CXX_FLAGS "-g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -std=c++11 \
                     -specs=nano.specs -fstack-usage -fdata-sections -fdata-sections"
     )
 
@@ -60,7 +66,7 @@ add_library(CMSIS_LIB
             Drivers/CMSIS/Device/ST/STM32F4xx/Source/stm32f4xx_hal_msp.c
             Drivers/CMSIS/Device/ST/STM32F4xx/Source/stm32f4xx_hal_timebase_tim.c
             Drivers/CMSIS/Device/ST/STM32F4xx/Source/stm32f4xx_it.c
-            startup/startup_stm32f401xe.s
+        Startup/startup_stm32f401xe.s
             )
 
 add_library(RTOS_LIB
@@ -77,27 +83,27 @@ add_library(RTOS_LIB
             )
 
 add_library(SPIFFS
-            src/fs/params_test.h
-            src/fs/spiffs.h
-            src/fs/spiffs_cache.c
-            src/fs/spiffs_check.c
-            src/fs/spiffs_config.h
-            src/fs/spiffs_gc.c
-            src/fs/spiffs_hydrogen.c
-            src/fs/spiffs_nucleus.c
-            src/fs/spiffs_nucleus.h
-            src/fs/fs.h
-            src/fs/fs.c
+        Src/fs/params_test.h
+        Src/fs/spiffs.h
+        Src/fs/spiffs_cache.c
+        Src/fs/spiffs_check.c
+        Src/fs/spiffs_config.h
+        Src/fs/spiffs_gc.c
+        Src/fs/spiffs_hydrogen.c
+        Src/fs/spiffs_nucleus.c
+        Src/fs/spiffs_nucleus.h
+        Src/fs/fs.h
+        Src/fs/fs.c
             )
 
-file(GLOB_RECURSE USER_SRC "src/*.c")
+file(GLOB_RECURSE USER_SRC "Src/*.c")
 file(GLOB_RECURSE HAL_SRC "Drivers/STM32F4xx_HAL_Driver/Src/*.c")
 
 
 include_directories(Drivers/STM32F4xx_HAL_Driver/Inc)
 include_directories(Drivers/CMSIS/Include)
 include_directories(Drivers/CMSIS/Device/ST/STM32F4xx/Include)
-include_directories(src)
+include_directories(Src)
 include_directories(Middlewares/Third_Party/FreeRTOS/Source)
 include_directories(Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS)
 include_directories(Middlewares/Third_Party/FreeRTOS/Source/include)
