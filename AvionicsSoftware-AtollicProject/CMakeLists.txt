@@ -33,7 +33,9 @@ if ($ENV{CLION_IDE})
                    Save file and close it
              e) open PowerShell and go to the project directory and type:
                 ./build.ps1
-             g) wait till it is finished, but make sure the build is successful
+             f) wait till it is finished, but make sure the build is successful
+             g) Execute CLion from PowerShell!
+
 
             3. Setup CLion Toolchains:
              a) Go to File -> Settings -> Build, Execution, Deployment -> Toolchains, let CLion detect the existing environments. then make some modifications to it
@@ -57,6 +59,10 @@ if ($ENV{CLION_IDE})
             \"EABI_PREFIX\" for STM32CubeIDE       MUST BE: \"arm-none-eabi\""
 
             )
+
+
+        set(EABI_PATH "")
+
 
     elseif(UNIX)
         message("OS DETECTED: " "OS Linux")
@@ -92,14 +98,14 @@ endif()
 
 
 IF(WIN32)
-    set(CMAKE_C_COMPILER     ${EABI_PREFIX}-gcc)     # absolute path needs to be set accordingly
-    set(CMAKE_CXX_COMPILER   ${EABI_PREFIX}-g++)     # absolute path needs to be set accordingly
-    set(AS                   ${EABI_PREFIX}-gcc-as)  # absolute path needs to be set accordingly
-    set(AR                   ${EABI_PREFIX}-gcc-ar)  # absolute path needs to be set accordingly
-    set(OBJCOPY              ${EABI_PREFIX}-objcopy) # absolute path needs to be set accordingly
-    set(OBJDUMP              ${EABI_PREFIX}-objdump) # absolute path needs to be set accordingly
-    set(SIZE                 ${EABI_PREFIX}-size)    # absolute path needs to be set accordingly
-    set(GDB                  ${EABI_PREFIX}-gdb)     # absolute path needs to be set accordingly
+    set(CMAKE_C_COMPILER     ${EABI_PATH}${EABI_PREFIX}-gcc)     # absolute path needs to be set accordingly
+    set(CMAKE_CXX_COMPILER   ${EABI_PATH}${EABI_PREFIX}-g++)     # absolute path needs to be set accordingly
+    set(AS                   ${EABI_PATH}${EABI_PREFIX}-gcc-as)  # absolute path needs to be set accordingly
+    set(AR                   ${EABI_PATH}${EABI_PREFIX}-gcc-ar)  # absolute path needs to be set accordingly
+    set(OBJCOPY              ${EABI_PATH}${EABI_PREFIX}-objcopy) # absolute path needs to be set accordingly
+    set(OBJDUMP              ${EABI_PATH}${EABI_PREFIX}-objdump) # absolute path needs to be set accordingly
+    set(SIZE                 ${EABI_PATH}${EABI_PREFIX}-size)    # absolute path needs to be set accordingly
+    set(GDB                  ${EABI_PATH}${EABI_PREFIX}-gdb)     # absolute path needs to be set accordingly
 elseif(UNIX)
     include(CMakeForceCompiler)
 
