@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.5.1)
-project(avionics NONE)
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -124,6 +123,7 @@ if (WIN32)
     SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wmissing-prototypes -Wmissing-declarations -Wl,-gc-sections,--print-memory-usage -T $${LINKER_SCRIPT}")
 endif()
 
+project(avionics)
 enable_language(ASM)
 enable_language(C)
 enable_language(CXX)
