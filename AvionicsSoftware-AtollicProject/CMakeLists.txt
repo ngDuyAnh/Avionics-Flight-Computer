@@ -34,7 +34,9 @@ if ($ENV{CLION_IDE})
                    Save file and close it
              e) open PowerShell and go to the project directory and type:
                 ./build.ps1
-             g) wait till it is finished, but make sure the build is successful
+             f) wait till it is finished, but make sure the build is successful
+             g) Execute CLion from PowerShell!
+
 
             3. Setup CLion Toolchains:
              a) Go to File -> Settings -> Build, Execution, Deployment -> Toolchains, let CLion detect the existing environments. then make some modifications to it
