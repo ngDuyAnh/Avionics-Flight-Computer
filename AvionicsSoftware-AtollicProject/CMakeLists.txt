@@ -119,7 +119,9 @@ elseif(UNIX)
     set(GDB                  "${ARM_TOOLS_DIR}/${EABI_PREFIX}-gdb")     # absolute path needs to be set accordingly
 endif()
 
-if (WIN32)
+if (
+
+)
     SET(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32F401RE_FLASH.ld)
     SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-gc-sections -T ${LINKER_SCRIPT}")
     SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wmissing-prototypes -Wmissing-declarations -Wl,-gc-sections,--print-memory-usage -T $${LINKER_SCRIPT}")
@@ -206,7 +208,7 @@ add_executable(${PROJECT_NAME}.elf
         ${LINKER_SCRIPT}
         )
 
-target_link_libraries(${PROJECT_NAME}.elf CMSIS_LIB RTOS_LIB)
+target_link_libraries(${PROJECT_NAME}.elf CMSIS_LIB RTOS_LIB -lm)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${PROJECT_SOURCE_DIR}/build/${PROJECT_NAME}.map")
 set(HEX_FILE ${PROJECT_SOURCE_DIR}/build/${PROJECT_NAME}.hex)
