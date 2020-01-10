@@ -100,21 +100,33 @@ IF(WIN32)
     set(OBJDUMP              ${EABI_PREFIX}-objdump) # absolute path needs to be set accordingly
     set(SIZE                 ${EABI_PREFIX}-size)    # absolute path needs to be set accordingly
     set(GDB                  ${EABI_PREFIX}-gdb)     # absolute path needs to be set accordingly
-else()
-    set(GDB                  ${EABI_PREFIX}-gdb)     # absolute path needs to be set accordingly
+elseif(UNIX)
+    include(CMakeForceCompiler)
+
+    set(ARM_TOOLS_DIR           "/opt/st/stm32cubeide_1.0.2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.linux64_1.0.0.201904181610/tools/bin")
+    set(CMAKE_C_COMPILER_WORKS  1)
+    set(CMAKE_C_COMPILER        "${ARM_TOOLS_DIR}/${EABI_PREFIX}-gcc")  # absolute path needs to be set accordingly
+    set(CMAKE_CXX_COMPILER      "${ARM_TOOLS_DIR}/${EABI_PREFIX}-g++")  # absolute path needs to be set accordingly
+
+    CMAKE_FORCE_C_COMPILER  (${CMAKE_C_COMPILER}   GNU)                 # absolute path needs to be set accordingly
+    CMAKE_FORCE_CXX_COMPILER(${CMAKE_CXX_COMPILER} GNU)                 # absolute path needs to be set accordingly
+
+    set(AS                   ${ARM_TOOLS_DIR}/${EABI_PREFIX}-gcc-as)    # absolute path needs to be set accordingly
+    set(AR                   ${ARM_TOOLS_DIR}/${EABI_PREFIX}-gcc-ar)    # absolute path needs to be set accordingly
+    set(OBJCOPY              ${ARM_TOOLS_DIR}/${EABI_PREFIX}-objcopy)   # absolute path needs to be set accordingly
+    set(OBJDUMP              ${ARM_TOOLS_DIR}/${EABI_PREFIX}-objdump)   # absolute path needs to be set accordingly
+    set(SIZE                 ${ARM_TOOLS_DIR}/${EABI_PREFIX}-size)      # absolute path needs to be set accordingly
+    set(GDB                  "${ARM_TOOLS_DIR}/${EABI_PREFIX}-gdb")     # absolute path needs to be set accordingly
 endif()
-
-
-SET(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32F401RE_FLASH.ld)
-SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-gc-sections -T ${LINKER_SCRIPT}")
-SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wmissing-prototypes -Wmissing-declarations -Wl,-gc-sections,--print-memory-usage -T $${LINKER_SCRIPT}")
 
 project(avionics)
 
 enable_language(ASM)
 enable_language(C)
 
-
+SET(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32F401RE_FLASH.ld)
+SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-gc-sections -T ${LINKER_SCRIPT}")
+SET(CMAKE_EXE_LINKER_FLAGS_INIT "-Wmissing-prototypes -Wmissing-declarations -Wl,-gc-sections,--print-memory-usage -T $${LINKER_SCRIPT}")
 
 # Add -O0 to remove optimizations when using gcc
 IF(CMAKE_COMPILER_IS_GNUCC)
