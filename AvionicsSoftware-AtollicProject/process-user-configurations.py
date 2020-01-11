@@ -46,8 +46,7 @@ def gen_aux_config_files():
                 os.remove(ps.name)
                 raise Exception("Path does not exist or is not a directory: " + dataMap.get(key))
 
-            if sys.platform != 'win32':
-                path = str(path).replace('\\','/')
+            path = str(path).replace('\\','/')
 
             cmake.write('SET(' + key + ' \"' + str(path) + '\")')
             cmake.write('\n')
