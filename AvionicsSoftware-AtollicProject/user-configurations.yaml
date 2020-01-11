@@ -1,5 +1,0 @@
-MINGW_ENV_PATH:         C:\dev\env\bin
-CLION_PATH:             C:\dev\opt\clion\bin
-CLION_CMAKE_PATH:       C:\dev\opt\clion\bin\cmake\win\bin
-ARM_TOOLS_DIR:          /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.3.0/ARMTools/bin
-SOURCE_PATH:            C:\dev\projects\Avionics-Flight-Computer\AvionicsSoftware-AtollicProject

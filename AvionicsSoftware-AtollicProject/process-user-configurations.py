@@ -1,6 +1,7 @@
 import yaml
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath, WindowsPath
+import sys
 
 CC = '-gcc'
 CXX = '-g++'
@@ -17,29 +18,65 @@ TOOLS = [AS, AR, OBJCOPY, OBJDUMP, SIZE, GDB]
 
 
 def gen_aux_config_files():
-    cmake = open("CMakeConfigFile.cmake", "w")
-    batch = open("CMDConfigFile.cmd", "w")
-    ps    = open("PSConfigFile.ps1", 'w')
+
     with open('user-configurations.yaml') as f:
         # use safe_load instead load
         dataMap = yaml.safe_load(f)
+
+        if dataMap is None:
+            raise Exception("Configuration file \"user-configurations.yaml\" is empty!")
+
+        cmake = open("CMakeConfigFile.cmake", "w")
+        batch = open("CMDConfigFile.cmd", "w")
+        ps    = open("PSConfigFile.ps1", 'w')
+
+
         for key in dataMap:
-            path = Path(dataMap.get(key))
-            if not path.is_dir():
+            if sys.platform == 'win32':
+                path = WindowsPath(dataMap.get(key))
+            else:
+                path = PurePosixPath(dataMap.get(key))
+
+            if not os.path.isdir(str(path)):
+                cmake.close()
+                batch.close()
+                ps.close()
+                os.remove(cmake.name)
+                os.remove(batch.name)
+                os.remove(ps.name)
                 raise Exception("Path does not exist or is not a directory: " + dataMap.get(key))
 
-            cmake.write('SET(' + key + ' \"' + dataMap.get(key) + '\")')
+            if sys.platform != 'win32':
+                path = str(path).replace('\\','/')
+
+            cmake.write('SET(' + key + ' \"' + str(path) + '\")')
             cmake.write('\n')
-            batch.write('set ' + key + '=' + ' \"' + dataMap.get(key) + '\"')
+            batch.write('set ' + key + '=' + ' \"' + str(path) + '\"')
             batch.write('\n')
-            ps.write('$ ' + key + '=' + ' \"' + dataMap.get(key) + '\"')
+            ps.write('$' + key + '=' + ' \"' + str(path) + '\"')
             ps.write('\n')
+
 
     ARM_TOOLS_DIR = dataMap.get('ARM_TOOLS_DIR')
     for compiler_executable_name in os.listdir(ARM_TOOLS_DIR):
-        if compiler_executable_name.endswith(CC):
-            cmake.write('SET(EABI_PREFIX \"' + compiler_executable_name[0:-4] + '\")')
-            break
+        if sys.platform == 'win32':
+            if compiler_executable_name.endswith(CC + '.exe'):
+                cmake.write('SET(EABI_PREFIX \"' + compiler_executable_name[0:-8] + '\")')
+                cmake.write('\n')
+                batch.write('set EABI_PREFIX=' + ' \"' + compiler_executable_name[0:-8] + '\"')
+                batch.write('\n')
+                ps.write('$EABI_PREFIX=' + ' \"' + compiler_executable_name[0:-8] + '\"')
+                ps.write('\n')
+                break
+        else:
+            if compiler_executable_name.endswith(CC):
+                cmake.write('SET(EABI_PREFIX \"' + compiler_executable_name[0:-4] + '\")')
+                cmake.write('\n')
+                batch.write('set EABI_PREFIX=' + ' \"' + compiler_executable_name[0:-4] + '\"')
+                batch.write('\n')
+                ps.write('$EABI_PREFIX=' + ' \"' + compiler_executable_name[0:-4] + '\"')
+                ps.write('\n')
+                break
 
 
 if __name__ == '__main__':

@@ -13,6 +13,5 @@ AvionicsSoftware-AtollicProject/startup.bat
 AvionicsSoftware-AtollicProject/CMDConfigFile.cmd
 AvionicsSoftware-AtollicProject/PSConfigFile.ps1
 AvionicsSoftware-AtollicProject/CMakeConfigFile.cmake
-user-configurations.yaml
 AvionicsSoftware-AtollicProject/venv/
-
+*.yaml
