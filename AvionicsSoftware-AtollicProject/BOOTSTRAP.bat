@@ -10,4 +10,4 @@ IF !CLION_CMAKE_PATH!=="" GOTO:EOF
 IF !ARM_TOOLS_PATH!=="" GOTO:EOF
 
 CALL ENVIRONMENT.BAT %MINGW_ENV_PATH% %CLION_PATH% %CLION_CMAKE_PATH% %ARM_TOOLS_PATH%
-
+REG add "HKCU\Software\Microsoft\Command Processor" /v Autorun /d "doskey make=%MINGW_ENV_PATH%\mingw32-make.exe" /f
