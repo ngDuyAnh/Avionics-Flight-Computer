@@ -29,7 +29,7 @@ $Reg = "Registry::HKLM\System\CurrentControlSet\Control\Session Manager\Environm
 $OldPath = (Get-ItemProperty -Path "$Reg" -Name PATH).Path
 SETX Path "$OldPath%ARM_DEV_ENV%"
 
-New-Item -ItemType Directory -Force -Path $profile
+New-Item -ItemType File $profile -Force
 Clear-Content -Path $profile
 "New-Alias make C:\dev\env\bin\mingw32-make.exe" | Add-Content  $profile
 "function go_to_avionics {set-location $SOURCE_PATH}" | Add-Content  $profile
