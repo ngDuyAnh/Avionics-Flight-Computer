@@ -10,3 +10,4 @@ bin/
 .mxproject
 .project
 AvionicsSoftware-AtollicProject/startup.bat
+*.yaml
