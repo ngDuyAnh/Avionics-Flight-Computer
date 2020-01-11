@@ -1,26 +1,27 @@
-$MINGW_ENV_PATH="C:\dev\env\bin"
-$CLION_PATH="C:\dev\opt\clion\bin"
-$CLION_CMAKE_PATH="C:\dev\opt\clion\bin\cmake\win\bin"
-$ARM_TOOLS_PATH="C:\dev\opt\cubeide\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-arm-embedded.7-2018-q2-update.win32_1.0.0.201904081647\tools\bin"
-$SOURCE_PATH="C:\dev\projects\Avionics-Flight-Computer\AvionicsSoftware-AtollicProject"
+
+. ./PSConfigFile.ps1
 
 If ($MINGW_ENV_PATH -eq "")
 {
+    Write-Error "Oops! Seems like you have not run \"python process-user-configurations.py\" first!"
     exit
 }
 
 If ($CLION_PATH -eq "")
 {
+    Write-Error "Oops! Seems like you have not run \"python process-user-configurations.py\" first!"
     exit
 }
 
 If ($CLION_CMAKE_PATH -eq "")
 {
+    Write-Error "Oops! Seems like you have not run \"python process-user-configurations.py\" first!"
     exit
 }
 
 If ($ARM_TOOLS_PATH -eq "")
 {
+    Write-Error "Oops! Seems like you have not run \"python process-user-configurations.py\" first!"
     exit
 }
 

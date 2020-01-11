@@ -1,12 +1,6 @@
 @ECHO OFF
-set MINGW_ENV_PATH="C:\dev\env\bin"
-set CLION_PATH="C:\dev\opt\clion\bin"
-set CLION_CMAKE_PATH="C:\dev\opt\clion\bin\cmake\win\bin"
-set ARM_TOOLS_PATH="C:\dev\opt\cubeide\STM32CubeIDE\plugins\com.st.stm32cube.ide.mcu.externaltools.gnu-arm-embedded.7-2018-q2-update.win32_1.0.0.201904081647\tools\bin"
-set SOURCE_PATH="C:\dev\projects\Avionics-Flight-Computer\AvionicsSoftware-AtollicProject"
 
-
-
+call CMDConfigFile.cmd
 
 IF !MINGW_ENV_PATH!=="" GOTO:EOF
 IF !CLION_PATH!=="" GOTO:EOF

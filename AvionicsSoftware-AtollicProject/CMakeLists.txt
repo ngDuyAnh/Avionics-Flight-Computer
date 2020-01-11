@@ -3,7 +3,14 @@ set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(EABI_PREFIX arm-none-eabi)
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/CMakeConfigFile.cmake")
+    include(${CMAKE_SOURCE_DIR}/CMakeConfigFile.cmake)
+else()
+    message(FATAL_ERROR "Cannot generate project: please, first run \"python process-user-configurations.py\"")
+endif()
+
+
 
 if ($ENV{CLION_IDE})
     if (WIN32)
@@ -103,9 +110,7 @@ IF(WIN32)
     set(SIZE                 ${EABI_PREFIX}-size                    )   # absolute path needs to be set accordingly
     set(GDB                  ${EABI_PREFIX}-gdb                     )   # absolute path needs to be set accordingly
 elseif(UNIX)
-
     include(CMakeForceCompiler)
-    set(ARM_TOOLS_DIR        "/opt/st/stm32cubeide_1.0.2/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.7-2018-q2-update.linux64_1.0.0.201904181610/tools/bin")
     set(CMAKE_C_COMPILER_WORKS                                     1)
     CMAKE_FORCE_C_COMPILER  (${ARM_TOOLS_DIR}/${EABI_PREFIX}-gcc GNU)   # absolute path needs to be set accordingly
     CMAKE_FORCE_CXX_COMPILER(${ARM_TOOLS_DIR}/${EABI_PREFIX}-g++ GNU)   # absolute path needs to be set accordingly
