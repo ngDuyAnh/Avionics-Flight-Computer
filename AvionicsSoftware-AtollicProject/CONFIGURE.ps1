@@ -1,5 +1,3 @@
-Set-ExecutionPolicy RemoteSigned -Force
-
 $MINGW_ENV_PATH="C:\dev\env\bin"
 $CLION_PATH="C:\dev\opt\clion\bin"
 $CLION_CMAKE_PATH="C:\dev\opt\clion\bin\cmake\win\bin"
@@ -31,7 +29,7 @@ $Reg = "Registry::HKLM\System\CurrentControlSet\Control\Session Manager\Environm
 $OldPath = (Get-ItemProperty -Path "$Reg" -Name PATH).Path
 SETX Path "$OldPath%ARM_DEV_ENV%"
 
-New-Item -ItemType Directory  -Path $profile
+New-Item -ItemType Directory -Force -Path $profile
 Clear-Content -Path $profile
 "New-Alias make C:\dev\env\bin\mingw32-make.exe" | Add-Content  $profile
 "function go_to_avionics {set-location $SOURCE_PATH}" | Add-Content  $profile
