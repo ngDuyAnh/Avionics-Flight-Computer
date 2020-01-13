@@ -82,6 +82,10 @@ def gen_aux_config_files():
                     ps.write('\n')
                     break
 
+        if sys.platform != 'win32':
+            return
+
+
         bat_build.write("@ECHO OFF")
         bat_build.write("\n")
         bat_build.write("rd /s /q \"build\" > nul 2>&1")
