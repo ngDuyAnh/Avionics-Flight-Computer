@@ -4,8 +4,8 @@ set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/CMakeConfigFile.cmake")
-    include(${CMAKE_SOURCE_DIR}/CMakeConfigFile.cmake)
+if(EXISTS "${CMAKE_SOURCE_DIR}/generated/CMakeConfigFile.cmake")
+    include(${CMAKE_SOURCE_DIR}/generated/CMakeConfigFile.cmake)
 else()
     message(FATAL_ERROR "Cannot generate project: please, first run \"python process-user-configurations.py\"")
 endif()

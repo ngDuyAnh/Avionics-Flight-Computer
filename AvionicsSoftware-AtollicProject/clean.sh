@@ -1,5 +1,5 @@
-rm -rf build
-rm -rf bin
-rm CMakeConfigFile.cmake
-rm CMDConfigFile.cmd
-rm PSConfigFile.ps1
+rm -rf ../build
+rm -rf ../bin
+rm -rf ./generated
+rm REBUILD.bat
+rm REBUILD.ps1
