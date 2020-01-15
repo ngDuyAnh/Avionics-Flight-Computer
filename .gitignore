@@ -1,3 +1,17 @@
 /Debug/
 .settings/language.settings.xml
 *.LAUNCH
+.idea/
+build/
+Debug/
+bin/
+.cproject
+.code_review_properties
+.mxproject
+.project
+AvionicsSoftware-AtollicProject/startup.bat
+AvionicsSoftware-AtollicProject/CMDConfigFile.cmd
+AvionicsSoftware-AtollicProject/PSConfigFile.ps1
+AvionicsSoftware-AtollicProject/CMakeConfigFile.cmake
+AvionicsSoftware-AtollicProject/venv/
+*.yaml
