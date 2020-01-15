@@ -5,7 +5,7 @@ $version = if($p -is [System.Management.Automation.ErrorRecord])
 {
     # grab the version string from the error message
 
-    Write-Warning "Oops! Seems liek you do not have python installed in your system!"
+    Write-Warning "Oops! Seems like you do not have python installed in your system!"
 }
 else
 {
