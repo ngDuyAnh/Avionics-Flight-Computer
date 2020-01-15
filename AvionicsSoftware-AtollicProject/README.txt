@@ -1,4 +1,6 @@
 Example of the file user-configurations.yaml:
+NOTE: You must create this file in the same directory as 'CONFIGURE.ps1'. The locations will vary depending on your installation.
+The file locations should have no spaces in the name. It is suggested to follow a similar directory structure as is listed below.
 
 ```
 MINGW_ENV_PATH:         C:/dev/env/bin
@@ -12,7 +14,7 @@ SOURCE_PATH:            C:/dev/projects/Avionics-Flight-Computer/AvionicsSoftwar
 FOR WINDOWS:
 ```
 MAKE SURE to set up CLION properly.
-The configurations include: Toolchains such as MinGW make, gcc and g++.
+The configurations include: Toolchains such as MinGW make, gcc and g++, and OpenOCD.
 Install STM32CubeIDE or AtttolicTrue Studio to install ARM build toolchains
 
 If you use STM32CubeIDE:          {STM32CubeIDE_LOCATION}/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-arm-embedded.7-2018-q2-update.win32_{CHOOSE_LATEST_VERSION}/tools/bin
