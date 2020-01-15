@@ -3,6 +3,7 @@ Flight Computer Software for the 2019 Rocket.
 
 ## Versions
 #### v2.0.0 - 2020 Spaceport America Cup Flight Software
+##### v2.0.1 - CMake build configured for cross compilation. Includes scripts for setting environment variables on Linux and Windows.
 
 #### v1.0.0 - 2019 Spaceport America Cup Flight Software
 - includes custom flight computer software
