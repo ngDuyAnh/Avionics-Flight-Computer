@@ -61,15 +61,18 @@ bool task_command_line_controller_execute_command(const char *command)
             OPT_CASE_FUNC(302, 'h', general, help, ARGUMENTS);
             OPT_CASE_FUNC(305, 's', general, save, ARGUMENTS);
             OPT_CASE_FUNC(306, 'S', general, start, ARGUMENTS);
-            
+
             OPT_CASE_MODULE(300, 'c', configure, ARGUMENTS);
             OPT_CASE_MODULE(301, 'e', ematch,    ARGUMENTS);
             OPT_CASE_MODULE(303, 'm', mem,       ARGUMENTS);
             OPT_CASE_MODULE(304, 'r', read,      ARGUMENTS);
+            OPT_CASE_MODULE(307, 'd', datafeeder,ARGUMENTS);
+
+
             // Add more commands
             
-//            OPT_ERROR_FUNC  (configure, error_behaviour,   command);
-//            OPT_DEFAULT_FUNC(configure, default_behaviour, command);
+            OPT_ERROR_FUNC  (configure, error_behaviour,   command);
+            OPT_DEFAULT_FUNC(configure, default_behaviour, command);
         }
         
         // restoring optind

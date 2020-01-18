@@ -18,7 +18,8 @@ DECL_NEW_USAGE(GENERAL) = "Commands:\r\n"
                           "\t[ematch] - check and fire ematches\r\n"
                           "\t[mem] - Check on and erase the flash memory\r\n"
                           "\t[save] - Save all setting to the flight computer\r\n"
-                          "\t[start] - Start the flight computer\r\n";
+                          "\t[start] - Start the flight computer\r\n"
+                          "\t[datafeeder] - datafeeder event loop";
 
 typedef enum{
     MAIN_MENU,
@@ -53,11 +54,12 @@ DECL_NEW_ARG_OPTIONS_FOR(GENERAL) =
         OPTION_ADD_OPTION(read,      304),
         OPTION_ADD_OPTION(save,      305),
         OPTION_ADD_OPTION(start,     306),
+        OPTION_ADD_OPTION(datafeeder,307),
         
         OPTION_LIST_END
     },
     
-    .SHORT = "c:e:h::m::r::s::S",
+    .SHORT = "c:e:h::m::r::s::S::d",
     
     .FUNCTIONS = (option_function[])
     {
