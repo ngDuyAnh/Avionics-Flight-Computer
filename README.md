@@ -180,7 +180,6 @@ referred as application binary interface (ABI) is an interface between two binar
 that is being run by a user. ABI defines the low-level binary interface between two or more pieces of software on a particular architecture
 
 ABIs cover details such as:
-------------------------------------------------------------------------------------------------------------------------
 - a processor instruction set (with details like register file structure, stack organization, memory access types, ...)
 - the sizes, layouts, and alignments of basic data types that the processor can directly access
 - the calling convention, which controls how functions' arguments are passed and return values are retrieved; for example, whether all parameters are passed on the stack or some are passed in registers, which registers are used for which function parameters, and whether the first function parameter passed on the stack is pushed first or last onto the stack
