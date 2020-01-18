@@ -3,6 +3,7 @@ You will also leran how to setup Windows Environemtn similar to Linux and compil
 I will draw the difference between Atollic Studio and CLion and explain why it is better to be able to set up CLion
 
 AtollicTrueStudio:
+------------------------------------------------------------------------------------------------------------------------
 This is a simple eclipse-based IDE, nothing else!
 
 It just sets up the embedded development environment for you. Basically does the job you should be doing in order to understand
@@ -22,6 +23,7 @@ of the project in your head, amaking you to be capable to build and upload the c
 
 
 CLion:
+------------------------------------------------------------------------------------------------------------------------
 This is also IDE! But not eclipse based, thus, you gotta set it up yourself. Plus, CLion does not have an internal building project tools and purely relies on CMake Project generating
 tool. Benefits are that you will completely understand how project is build an compiled, will have control over the smallest details and CLion is way cooler made IDE which is extremely
 intelligent compared to dump and stupid eclipse which does not provide any comfort neither for editing nor for debugging. Lastly, the design of eclipse sucks!
@@ -29,6 +31,7 @@ intelligent compared to dump and stupid eclipse which does not provide any comfo
 
 
 Some theory to know before proceeding with CLion.
+------------------------------------------------------------------------------------------------------------------------
 Before setting things up, if you happened to work on Windows OS, then i just want to let yo know that setting up environment
 takes more steps than for Linux OS. First thing you need to understand is that Windows works very tight with environment variables,
 while Linux uses symbolic links and installation principles. Symbolic links are similar to Windows shortcuts, but the difference
@@ -44,6 +47,7 @@ you have its path (where exe file is, usually in the root directory of particula
 
 
 Windows Environment Paths:
+------------------------------------------------------------------------------------------------------------------------
 On Windows you have two Environment Paths: System Environment Path and User Environment Path. Both are called as "Path"
 So you have two versions of this variable, one is seen system-wide, one is seen user-wide.
 You can check your Environment Variables by going to: Control Panel ->System and Security -> Environment -> Advanced System Settings -> Environment Variables
@@ -51,6 +55,7 @@ You will see two tables, one is dedicated for USER and one is for SYSTEM. If you
 for all users, use the one below.
 
 Environment Variables:
+------------------------------------------------------------------------------------------------------------------------
 Both tables know the only variable called "Path" and that is the only thing you Windows system will ever be able to see.
 However you can see that there are many entries in each table. Each entry has a name called "variable", so you can edit those variables and add up to a limited number of pathes.
 Create for example a variable called "MY_GAMES" and add there all the folders containing their exe files one by one separated by a semicolon.
@@ -59,6 +64,7 @@ To make it work, you need to add you variable "MY_GAMES" to Path by adding "%MY_
 all the entries of MY_GAMES variables. Now you can run all your games that you added to MY_GAMES from any command line.
 
 C/C++ Toolchains:
+------------------------------------------------------------------------------------------------------------------------
 To build any project from source you need to have certain tools (executables) that are meant to generate object files, link them together into another executable that you will then run on a platform.
 Those tools are called compiler and linker. Compiler translates each of your code source files (*.c or *.cpp) into a corresponding object file (*.o) that contains machine code. Linkers take those binary
 files and literally merges them together using certain rules and produce a single executable file. Linker's rules are defined in a text configuration file called linker script. Every link operation done
@@ -68,6 +74,7 @@ For embedded systems, map files are a lot more useful. (Although you wouldn't be
 a particular variable resides in, are important.
 
 Makefiles
+------------------------------------------------------------------------------------------------------------------------
 Makefile is a file (by default named "Makefile") containing a set of directives used by a make build automation tool to generate a target/goal (executable). Most often, the makefile directs
 Make tool on how to compile and  link a program. A makefile works upon the principle that files only need recreating if their dependencies are newer than the file being created/recreated.
 The makefile is recursively carried out (with dependency prepared before each target depending upon them) until everything has been updated (that requires updating) and the primary/ultimate target is complete.
@@ -78,6 +85,7 @@ must be linked together to produce the new executable program.
 
 
 CMake Project Generator:
+------------------------------------------------------------------------------------------------------------------------
 A CMake Generator is responsible for writing the input files for a native build system.
 
 What's a generator?
@@ -125,6 +133,7 @@ The following are supported(**):
 
 
 Extra Generators
+------------------------------------------------------------------------------------------------------------------------
 These are generators that create a configuration to work with an alternative IDE tool and must be included with either an IDE or Command-Line generator.
 The following are supported(**):
 
@@ -149,6 +158,7 @@ files that must be generated that depend on the source files supplied in the CMa
 
 
 x86-x64, ARM, embedded ARM and cross-platform toolchain:
+------------------------------------------------------------------------------------------------------------------------
 A toolchain is a set of distinct software development tools that are linked (or chained) together by specific stages such as GCC, binutils and glibc (a portion of the GNU Toolchain). Optionally,
 a toolchain may contain other tools such as a debugger or a compiler for a specific programming language, such as C++. Quite often, the toolchain used for embedded development is a cross toolchain,
 or more commonly known as a cross compiler. All the programs (like GCC) run on a host system of a specific architecture (such as x86), but they produce binary code (executables) to run on a different
@@ -170,6 +180,7 @@ referred as application binary interface (ABI) is an interface between two binar
 that is being run by a user. ABI defines the low-level binary interface between two or more pieces of software on a particular architecture
 
 ABIs cover details such as:
+------------------------------------------------------------------------------------------------------------------------
 - a processor instruction set (with details like register file structure, stack organization, memory access types, ...)
 - the sizes, layouts, and alignments of basic data types that the processor can directly access
 - the calling convention, which controls how functions' arguments are passed and return values are retrieved; for example, whether all parameters are passed on the stack or some are passed in registers, which registers are used for which function parameters, and whether the first function parameter passed on the stack is pushed first or last onto the stack
@@ -189,6 +200,7 @@ NOTE: that 'abi' refers to the same application binary interface (ABI)
 
 
 MinGW Environment
+------------------------------------------------------------------------------------------------------------------------
 So, we have talked about ABI. Now we need to talk about API (Application Programming Interface).
 Windows uses win32 API to provide development environment, while of course win32 forwards the calls to native API.
 Native API is something used across all the platforms, it mostly provides system calls which all the other libraries, including win32 use.
@@ -221,6 +233,7 @@ This step requires some level of organization. In Linux it is easier and this st
 operating system for development.
 
 DOWNLOAD:
+------------------------------------------------------------------------------------------------------------------------
 - MinGW-64
 - ATollic True Studio
 - CLion (latest version)
@@ -228,6 +241,7 @@ DOWNLOAD:
 - Python (latest version)
 
 INSTALLATION:
+------------------------------------------------------------------------------------------------------------------------
 1. Create a folder C:\dev
 2. Create a folder C:\dev\opt
 3. Create a folder C:\dev\env
@@ -240,6 +254,7 @@ INSTALLATION:
 NOTE: while installing CLion and Python do not check on ADD TO SYSTEM PATH
 
 ENVIRONMENT VARIABLES:
+------------------------------------------------------------------------------------------------------------------------
 Recall what I have mentioned about system-wide Path and User-wide Path. For our purpose we will use User-Wide Path variable
 1. Create a variable named "ARM_DEV_ENV"
 2. Add 6 entries separated by semicolon for:
@@ -256,6 +271,7 @@ C:\dev\env;C:\dev\opt\clion;C:\dev\opt\clion\cmake\win\bin;C:dev\opt\openocd\bin
 Then add new entry %ARM_DEV_ENV% to the "Path" variable and apply changes press OK.
 
 COMMAND TERMINAL:
+------------------------------------------------------------------------------------------------------------------------
 1. Open !NEW! session of any windows terminal (CMD PowerShell, etc)
 2. Type 'cmake'
 3. Type 'mingw32-make'
@@ -270,6 +286,7 @@ back to Environment Variables and make sure you set up everything like I describ
 
 
 CLion:
+------------------------------------------------------------------------------------------------------------------------
 When all the commands work open clion FROM THE TERMINAL (!IMPORTANT!) to make sure we have access to all the variables that
 we just typed and saw working. Of course you can run it from Windows Menu and it should all see the ARM_DEV_ENV variables.
 If for some reason CLion does not see ARM_DEV_ENV then run CLion from the terminal. To check whether CLion sees ARM_DEV_ENV,
@@ -294,6 +311,7 @@ COMPILE AND ENJOY CLION!Now it should work!
 
 
 WINDOWS Aliases:
+------------------------------------------------------------------------------------------------------------------------
 It is good to be able to travel from one folder to another fast, without thinking. It is extremely comfortable.
 The following Aliases will ease your life
 
@@ -326,6 +344,7 @@ Clear-Content -Path $profile
 
 
 EXTRAS:
+------------------------------------------------------------------------------------------------------------------------
 
 Example of the file user-configurations.yaml:
 
