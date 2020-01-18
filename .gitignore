@@ -15,3 +15,5 @@ venv/
 BUILD.BAT
 CLEAN.BAT
 cmake-build-debug/
+Avionics-Flight-Computer_converter.log
+Avionics-Flight-Computer.elf.launch
