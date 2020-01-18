@@ -1,9 +1,9 @@
-In this README you will understand the basics of toolchain systems (including compilers, linkers and makefiles), building processes, difference in platforms.
-You will also leran how to setup Windows Environemtn similar to Linux and compile Avionics-Flight-Computer project with CLion.
-I will draw the difference between Atollic Studio and CLion and explain why it is better to be able to set up CLion
+In this README you will come to understand the basics of toolchain systems (including compilers, linkers and makefiles), building processes, difference in platforms.
+You will also learn how to setup Windows Environment similar to Linux and compile Avionics-Flight-Computer project with CLion.
+I will draw the difference between Atollic Studio and CLion. Also, I will explain why it is better to be able to set up CLion for development.
 
 AtollicTrueStudio:
-------------------------------------------------------------------------------------------------------------------------
+-----------------
 This is a simple eclipse-based IDE, nothing else!
 
 It just sets up the embedded development environment for you. Basically does the job you should be doing in order to understand
@@ -16,38 +16,39 @@ how things work. So what exactly does Atollic do?
 5. Handles debugging setup, through ST-Link driver, connecting arm-atollic-eabi-gdb.exe straight to the driver
 
 That is why you do not need to care of anything. You just follow the right instructions and you are good to go!
-All the eclipse-based IDEs are notorious for working with the internal environment only within eclipse runtime, that is
-why you basically cannot do anything with the project unless you have AtollicStudio. Sometimes it is no the best solution, as it hinders you from learning and also
-limits your capabilities to control the project. It is especially bad for embedded development, as you can benefit a lot knowing how things work and to have a full control
-of the project in your head, amaking you to be capable to build and upload the code to the board with you bare hands using native command console only.
+All the eclipse-based IDEs are notorious for working with the internal environment only within eclipse runtime. That is
+why you basically cannot do anything with the project unless you have AtollicStudio. Sometimes it is not the best solution, as it hinders you from learning and also
+limits your capabilities to control the project. It is especially bad for embedded development, as you can benefit a lot from knowing how things work and to have a full control
+of the project in your head. Making you capable of building and uploading the code to the board with you bare hands using native command console only.
 
 
 CLion:
-------------------------------------------------------------------------------------------------------------------------
-This is also IDE! But not eclipse based, thus, you gotta set it up yourself. Plus, CLion does not have an internal building project tools and purely relies on CMake Project generating
-tool. Benefits are that you will completely understand how project is build an compiled, will have control over the smallest details and CLion is way cooler made IDE which is extremely
+-----------------
+
+This is also IDE! But it is not eclipse based, thus, you must set it up yourself. Plus, CLion does not have an internal building project tools and purely relies on CMake Project generating
+tool. Benefits are that you will completely understand how project is build an compiled, will have control over the smallest details and CLion is way cooler IDE which is extremely
 intelligent compared to dump and stupid eclipse which does not provide any comfort neither for editing nor for debugging. Lastly, the design of eclipse sucks!
 
 
 
 Some theory to know before proceeding with CLion.
-------------------------------------------------------------------------------------------------------------------------
-Before setting things up, if you happened to work on Windows OS, then i just want to let yo know that setting up environment
+Before setting things up, if you happened to work on Windows OS, then I just want to let you know that setting up environment
 takes more steps than for Linux OS. First thing you need to understand is that Windows works very tight with environment variables,
 while Linux uses symbolic links and installation principles. Symbolic links are similar to Windows shortcuts, but the difference
 is that the former can act as executable, while Windows shortcuts (also well known as lnk files) cannot be executed.
 Also, in Linux, many software libraries especially those that are meant to be used in command line install the corresponding executables
 into /usr/bin folder, so you end up having every single tool in one location. Therefore, if some application does not have a dedicated bin
 folder that is copied into /usr/bin/ then you can create a symbolic link to its executable and put it into /usr/bin - the effect is identical.
-Linux's /usr/bin folder is identical to have Windows Environment Path works. You can treat them the same way.
+Linux's /usr/bin folder is identical to how Windows Environment Path works. You can treat them the same way.
 If you want to have a way to run your application from Linux terminal calling it by its name only, you need to make sure that
 you have an executable or symbolic link symbolic link in /usr/bin/.
 On Windows if you want to run your application from CMD or any terminal calling it by its name only, you need to make sure that
-you have its path (where exe file is, usually in the root directory of particular application or in some of its nested folders) set in the Environment Path.
+you have its path (where .exe file is, usually in the root directory of particular application or in some of its nested folders) set in the Environment Path.
 
 
 Windows Environment Paths:
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 On Windows you have two Environment Paths: System Environment Path and User Environment Path. Both are called as "Path"
 So you have two versions of this variable, one is seen system-wide, one is seen user-wide.
 You can check your Environment Variables by going to: Control Panel ->System and Security -> Environment -> Advanced System Settings -> Environment Variables
@@ -55,26 +56,29 @@ You will see two tables, one is dedicated for USER and one is for SYSTEM. If you
 for all users, use the one below.
 
 Environment Variables:
-------------------------------------------------------------------------------------------------------------------------
-Both tables know the only variable called "Path" and that is the only thing you Windows system will ever be able to see.
-However you can see that there are many entries in each table. Each entry has a name called "variable", so you can edit those variables and add up to a limited number of pathes.
-Create for example a variable called "MY_GAMES" and add there all the folders containing their exe files one by one separated by a semicolon.
+-----------------
+
+Both tables know the only variable called "Path" and that is the only thing your Windows system will ever be able to see.
+However you can see that there are many entries in each table. Each entry has a name called "variable", so you can edit those variables and add up to a limited number of paths.
+Create, for example, a variable called "MY_GAMES" and add there all the folders containing their exe files one by one separated by a semicolon.
 Then confirm and apply changes, you need to open a new command line session for the change to work. However it will not work anyways, because Windows only knows about variable named "Path".
 To make it work, you need to add you variable "MY_GAMES" to Path by adding "%MY_GAMES%" to it. When you open a new command line session this time, Windows will extract %MY_GAMES% and will incorporate
 all the entries of MY_GAMES variables. Now you can run all your games that you added to MY_GAMES from any command line.
 
 C/C++ Toolchains:
-------------------------------------------------------------------------------------------------------------------------
-To build any project from source you need to have certain tools (executables) that are meant to generate object files, link them together into another executable that you will then run on a platform.
-Those tools are called compiler and linker. Compiler translates each of your code source files (*.c or *.cpp) into a corresponding object file (*.o) that contains machine code. Linkers take those binary
+-----------------
+
+To build any project from source you need to have certain tools (executables) that are meant to generate object files, link them together into an executable that you will then run on a platform.
+Those tools are called compiler and linker. Compiler translate each of your code source files (*.c or *.cpp) into a corresponding object file (*.o) that contain machine code. Linkers take those binary
 files and literally merges them together using certain rules and produce a single executable file. Linker's rules are defined in a text configuration file called linker script. Every link operation done
 by a linker is controlled by a linker script. This script is written in the linker command language. The main purpose of the linker script is to describe how the sections in the input files should be
 mapped into the output file, and to control the memory layout of the output file. Linker also produces map files (*.map) which map memory addresses to functions and variables within the executable (exe, dll, elf, etc)
-For embedded systems, map files are a lot more useful. (Although you wouldn't be using Visual C++ for that ;) Things like knowing how close you are to running out of program/data memory, and what location
+For embedded systems, map files are a lot more useful. (Although you wouldn't be using Visual C++ for that ;) ) Things like knowing how close you are to running out of program/data memory, and what location
 a particular variable resides in, are important.
 
 Makefiles
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 Makefile is a file (by default named "Makefile") containing a set of directives used by a make build automation tool to generate a target/goal (executable). Most often, the makefile directs
 Make tool on how to compile and  link a program. A makefile works upon the principle that files only need recreating if their dependencies are newer than the file being created/recreated.
 The makefile is recursively carried out (with dependency prepared before each target depending upon them) until everything has been updated (that requires updating) and the primary/ultimate target is complete.
@@ -85,7 +89,8 @@ must be linked together to produce the new executable program.
 
 
 CMake Project Generator:
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 A CMake Generator is responsible for writing the input files for a native build system.
 
 What's a generator?
@@ -133,7 +138,6 @@ The following are supported(**):
 
 
 Extra Generators
-------------------------------------------------------------------------------------------------------------------------
 These are generators that create a configuration to work with an alternative IDE tool and must be included with either an IDE or Command-Line generator.
 The following are supported(**):
 
@@ -158,14 +162,15 @@ files that must be generated that depend on the source files supplied in the CMa
 
 
 x86-x64, ARM, embedded ARM and cross-platform toolchain:
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 A toolchain is a set of distinct software development tools that are linked (or chained) together by specific stages such as GCC, binutils and glibc (a portion of the GNU Toolchain). Optionally,
 a toolchain may contain other tools such as a debugger or a compiler for a specific programming language, such as C++. Quite often, the toolchain used for embedded development is a cross toolchain,
 or more commonly known as a cross compiler. All the programs (like GCC) run on a host system of a specific architecture (such as x86), but they produce binary code (executables) to run on a different
 architecture (for example, ARM). This is called cross compilation and is the typical way of building embedded software. It is possible to compile natively, running GCC on your target. Before searching
 for a prebuilt toolchain or building your own, it's worth checking to see if one is included with your target hardware. However, a GCC native to your host computer will not always support the instructions
 for embedded ARM processors. The instructions and the number of instructions differ significantly across the processors. For example, on your computer, you have x86-x64 processor which is a CISC
-(Complex Instruction Set Computing) while ARM processors are RISC (Reduced Instruction Set Computing) for example supports a different set of instructions, compared to a
+(Complex Instruction Set Computing) while ARM processors are RISC (Reduced Instruction Set Computing) for example and support a different set of instructions.
 
 Complex Instruction Set Computer (CISC) processors, like the x86, have a rich instruction set capable of doing complex things with a single instruction. Such processors often have significant amounts
 of internal logic that decode machine instructions to sequences of internal operations (microcode).
@@ -176,19 +181,20 @@ be determined from register contents and instruction fields.
 
 So logically, you cannot port instructions between x86-x64 and ARM, but you are just supposed to use dedicated compilers in order to translate the code into instructions known for a particular processor.
 That is why for embedded development Atollic packs dedicated ARM Toolchain located in Atollic/ARMTools/bin folder to be able to translate the code using supported instruction set. This is also usually
-referred as application binary interface (ABI) is an interface between two binary program modules; often, one of these modules is a library or operating system facility, and the other is a program
+referred as application binary interface (ABI). ABI is an interface between two binary program modules; often, one of these modules is a library or operating system facility, and the other is a program
 that is being run by a user. ABI defines the low-level binary interface between two or more pieces of software on a particular architecture
 
 ABIs cover details such as:
 - a processor instruction set (with details like register file structure, stack organization, memory access types, ...)
 - the sizes, layouts, and alignments of basic data types that the processor can directly access
-- the calling convention, which controls how functions' arguments are passed and return values are retrieved; for example, whether all parameters are passed on the stack or some are passed in registers, which registers are used for which function parameters, and whether the first function parameter passed on the stack is pushed first or last onto the stack
+- the calling convention, which controls how functions' arguments are passed and return values are retrieved; for example, whether all parameters are passed on the stack or some are passed in registers,
+  which registers are used for which function parameters, and whether the first function parameter passed on the stack is pushed first or last onto the stack
 - how an application should make system calls to the operating system and, if the ABI specifies direct system calls rather than procedure calls to system call stubs, the system call numbers
 - and in the case of a complete operating system ABI, the binary format of object files, program libraries and so on.
 
 PREFIXES: What is the difference between versions of tools' names?
 If you go into Atollic/ARMTools/bin you will find that all files have prefix arm-atollic-eabi, while if you look into mingw32-64/bin/ you will see find no such prefix, also if you go to the corresponding folder
-of STM32CubeIDE you will find arm-none-eabi. SO what is the difference?
+of STM32CubeIDE you will find arm-none-eabi. So, what is the difference?
 
 arm-atollic-eabi: This toolchain targets the ARM architecture, has vendor "atollic", does not target any operating system, and complies with the ARM EABI.
 arm-none-eabi: This toolchain targets the ARM architecture, has no vendor, does not target any operating system, and complies with the ARM EABI.
@@ -199,7 +205,8 @@ NOTE: that 'abi' refers to the same application binary interface (ABI)
 
 
 MinGW Environment
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 So, we have talked about ABI. Now we need to talk about API (Application Programming Interface).
 Windows uses win32 API to provide development environment, while of course win32 forwards the calls to native API.
 Native API is something used across all the platforms, it mostly provides system calls which all the other libraries, including win32 use.
@@ -232,7 +239,8 @@ This step requires some level of organization. In Linux it is easier and this st
 operating system for development.
 
 DOWNLOAD:
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 - MinGW-64
 - ATollic True Studio
 - CLion (latest version)
@@ -240,7 +248,8 @@ DOWNLOAD:
 - Python (latest version)
 
 INSTALLATION:
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 1. Create a folder C:\dev
 2. Create a folder C:\dev\opt
 3. Create a folder C:\dev\env
@@ -253,7 +262,8 @@ INSTALLATION:
 NOTE: while installing CLion and Python do not check on ADD TO SYSTEM PATH
 
 ENVIRONMENT VARIABLES:
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 Recall what I have mentioned about system-wide Path and User-wide Path. For our purpose we will use User-Wide Path variable
 1. Create a variable named "ARM_DEV_ENV"
 2. Add 6 entries separated by semicolon for:
@@ -270,7 +280,8 @@ C:\dev\env;C:\dev\opt\clion;C:\dev\opt\clion\cmake\win\bin;C:dev\opt\openocd\bin
 Then add new entry %ARM_DEV_ENV% to the "Path" variable and apply changes press OK.
 
 COMMAND TERMINAL:
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 1. Open !NEW! session of any windows terminal (CMD PowerShell, etc)
 2. Type 'cmake'
 3. Type 'mingw32-make'
@@ -285,7 +296,8 @@ back to Environment Variables and make sure you set up everything like I describ
 
 
 CLion:
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 When all the commands work open clion FROM THE TERMINAL (!IMPORTANT!) to make sure we have access to all the variables that
 we just typed and saw working. Of course you can run it from Windows Menu and it should all see the ARM_DEV_ENV variables.
 If for some reason CLion does not see ARM_DEV_ENV then run CLion from the terminal. To check whether CLion sees ARM_DEV_ENV,
@@ -297,12 +309,16 @@ Specify your MingGw location (C:\dev\env), then let CLion automatically detect t
 C Compiler to C:\dev\opt\atollic\ARMTools\bin\arm-atollic-eabi-gcc.exe
 C++ Compiler to C:\dev\opt\atollic\ARMTools\bin\arm-atollic-eabi-g++.exe
 
-NOTE: Recall what I said about differences in processor instruction sets. YOu will not be able to compile with gcc.exe or g++.exe shipped with MinGW (C:\dev\env\bin)
+NOTE: Recall what I said about differences in processor instruction sets. You will not be able to compile with gcc.exe or g++.exe shipped with MinGW (C:\dev\env\bin)
 NOTE: You may leave the default debugger, it will be able to understand STM32 ARM debug symbols, but if you use C:\dev\env\bin\gdb.exe, then debugger will not work.
       Debuggers have certain protocols of communication, just like ABI, they need to match.
 NOTE: Leave detected by CLion ming32-make.exe as it is. Do not use any other make.exe because again different Make tools have different protocols, so they need to match
 
+The final step is to tell the CMakeLists.txt where to find the ARMTools that will be used to compile the source code for the targeted platform (ARM Cortex-M4).
+Open the CMakeLists.txt found in the AvionicsSoftware-AtollicProject folder and edit the line that says "set(ARM_TOOLS_DIR    [YOUR PATH HERE])" to contain
+the path for Atollic ARMTools mentioned earlier.
 
+NOTE: You must change the "\" in the path to "/".
 
 COMPILE AND ENJOY CLION!Now it should work!
 
@@ -310,7 +326,8 @@ COMPILE AND ENJOY CLION!Now it should work!
 
 
 WINDOWS Aliases:
-------------------------------------------------------------------------------------------------------------------------
+-----------------
+
 It is good to be able to travel from one folder to another fast, without thinking. It is extremely comfortable.
 The following Aliases will ease your life
 
@@ -343,16 +360,12 @@ Clear-Content -Path $profile
 
 
 EXTRAS:
-------------------------------------------------------------------------------------------------------------------------
-
+-----------------
 Example of the file user-configurations.yaml:
-
 ```
 MINGW_ENV_PATH:         C:/dev/env/bin
-CLION_PATH:             C:/dev/opt/clion/bin
 CLION_CMAKE_PATH:       C:/dev/opt/clion/bin/cmake/win/bin
 ARM_TOOLS_DIR:          C:/dev/opt/cubeide/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-arm-embedded.7-2018-q2-update.win32_1.0.0.201904081647/tools/bin
-SOURCE_PATH:            C:/dev/projects/Avionics-Flight-Computer/AvionicsSoftware-AtollicProject
 ```
 
 
