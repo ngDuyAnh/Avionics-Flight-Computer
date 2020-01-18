@@ -1,0 +1,4 @@
+# cat requirements.txt
+pandas==0.25.3
+argparse==1.2.1
+pyserial==3.4
