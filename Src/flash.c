@@ -173,7 +173,7 @@ Flash flash_initialize()
     HAL_GPIO_WritePin(FLASH_WP_PORT, FLASH_WP_PIN, GPIO_PIN_SET);
     HAL_GPIO_WritePin(FLASH_HOLD_PORT, FLASH_HOLD_PIN, GPIO_PIN_SET);
     //Set up the SPI interface
-    spi1_init(&flash->spi_handle);
+    flash->spi_handle = spi1_init();
 
     HAL_GPIO_WritePin(FLASH_SPI_CS_PORT, FLASH_SPI_CS_PIN, GPIO_PIN_SET);
     
