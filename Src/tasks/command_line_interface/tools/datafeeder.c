@@ -13,7 +13,7 @@ CREATE_OPT_DEFAULT_FUNCTION(datafeeder, default_behaviour)
 }
 
 
-CREATE_OPT_ERROR_FUNCTION(ematch, error_behaviour)
+CREATE_OPT_ERROR_FUNCTION(datafeeder, error_behaviour)
 {
     // TODO: do something
 }

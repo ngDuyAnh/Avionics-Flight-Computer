@@ -27,7 +27,7 @@ static inline void write_16(uint16_t src, uint8_t * dest)
     dest[1] = (uint8_t) ((src >> 0) & 0xFF);
 }
 
-inline uint32_t read_32(const uint8_t * src)
+static inline uint32_t read_32(const uint8_t * src)
 {
     return ((((uint8_t) src[0]) << 24) & 0xFF) |
            ((((uint8_t) src[1]) << 16) & 0xFF) |
