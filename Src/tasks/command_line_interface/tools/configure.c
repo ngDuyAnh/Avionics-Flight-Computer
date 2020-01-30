@@ -1,29 +1,25 @@
 #include "configure.h"
-#include "tasks/command_line_interface/details/internals.h"
 #include <stdlib.h>
+
+#include "tasks/command_line_interface/details/internals.h"
 #include "external/sensors/bmp3_defs.h"
 #include "external/sensors/bmi08x_defs.h"
-
-CREATE_OPT_DEFAULT_FUNCTION(configure, default_behaviour)
-{
-    sprintf(__s_output, "Command [%s] not recognized.", arguments);
-    uart_transmit_line(__s_uart, arguments);
-    
-    return true;
-}
-
-CREATE_OPT_ERROR_FUNCTION(configure, error_behaviour)
-{
-    // TODO: do something
-}
-
 
 OPTION_NEW_TOOL_IMPL(configure)
 {
     EXPAND_ARGUMENTS_STRING(ARGUMENTS_STRING);
+    CHECK_ARGUMENTS();
+
+    if(argv[1][0] != '-')
+    {
+        PRINT("Command [%s] not recognized.\n", ARGUMENTS_STRING);
+        return false;
+    }
+
     int option_index = 0;
     optind = 0; /* resetting the optind */
     int temp_optind = optind;
+
     while (1)
     {
         int opt;
@@ -32,13 +28,13 @@ OPTION_NEW_TOOL_IMPL(configure)
         (opt = getopt(argc, argv, CONFIGURATIONS_ARG_OPTIONS.SHORT))
         :
         (opt = getopt_long(argc, argv, CONFIGURATIONS_ARG_OPTIONS.SHORT, CONFIGURATIONS_ARG_OPTIONS.LONG, &option_index));
-        
+
         if(opt == -1)
             break;
-        
+
         // saving optind
         temp_optind = optind;
-        
+
         switch(opt)
         {
             OPT_CASE_FUNC(300, 'h', configure, h, optarg);
@@ -55,18 +51,23 @@ OPTION_NEW_TOOL_IMPL(configure)
             OPT_CASE_FUNC(311, 'l', configure, l, optarg);
             OPT_CASE_FUNC(312, 'm', configure, m, optarg);
             OPT_CASE_FUNC(313, 'n', configure, n, optarg);
-            
+
             // Add more commands
-            OPT_ERROR_FUNC  (configure,  error_behaviour,   ARGUMENTS_STRING);
-            OPT_DEFAULT_FUNC(configure, default_behaviour,  ARGUMENTS_STRING);
+            case '?':
+            PRINT("Invalid option [%s] or missing arguments for [%s]\n", ARGUMENTS_STRING, ARGUMENTS_STRING);
+                break;
+            default:
+            PRINT("Command [%s] not recognized.\n", ARGUMENTS_STRING);
+                break;
         }
-        
+
         // restoring optind
         optind = temp_optind;
     }
-    
+
     return true;
 }
+
 
 
 OPTION_FUNCTION_IMPL(configure, h)

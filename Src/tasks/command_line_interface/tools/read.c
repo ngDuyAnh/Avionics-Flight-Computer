@@ -6,8 +6,7 @@
 
 OPTION_NEW_TOOL_IMPL(read)
 {
-    uart_transmit_line(__s_uart,
-        "Data transfer will start in 20 seconds. The LED will turn off when the transfer is complete.");
+    uart_transmit_line(__s_uart, "Data transfer will start in 20 seconds. The LED will turn off when the transfer is complete.");
     
     uint8_t buffer[256 * 5]; //Read 5 pages from flash at a time;
     

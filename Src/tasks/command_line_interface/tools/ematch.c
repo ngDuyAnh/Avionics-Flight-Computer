@@ -1,27 +1,20 @@
 #include <stdlib.h>
 #include "ematch.h"
 #include "tasks/command_line_interface/details/internals.h"
-#include "../../../recovery.h"
-#include "../../../hardware_definitions.h"
-
-
-CREATE_OPT_DEFAULT_FUNCTION(ematch, default_behaviour)
-{
-    sprintf(__s_output, "Command [%s] not recognized.", arguments);
-    uart_transmit_line(__s_uart, arguments);
-    
-    return true;
-}
-
-CREATE_OPT_ERROR_FUNCTION(ematch, error_behaviour)
-{
-    // TODO: do something
-}
-
+#include "recovery.h"
+#include "hardware_definitions.h"
 
 OPTION_NEW_TOOL_IMPL(ematch)
 {
     EXPAND_ARGUMENTS_STRING(ARGUMENTS_STRING);
+    CHECK_ARGUMENTS();
+
+    if(argv[1][0] != '-')
+    {
+        PRINT("Command [%s] not recognized.\n", ARGUMENTS_STRING);
+        return false;
+    }
+
     int option_index = 0;
     optind = 0; /* resetting the optind */
     int temp_optind = optind;
@@ -33,13 +26,13 @@ OPTION_NEW_TOOL_IMPL(ematch)
         (opt = getopt(argc, argv, EMATCH_ARG_OPTIONS.SHORT))
         :
         (opt = getopt_long(argc, argv, EMATCH_ARG_OPTIONS.SHORT, EMATCH_ARG_OPTIONS.LONG, &option_index));
-        
+
         if(opt == -1)
             break;
-        
+
         // saving optind
         temp_optind = optind;
-        
+
         switch(opt)
         {
             OPT_CASE_FUNC(300, 'h', ematch, h, optarg);
@@ -52,18 +45,22 @@ OPTION_NEW_TOOL_IMPL(ematch)
             OPT_CASE_FUNC(307, 'g', ematch, g, optarg);
             OPT_CASE_FUNC(308, 'i', ematch, i, optarg);
             OPT_CASE_FUNC(309, 'j', ematch, j, optarg);
-            
-            // Add more commands
-            OPT_ERROR_FUNC  (ematch,  error_behaviour,   ARGUMENTS_STRING);
-            OPT_DEFAULT_FUNC(ematch, default_behaviour,  ARGUMENTS_STRING);
+
+            case '?':
+            PRINT("Invalid option [%s] or missing arguments for [%s]\n", ARGUMENTS_STRING, ARGUMENTS_STRING);
+                break;
+            default:
+            PRINT("Command [%s] not recognized.\n", ARGUMENTS_STRING);
+                break;
         }
-        
+
         // restoring optind
         optind = temp_optind;
     }
-    
+
     return true;
 }
+
 
 OPTION_FUNCTION_IMPL(ematch, h)
 {

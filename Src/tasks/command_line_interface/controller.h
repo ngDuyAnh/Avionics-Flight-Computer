@@ -19,7 +19,8 @@ DECL_NEW_USAGE(GENERAL) = "Commands:\r\n"
                           "\t[mem] - Check on and erase the flash memory\r\n"
                           "\t[save] - Save all setting to the flight computer\r\n"
                           "\t[start] - Start the flight computer\r\n"
-                          "\t[datafeeder] - datafeeder event loop";
+                          "\t[datafeeder] - datafeeder event loop\r\n"
+						  "\t[test] - command line development debugging purpose\r\n";
 
 typedef enum{
     MAIN_MENU,
@@ -42,6 +43,7 @@ typedef struct
 OPTION_FUNCTION_DECL(general, help);
 OPTION_FUNCTION_DECL(general, save);
 OPTION_FUNCTION_DECL(general, start);
+OPTION_FUNCTION_DECL(general, test);
 
 DECL_NEW_ARG_OPTIONS_FOR(GENERAL) =
 {
@@ -55,17 +57,18 @@ DECL_NEW_ARG_OPTIONS_FOR(GENERAL) =
         OPTION_ADD_OPTION(save,      305),
         OPTION_ADD_OPTION(start,     306),
         OPTION_ADD_OPTION(datafeeder,307),
-        
+        OPTION_ADD_OPTION(test,		 308),
         OPTION_LIST_END
     },
     
-    .SHORT = "c:e:h::m::r::s::S::d",
+    .SHORT = "c:e:h::m::r::s::S::d::t",
     
     .FUNCTIONS = (option_function[])
     {
         OPTION_ADD_FUNCTION(general, help),
         OPTION_ADD_FUNCTION(general, save),
-        OPTION_ADD_FUNCTION(general, start)
+        OPTION_ADD_FUNCTION(general, start),
+        OPTION_ADD_FUNCTION(general, test)
     }
 };
 

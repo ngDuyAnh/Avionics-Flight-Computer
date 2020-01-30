@@ -7,7 +7,6 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
-#include "protocols/UART.h"
 
 #define STRINGIFY(a)__STRINGIFY(a)
 #define __STRINGIFY(a)#a
@@ -48,8 +47,9 @@
 
 #define EXTRACT_PROGRAM_NAME_AND_ARGUMENTS(command)                                        \
             char __command[MAX_COMMAND_LENGTH];                                            \
-            strcpy(__command, command);                                                    \
-            char *PROGRAM[2] = {"execute", strtok(__command, "\x20")};                     \
+            strcpy(&__command[0], "--");                                                   \
+            strcpy(&__command[2], command);                                                \
+            char *PROGRAM[2] = {"execute", strtok(__command, " ")};                        \
             char *ARGUMENTS = strtok(NULL, "");                                            \
 
 #define OPT_CASE_FUNC(literal_I, literal_C, section_name, function_name, args)             \
@@ -72,27 +72,38 @@
 #define OPT_DEFAULT_FUNC(module_name, function_name, arguments)                            \
             default:                                                                       \
                 return module_name##_##function_name##_default_function(arguments);        \
-   
+
 #define CREATE_OPT_DEFAULT_FUNCTION(module_name, function_name)                            \
             bool module_name##_##function_name##_default_function(const char* arguments)   \
 
 #define CREATE_OPT_ERROR_FUNCTION(module_name, function_name)                              \
             void module_name##_##function_name##_error_function(const char* arguments)     \
-            
+
+#define CHECK_ARGUMENTS()                                                                  \
+            if (argc == 1){                                                                \
+                argv[1] = "-h";                                                            \
+                argc++;                                                                    \
+            } opterr = 0                                                                   \
+
 #define EXPAND_ARGUMENTS_STRING(ARGUMENT_STRING)                                           \
             char* __tokens[MAX_ARGUMENTS_LENGTH];                                          \
             uint8_t argc = 0;                                                              \
-            __tokens[argc++] = "execute";                                                  \
-            char* __cmd = strtok(ARGUMENTS_STRING, "\x20");                                \
-            __tokens[argc] = __cmd;                                                        \
-            do{    argc++;                                                                 \
-                __cmd = strtok(NULL, "\x20");                                              \
+            __tokens[argc++] = ".";                                                        \
+            char* __cmd = strtok(ARGUMENTS_STRING, " ");                                   \
+            if(__cmd != NULL){                                                             \
                 __tokens[argc] = __cmd;                                                    \
-            }while(__cmd != NULL);                                                         \
-            char **argv = __tokens;                                                        \
-            
+                do{    argc++;                                                             \
+                    __cmd = strtok(NULL, " ");                                             \
+                    __tokens[argc] = __cmd;                                                \
+                }while(__cmd != NULL);                                                     \
+            }                                                                              \
+            char **argv = __tokens                                                         \
 
-const static int MAX_ARGUMENTS_LENGTH       = 32;
+#define PRINT(format, args...)                                                             \
+            sprintf(__s_output, format, args);                                             \
+            uart_transmit_line(__s_uart, __s_output);                                      \
+
+const static int MAX_ARGUMENTS_LENGTH       = 3;
 const static int MAX_COMMAND_LENGTH         = 64;
 
 

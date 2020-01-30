@@ -9,20 +9,29 @@
 CREATE_OPT_DEFAULT_FUNCTION(mem, default_behaviour)
 {
     sprintf(__s_output, "Command [%s] not recognized.", arguments);
-    uart_transmit_line(__s_uart, arguments);
-    
+    uart_transmit_line(__s_uart, __s_output);
+
     return true;
 }
 
 CREATE_OPT_ERROR_FUNCTION(mem, error_behaviour)
 {
-    // TODO: do something
+    sprintf(__s_output, "Invalid option [-%s]\n", arguments);
+    uart_transmit_line(__s_uart, __s_output);
 }
 
 
 OPTION_NEW_TOOL_IMPL(mem)
 {
     EXPAND_ARGUMENTS_STRING(ARGUMENTS_STRING);
+    CHECK_ARGUMENTS();
+
+    if(argv[1][0] != '-')
+    {
+        PRINT("Command [%s] not recognized.\n", ARGUMENTS_STRING);
+        return false;
+    }
+
     int option_index = 0;
     optind = 0; /* resetting the optind */
     int temp_optind = optind;
@@ -34,13 +43,13 @@ OPTION_NEW_TOOL_IMPL(mem)
         (opt = getopt(argc, argv, MEMORY_MENU_ARG_OPTIONS.SHORT))
         :
         (opt = getopt_long(argc, argv, MEMORY_MENU_ARG_OPTIONS.SHORT, MEMORY_MENU_ARG_OPTIONS.LONG, &option_index));
-        
+
         if(opt == -1)
             break;
-        
+
         // saving optind
         temp_optind = optind;
-        
+
         switch(opt)
         {
             OPT_CASE_FUNC(300, 'h', mem, h, optarg);
@@ -50,15 +59,19 @@ OPTION_NEW_TOOL_IMPL(mem)
             OPT_CASE_FUNC(304, 'd', mem, d, optarg);
             OPT_CASE_FUNC(305, 'e', mem, e, optarg);
             // Add more commands
-            
-            OPT_ERROR_FUNC  (mem,  error_behaviour,   ARGUMENTS_STRING);
-            OPT_DEFAULT_FUNC(mem, default_behaviour,  ARGUMENTS_STRING);
+
+            case '?':
+            PRINT("Invalid option [%s] or missing arguments for [%s]\n", ARGUMENTS_STRING, ARGUMENTS_STRING);
+                break;
+            default:
+            PRINT("Command [%s] not recognized.\n", ARGUMENTS_STRING);
+                break;
         }
-        
+
         // restoring optind
         optind = temp_optind;
     }
-    
+
     return true;
 }
 

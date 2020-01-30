@@ -42,7 +42,10 @@ int main(void)
     {
         stm32_error_handler(__FILE__, __LINE__);
     }
-    
+
+    stm32_delay(50);
+
+
     UART huart6 = UART_Port6_Init();
     if(huart6 == NULL)
     {
@@ -86,7 +89,7 @@ int main(void)
         app_configuration_data.values.state = STATE_IN_FLIGHT_PRE_APOGEE;
     }
     
-    size_t end_Address = flash_scan(flash);
+    size_t end_Address = 0; //flash_scan(flash);
     sprintf(lines, "end address :%zu", end_Address);
     uart_transmit_line(huart6, lines);
     app_configuration_data.values.end_data_address = end_Address;
@@ -116,7 +119,7 @@ int main(void)
     
     thread_imu_params.huart = huart6;
     thread_imu_params.configuration_data = &app_configuration_data;
-    imu_sensor_init(&app_configuration_data);
+    //imu_sensor_init(&app_configuration_data);
     
     
     thread_cli_params.flash = flash;
@@ -154,17 +157,17 @@ int main(void)
     if(NULL == (thread_startup_parameters.timer_thread_handle = osThreadCreate(osThread(timer), &app_configuration_data))){
         stm32_error_handler(__FILE__, __LINE__);
     }
-    
+
     osThreadDef(imu, imu_thread_start, osPriorityHigh, 1, 1000);
     if(NULL == (thread_startup_parameters.imu_thread_handle = osThreadCreate(osThread(imu), &app_configuration_data))){
         stm32_error_handler(__FILE__, __LINE__);
     }
-    
+
     osThreadDef(flight_state_controller, thread_flight_state_controller_start, osPriorityHigh, 1, 1000);
     if(NULL == (thread_startup_parameters.flight_state_controller_thread_handle = osThreadCreate(osThread(flight_state_controller), &thread_flight_state_controller_params))){
         stm32_error_handler(__FILE__, __LINE__);
     }
-    
+
     osThreadDef(cli, thread_command_line_controller_start, osPriorityAboveNormal, 1, 1000);
     if(NULL == (thread_startup_parameters.cli_thread_params = osThreadCreate(osThread(cli), NULL))){
         stm32_error_handler(__FILE__, __LINE__);
@@ -174,13 +177,13 @@ int main(void)
     if(NULL == (thread_startup_parameters.pressure_sensor_thread_handle = osThreadCreate(osThread(pressure_sensor), &app_configuration_data))){
         stm32_error_handler(__FILE__, __LINE__);
     }
-    
+
     osThreadDef(startup, app_threads_controller_start, osPriorityAboveNormal, 1, 1000);
     if(NULL == (thread_cli_params.startupTaskHandle = osThreadCreate(osThread(startup), &app_configuration_data))){
         stm32_error_handler(__FILE__, __LINE__);
     }
     
-    //Start with all tasks suspended except starter task.
+    // Start with all tasks suspended except starter task.
     osThreadSuspend(thread_startup_parameters.cli_thread_params);
     osThreadSuspend(thread_startup_parameters.imu_thread_handle);
     osThreadSuspend(thread_startup_parameters.pressure_sensor_thread_handle);
