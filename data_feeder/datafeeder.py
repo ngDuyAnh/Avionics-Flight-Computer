@@ -9,6 +9,7 @@ import sys
 import getopt
 import sys
 import argparse
+import threading
 
 # Read data from file 'filename.csv'
 # (in the same directory that your python process is based)
@@ -22,12 +23,16 @@ pressure    = 32bits   int
 temperature = 32bits   int
 '''
 
+zero = 0
+END = zero.to_bytes(36, byteorder='little')
+
 
 class DataFeeder:
     def __init__(self, serial_port, baud_rate, file_name):
         self.SERIALPORT = serial_port
         self.BAUDRATE = baud_rate
         self.file = file_name
+        self.ser = serial.Serial(self.SERIALPORT, self.BAUDRATE)
 
     def set_baud_rate(self, baudrate):
         self.BAUDRATE = baudrate
@@ -47,34 +52,61 @@ class DataFeeder:
             exit()
 
         print('CSV has been successfully loaded!')
-
-        print('Setting Up Serial Connection: Serial Port=' + self.SERIALPORT + ', baudrate=' + str(self.BAUDRATE))
-        ser = serial.Serial(self.SERIALPORT, self.BAUDRATE)
         print('Starting Up Serial Monitor.')
         try:
-            ser.open()
+            self.ser.close()
+            self.ser.open()
         except Exception as e:
             eprint(str(e) + '\n')
             exit()
 
-        if ser.isOpen():
+        COMM = "datafeeder ---start\r"
+        if self.ser.isOpen():
             try:
-                ser.flushInput()  # flush input buffer, discarding all its contents
-                ser.flushOutput()  # flush output buffer, aborting current output
-                ser.write("datafeeder --start".encode())
-                reply = ser.read()
-                if reply != 'STARTED':
-                    print("bad reply: " + reply + '\r')
-                    exit()
+                self.ser.flushInput()  # flush input buffer, discarding all its contents
+                self.ser.flushOutput()  # flush output buffer, aborting current output
                 time.sleep(0.5)
                 number_of_ine = 0
+
+                self.ser.write(COMM.encode())
+                reply = self.ser.read(len(COMM))
+                reply = self.ser.read(2)
+                if reply != b'OK':
+                    print("bad reply: " + str(reply) + '\n')
+                    self.ser.close()
+                    exit()
+
+                print('Flight-Computer [DataFeeder] has been STARTED...')
+
+                buffer = ''
                 for index, row in data.iterrows():
                     values = row.to_list()
-                    buffer = struct.pack('%si' % len(values), *values)
-                    ser.write(buffer)
+                    buffer = bytearray(0)
+                    buffer += values[0].to_bytes(4, byteorder='little')   # timestamp
+                    buffer += values[1].to_bytes(4, byteorder='little', signed=True)   # accel [1] - int32 or int16
+                    buffer += values[2].to_bytes(4, byteorder='little', signed=True)   # accel [2] - int32 or int16
+                    buffer += values[3].to_bytes(4, byteorder='little', signed=True)   # accel [3] - int32 or int16
+                    buffer += values[4].to_bytes(4, byteorder='little', signed=True)   # gyro [1]  - int32 or int16
+                    buffer += values[5].to_bytes(4, byteorder='little', signed=True)   # gyro [2]  - int32 or int16
+                    buffer += values[6].to_bytes(4, byteorder='little', signed=True)   # gyro [3]  - int32 or int16
+                    buffer += values[7].to_bytes(4, byteorder='little')   # pressure
+                    buffer += values[8].to_bytes(4, byteorder='little')   # temperature
+
+                    self.ser.write(buffer)
+                    time.sleep(0.05)
                     number_of_ine = number_of_ine + 1
-                ser.write('--stop'.encode())
-                ser.close()
+
+                self.ser.write(END)
+                reply = self.ser.read_all()
+                if b'OK' not in reply:
+                    print("bad reply: " + str(reply) + '\n')
+                    self.ser.close()
+                    exit()
+
+                print('Flight-Computer [DataFeeder] has been STOPPED...')
+                self.ser.flushInput()  # flush input buffer, discarding all its contents
+                self.ser.flushOutput()  # flush output buffer, aborting current output
+                self.ser.close()
             except Exception as e:
                 eprint(str(e) + '\n')
         else:
@@ -110,3 +142,5 @@ def eprint(*args, **kwargs):
 
 if __name__ == '__main__':
     main()
+
+
