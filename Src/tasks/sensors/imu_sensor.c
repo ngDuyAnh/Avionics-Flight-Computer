@@ -118,8 +118,8 @@ void imu_thread_start(void const *param){
         dataStruct.gyro_z = container.z;
         
         dataStruct.time_ticks = xTaskGetTickCount();
-        xQueueSend(bmi088_queue,&dataStruct,1);
-        
+
+        imu_add_measurement(&dataStruct);
         vTaskDelayUntil(&prevTime,configParams->values.data_rate);
     }
 }
@@ -336,5 +336,10 @@ bool imu_sensor_test()
     }
     
     return false;
+}
+
+bool imu_add_measurement (imu_sensor_data * _data)
+{
+    return pdTRUE == xQueueSend(bmi088_queue,_data,1);
 }
 

@@ -62,6 +62,7 @@ bool    pressure_sensor_test                (void);
 bool    pressure_sensor_read                (pressure_sensor_data * buffer, uint8_t data_rate);
 void    pressure_sensor_data_to_bytes       (pressure_sensor_data reading, uint8_t * bytes);
 float   pressure_sensor_calculate_altitude  (pressure_sensor_data * reading);
+bool    pressure_sensor_add_measurement     (pressure_sensor_data * _data);
 
 
 #endif // PRESSURE_SENSOR_BMP3_H

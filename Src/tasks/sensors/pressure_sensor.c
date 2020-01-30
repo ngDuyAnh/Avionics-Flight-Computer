@@ -233,7 +233,8 @@ void thread_pressure_sensor_start(void const*pvParameters)
         dataStruct.temperature = sensor_data.temperature;
         
         dataStruct.time_ticks = xTaskGetTickCount();
-        xQueueSend(bmp388_queue, &dataStruct, 1);
+
+        pressure_sensor_add_measurement(&dataStruct);
         vTaskDelayUntil(&prevTime, configParams->values.data_rate);
     }
 }
@@ -365,4 +366,9 @@ void pressure_sensor_data_to_bytes(pressure_sensor_data bmp_reading, uint8_t * b
     write_24(bmp_reading.temperature, &bytes[18]);
     float altitude = pressure_sensor_calculate_altitude(&bmp_reading);
     float2bytes(altitude, &bytes[21]);
+}
+
+bool pressure_sensor_add_measurement (pressure_sensor_data * _data)
+{
+    return pdTRUE == xQueueSend(bmp388_queue,_data,1);
 }

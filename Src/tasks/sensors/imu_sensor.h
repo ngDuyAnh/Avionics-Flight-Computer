@@ -58,5 +58,7 @@ void imu_thread_start           (void const *param);
 bool imu_read                   (imu_sensor_data * buffer, uint8_t data_rate);
 void imu_sensor_data_to_bytes   (imu_sensor_data reading, uint8_t* bytes, uint32_t timestamp);
 
+bool imu_add_measurement        (imu_sensor_data *_data);
+
 
 #endif // SENSOR_AG_H
