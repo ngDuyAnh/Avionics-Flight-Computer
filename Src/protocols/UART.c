@@ -203,6 +203,22 @@ char* uart_receive_command(UART uart){
     return (char*)buffrx;
 }
 
+
+bool uart_receive(UART uart, uint8_t * buf, size_t size){
+    uint8_t c; //key pressed character
+    size_t i = 0; //start at beginning of index
+
+    while(i < size){
+        //get character (BLOCKING COMMAND)
+        if (HAL_UART_Receive(uart, &buf[i++], 1, 0xFFFF) != HAL_OK){
+            return i == size;
+        }
+    }
+
+    return true;
+}
+
+
 static void Error_Handler_UART(void)
 {
   /* User can add his own implementation to report the HAL error return state */

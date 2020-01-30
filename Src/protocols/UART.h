@@ -14,6 +14,8 @@
 // - Created.
 
 #include <inttypes.h>
+#include <stdbool.h>
+#include <sched.h>
 
 #define TIMEOUT_MAX 0xFFFF
 #define BUFFER_SIZE 2048
@@ -104,5 +106,5 @@ void uart_transmit_bytes(UART uart, uint8_t * bytes, uint16_t numBytes);
 //  Pointer to character array containing user entered message
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 char* uart_receive_command(UART uart);
-
+bool uart_receive(UART uart, uint8_t * buf, size_t size);
 #endif //STM32F4XX_HAL_UART_CLI_H
