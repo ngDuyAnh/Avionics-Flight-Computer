@@ -43,7 +43,7 @@ int main(void)
         stm32_error_handler(__FILE__, __LINE__);
     }
 
-    stm32_delay(50);
+//    stm32_delay(50);
 
 
     UART huart6 = UART_Port6_Init();

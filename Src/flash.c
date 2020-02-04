@@ -28,6 +28,8 @@ struct flash_t
 
 typedef struct flash_t* Flash;
 
+static struct flash_t flash_;
+
 /**
  * @brief
  * This function sets the write enable. This is needed before a
@@ -142,11 +144,7 @@ FlashStatus flash_check_id(Flash p_flash)
 
 Flash flash_initialize()
 {
-    Flash flash = (Flash)pvPortMalloc(sizeof(struct flash_t));
-    if(flash == NULL)
-    {
-        return NULL;
-    }
+    Flash flash = &flash_;
 
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();

@@ -19,10 +19,10 @@
 #include "portable.h"
 
 
-#define SPI1_CS_PIN        FLASH_SPI_CS_PIN
+#define SPI1_CS_PIN     FLASH_SPI_CS_PIN
 #define SPI1_CS_PORT    FLASH_SPI_CS_PORT
 
-#define SPI2_CS_PIN        PRES_SPI_CS_PIN
+#define SPI2_CS_PIN     PRES_SPI_CS_PIN
 #define SPI2_CS_PORT    PRES_SPI_CS_PORT
 
 //Right now the timeout value is used to select between chip selects.
@@ -37,11 +37,14 @@
 #define SPI3_CS2_PIN    IMU_SPI_GYRO_CS_PIN
 #define SPI3_CS2_PORT   IMU_SPI_GYRO_CS_PORT
 
+static SPI_HandleTypeDef hspi1;
+static SPI_HandleTypeDef hspi2;
+static SPI_HandleTypeDef hspi3;
 
 SPI spi1_init(void)
 {
     __HAL_RCC_SPI1_CLK_ENABLE();
-    SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *) pvPortMalloc(sizeof(SPI_HandleTypeDef));
+    SPI_HandleTypeDef *hspi = &hspi1;
     if(hspi == NULL)
     {
         return NULL;
@@ -103,8 +106,8 @@ SPI spi2_init(void)
 {
     __HAL_RCC_SPI2_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
-    
-    SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *) pvPortMalloc(sizeof(SPI_HandleTypeDef));
+
+    SPI_HandleTypeDef *hspi = &hspi2;
     if(hspi == NULL)
     {
         return NULL;
@@ -163,8 +166,8 @@ SPI spi3_init(void)
 {
     __HAL_RCC_SPI3_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
-    
-    SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *) pvPortMalloc(sizeof(SPI_HandleTypeDef));
+
+    SPI_HandleTypeDef *hspi = &hspi3;
     if(hspi == NULL)
     {
         return NULL;

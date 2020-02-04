@@ -21,8 +21,13 @@
 #include "portable.h"
 #include "../hardware_definitions.h"
 
-uint8_t bufftx[BUFFER_SIZE] = ""; // uart_transmit buffer
-uint8_t buffrx[BUFFER_SIZE] = ""; // receive buffer
+static uint8_t bufftx[BUFFER_SIZE] = ""; // uart_transmit buffer
+static uint8_t buffrx[BUFFER_SIZE] = ""; // receive buffer
+
+static UART_HandleTypeDef uart2;
+static UART_HandleTypeDef uart6;
+
+
 
 static void Error_Handler_UART(void);
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -53,7 +58,7 @@ UART UART_Port2_Init(void)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
     
     /* Create UART struct */
-    UART_HandleTypeDef* uart = (UART_HandleTypeDef*)pvPortMalloc(sizeof(UART_HandleTypeDef));
+    UART_HandleTypeDef * uart = &uart2;
     if(uart == NULL)
     {
         return NULL;
@@ -98,8 +103,8 @@ UART UART_Port6_Init(void)
     HAL_GPIO_Init(UART_RX_PORT, &GPIO_InitStruct);
     
     /* Create UART struct */
-    
-    UART_HandleTypeDef* uart = (UART_HandleTypeDef*)pvPortMalloc(sizeof(UART_HandleTypeDef));
+
+    UART_HandleTypeDef * uart = &uart6;
     if(uart == NULL)
     {
         return NULL;

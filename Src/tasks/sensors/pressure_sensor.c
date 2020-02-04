@@ -48,6 +48,8 @@ static char buf[128];
 static _bmp3_sensor *s_bmp3_sensor;
 static QueueHandle_t bmp388_queue;
 static struct bmp3_data sensor_data;
+static struct bmp3_dev bmp3;
+static _bmp3_sensor bmp3_sensor;
 
 static void     delay_ms                    (uint32_t period_ms);
 static int8_t   spi_reg_write               (uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length);
@@ -69,7 +71,7 @@ int8_t __pressure_sensor_init(_bmp3_sensor *bmp3_sensor_ptr)
     }
     
     //Initialize BMP3 Handler
-    bmp3_ptr = pvPortMalloc(sizeof(struct bmp3_dev));
+    bmp3_ptr = &bmp3;
     if(bmp3_ptr == NULL)
     {
         return INTERNAL_ERROR;
@@ -159,7 +161,7 @@ int8_t get_sensor_data(struct bmp3_dev *dev, struct bmp3_data *data)
 
 bool pressure_sensor_init(configuration_data_t *parameters)
 {
-    _bmp3_sensor *bmp3_sensor_ptr = pvPortMalloc(sizeof(_bmp3_sensor));
+    _bmp3_sensor *bmp3_sensor_ptr = &bmp3_sensor;
     if(bmp3_sensor_ptr == NULL)
     {
         return false;

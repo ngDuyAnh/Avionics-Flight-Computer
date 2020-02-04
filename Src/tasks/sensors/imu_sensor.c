@@ -40,6 +40,9 @@ typedef struct _bmi088_sensor_struct{
 
 static QueueHandle_t bmi088_queue;
 static _bmi_sensor* s_bmp3_sensor;
+static _bmi_sensor bmi_sensor;
+static struct bmi08x_dev bmi08x_dev_;
+
 
 static uint8_t  __imu_init  (_bmi_sensor* bmi_sensor_ptr);
 static bool     __imu_config(configuration_data_t * parameters);
@@ -60,7 +63,7 @@ int8_t gyro_config (struct bmi08x_dev *bmi088dev, configuration_data_t * configP
 
 bool imu_sensor_init(configuration_data_t * parameters){
     
-    _bmi_sensor* bmi_sensor_ptr = pvPortMalloc(sizeof(_bmi_sensor));
+    _bmi_sensor* bmi_sensor_ptr = &bmi_sensor;
     if(bmi_sensor_ptr == NULL)
     {
         return false;
@@ -257,7 +260,7 @@ static uint8_t __imu_init(_bmi_sensor* bmi_sensor_ptr)
     }
     
     //Initialize BMP3 Handler
-    bmi088dev_ptr = pvPortMalloc(sizeof(struct bmi08x_dev));
+    bmi088dev_ptr = &bmi08x_dev_;
     if(bmi088dev_ptr == NULL)
     {
         return INTERNAL_ERROR;
