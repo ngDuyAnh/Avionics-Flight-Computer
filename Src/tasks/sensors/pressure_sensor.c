@@ -231,6 +231,7 @@ void thread_pressure_sensor_start(void const*pvParameters)
         {
             continue;
         }
+
         dataStruct.pressure = sensor_data.pressure;
         dataStruct.temperature = sensor_data.temperature;
         
