@@ -106,7 +106,9 @@ int8_t __pressure_sensor_init(_bmp3_sensor *bmp3_sensor_ptr)
         }
         
         vQueueAddToRegistry(bmp388_queue,"bmp388_queue");
-    }else
+        return result;
+    }
+    else
     {
         return result;
     }
@@ -116,6 +118,7 @@ int8_t __pressure_sensor_init(_bmp3_sensor *bmp3_sensor_ptr)
 static bool __pressure_sensor_config(uint8_t iir, uint8_t os_pres, uint8_t os_temp, uint8_t odr)
 {
     struct bmp3_dev *dev = s_bmp3_sensor->bmp_ptr;
+    int8_t result = 0;
     
     /* Used to select the settings user needs to change */
     uint16_t settings_sel;
@@ -131,15 +134,21 @@ static bool __pressure_sensor_config(uint8_t iir, uint8_t os_pres, uint8_t os_te
     /* Assign the settings which needs to be set in the sensor */
     settings_sel = BMP3_PRESS_EN_SEL | BMP3_TEMP_EN_SEL | BMP3_PRESS_OS_SEL | BMP3_TEMP_OS_SEL | BMP3_ODR_SEL |
                    BMP3_IIR_FILTER_SEL;
-    if(0 == bmp3_set_sensor_settings(settings_sel, dev))
+
+    if(BMP3_OK == bmp3_set_sensor_settings(settings_sel, dev))
     {
-        return false;
+        return true;
     }
     
     /* Set the power mode to normal mode */
     dev->settings.op_mode = BMP3_NORMAL_MODE;
     
-    return (bmp3_set_op_mode(dev) == 0) ? true : false;
+    if(BMP3_OK == bmp3_set_op_mode(dev))
+	{
+    	return true;
+	}
+
+    return false;
 }
 
 float pressure_sensor_calculate_altitude(pressure_sensor_data * reading)
@@ -167,18 +176,18 @@ bool pressure_sensor_init(configuration_data_t *parameters)
         return false;
     }
     
-    if(false == __pressure_sensor_init(bmp3_sensor_ptr))
+    if(BMP3_OK != __pressure_sensor_init(bmp3_sensor_ptr))
     {
         return false;
     }
     
+    bool result = __pressure_sensor_config(parameters->values.iir_coef,
+            parameters->values.pres_os,
+            parameters->values.temp_os,
+            parameters->values.bmp_odr);
     
-    
-    return __pressure_sensor_config(parameters->values.iir_coef,
-                                    parameters->values.pres_os,
-                                    parameters->values.temp_os,
-                                    parameters->values.bmp_odr);
-    
+
+    return result;
 }
 void pressure_sensor_calibrate(configuration_data_t *configParams)
 {

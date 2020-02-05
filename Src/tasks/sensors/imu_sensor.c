@@ -54,10 +54,9 @@ int8_t user_spi_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_
 
 void delay_ms(uint32_t period);
 
-
 //configuration functions for accelerometer and gyroscope
-int8_t accel_config(struct bmi08x_dev *bmi088dev, configuration_data_t * configParams, int8_t rslt);
-int8_t gyro_config (struct bmi08x_dev *bmi088dev, configuration_data_t * configParams, int8_t rslt);
+int8_t accel_config(struct bmi08x_dev *bmi088dev, configuration_data_t * configParams);
+int8_t gyro_config (struct bmi08x_dev *bmi088dev, configuration_data_t * configParams);
 
 
 
@@ -69,7 +68,7 @@ bool imu_sensor_init(configuration_data_t * parameters){
         return false;
     }
     
-    if(false == __imu_init(bmi_sensor_ptr)){
+    if(BMI08X_OK != __imu_init(bmi_sensor_ptr)){
         return false;
     }
     
@@ -146,9 +145,10 @@ void imu_sensor_data_to_bytes(imu_sensor_data reading, uint8_t* buffer, uint32_t
 }
 
 //set the accelerometer starting configurations
-int8_t accel_config(struct bmi08x_dev *dev, configuration_data_t * configParams, int8_t rslt){
+int8_t accel_config(struct bmi08x_dev *dev, configuration_data_t * configParams){
     uint8_t data = 0;
-    
+    int8_t rslt;
+
     /* Read accel chip id */
     rslt = bmi08a_get_regs(BMI08X_ACCEL_CHIP_ID_REG, &data, 1, dev);
     if(rslt != BMI08X_OK)
@@ -174,8 +174,10 @@ int8_t accel_config(struct bmi08x_dev *dev, configuration_data_t * configParams,
 }
 
 //set the accelerometer starting configurations
-int8_t gyro_config(struct bmi08x_dev *dev, configuration_data_t * configParams, int8_t rslt){
+int8_t gyro_config(struct bmi08x_dev *dev, configuration_data_t * configParams)
+{
     uint8_t data = 0;
+    int8_t rslt;
 
     /* Read gyro chip id */
     rslt = bmi08g_get_regs(BMI08X_GYRO_CHIP_ID_REG, &data, 1, dev);
@@ -238,13 +240,17 @@ void delay_ms(uint32_t period)
 
 static bool __imu_config(configuration_data_t * parameters){
     struct bmi08x_dev * dev = s_bmp3_sensor->bmi088_ptr;
-    int8_t result = 0;
-    accel_config(dev, parameters, result);
+    int8_t result = accel_config(dev, parameters);
     if(result != BMI08X_OK)
     {
         return false;
     }
-    gyro_config(dev, parameters, result);
+
+    result = gyro_config(dev, parameters);
+    if(result != BMI08X_OK)
+    {
+        return false;
+    }
     
     return result == BMI08X_OK;
 }
@@ -289,6 +295,7 @@ static uint8_t __imu_init(_bmi_sensor* bmi_sensor_ptr)
         }
         
         vQueueAddToRegistry(bmi088_queue,"bmi088_queue");
+        return BMI08X_OK;
     }
     else
     {
