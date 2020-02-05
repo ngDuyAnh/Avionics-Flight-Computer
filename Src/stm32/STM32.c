@@ -28,7 +28,7 @@ STM32Status stm32_init(void)
 
 void stm32_delay(__uint32_t ms)
 {
-    HAL_Delay(ms);
+    // HAL_Delay(ms);
 }
 
 void stm32_led_blink(uint32_t ms)
