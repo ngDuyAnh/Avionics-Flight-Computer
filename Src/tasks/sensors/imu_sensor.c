@@ -39,9 +39,7 @@ typedef struct _bmi088_sensor_struct{
 }_bmi_sensor;
 
 static QueueHandle_t bmi088_queue;
-static _bmi_sensor* s_bmp3_sensor;
-static _bmi_sensor bmi_sensor;
-
+static _bmi_sensor s_bmi088_sensor;
 
 static uint8_t  __imu_init  ();
 static bool     __imu_config(configuration_data_t * parameters);
@@ -62,6 +60,7 @@ static struct bmi08x_dev bmi088dev_ = {
 };
 
 
+
 //configuration functions for accelerometer and gyroscope
 int8_t accel_config(struct bmi08x_dev *bmi088dev, configuration_data_t * configParams);
 int8_t gyro_config (struct bmi08x_dev *bmi088dev, configuration_data_t * configParams);
@@ -70,6 +69,8 @@ int8_t gyro_config (struct bmi08x_dev *bmi088dev, configuration_data_t * configP
 
 bool imu_sensor_init(configuration_data_t * parameters)
 {
+	s_bmi088_sensor.bmi088_ptr = &bmi088dev_;
+
     if(BMI08X_OK != __imu_init()){
         return false;
     }
@@ -211,11 +212,11 @@ int8_t user_spi_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t
     //debug removeHAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN, GPIO_PIN_SET);
     if(dev_addr == 0x00|| dev_addr == 0x1E){
         //Accelerometer.
-        spi_receive(s_bmp3_sensor->hspi_ptr, &reg_addr,1, data, len, 10); // The register address will always be 1.
+        spi_receive(s_bmi088_sensor.hspi_ptr, &reg_addr,1, data, len, 10); // The register address will always be 1.
     }
     else if(dev_addr == 0x01|| dev_addr == 0x0F){
 //        //Gyroscope.
-        spi_receive(s_bmp3_sensor->hspi_ptr, &reg_addr,1, data, len, 11); // The register address will always be 1.
+        spi_receive(s_bmi088_sensor.hspi_ptr, &reg_addr,1, data, len, 11); // The register address will always be 1.
     }
     //delay_ms(500);
     //HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN, GPIO_PIN_RESET);
@@ -225,10 +226,10 @@ int8_t user_spi_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t
 int8_t user_spi_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len){
 
     if(dev_addr == 0x00 || dev_addr == 0x1E){
-    spi_send(s_bmp3_sensor->hspi_ptr, &reg_addr,1, data, len, 10);
+    spi_send(s_bmi088_sensor.hspi_ptr, &reg_addr,1, data, len, 10);
     }
     else if(dev_addr == 0x01 || dev_addr == 0x0F){
-        spi_send(s_bmp3_sensor->hspi_ptr, &reg_addr,1, data, len, 11);
+        spi_send(s_bmi088_sensor.hspi_ptr, &reg_addr,1, data, len, 11);
 
     }
     return BMI08X_OK;
@@ -241,7 +242,7 @@ void delay_ms(uint32_t period)
 
 
 static bool __imu_config(configuration_data_t * parameters){
-    struct bmi08x_dev * dev = s_bmp3_sensor->bmi088_ptr;
+    struct bmi08x_dev * dev = s_bmi088_sensor.bmi088_ptr;
     int8_t result = accel_config(dev, parameters);
     if(result != BMI08X_OK)
     {
@@ -264,6 +265,7 @@ static uint8_t __imu_init()
     {
         return INTERNAL_ERROR;
     }
+    s_bmi088_sensor.hspi_ptr = hspi_ptr;
 
 
     int8_t result_flag = bmi088_init(&bmi088dev_); // bosch API initialization method
@@ -306,15 +308,15 @@ bool imu_sensor_test()
     uint8_t id_dummy[] = {0x00,0x00};
     
     
-    spi_receive(s_bmp3_sensor->hspi_ptr,command,1,id_dummy,2,10);
-    spi_receive(s_bmp3_sensor->hspi_ptr,command,1,id_read,2,10);
+    spi_receive(s_bmi088_sensor.hspi_ptr,command,1,id_dummy,2,10);
+    spi_receive(s_bmi088_sensor.hspi_ptr,command,1,id_read,2,10);
     
     if(id_read[1] == id)
     {
         res += 1;
     }
     
-    spi_receive(s_bmp3_sensor->hspi_ptr,command,1,id_read,2,11);
+    spi_receive(s_bmi088_sensor.hspi_ptr,command,1,id_read,2,11);
     
     if(id_read[0] == 0x0F)
     {
