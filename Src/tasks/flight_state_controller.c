@@ -183,6 +183,8 @@ void sm_STATE_LAUNCHPAD_ARMED(necessary_parameters parameters)
     parameters.config_data->values.state = STATE_IN_FLIGHT_PRE_APOGEE;
     sm_state = CONTROLLER_STATE_IN_FLIGHT_PRE_APOGEE;
 }
+
+
 void sm_STATE_IN_FLIGHT_PRE_APOGEE(necessary_parameters parameters)
 {
     parameters.apogee_holdout_count++;

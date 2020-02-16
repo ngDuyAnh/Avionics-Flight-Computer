@@ -176,15 +176,15 @@ int main(void)
 //        stm32_error_handler(__FILE__, __LINE__);
 //    }
 
-//    osThreadDef(cli, thread_command_line_controller_start, osPriorityAboveNormal, 1, 1000);
-//    if(NULL == (thread_startup_parameters.cli_thread_params = osThreadCreate(osThread(cli), NULL))){
-//        stm32_error_handler(__FILE__, __LINE__);
-//    }
+    osThreadDef(cli, thread_command_line_controller_start, osPriorityAboveNormal, 1, 1000);
+    if(NULL == (thread_startup_parameters.cli_thread_params = osThreadCreate(osThread(cli), NULL))){
+        stm32_error_handler(__FILE__, __LINE__);
+    }
 
-//    osThreadDef(pressure_sensor, thread_pressure_sensor_start, osPriorityAboveNormal, 1, 1000);
-//    if(NULL == (thread_startup_parameters.pressure_sensor_thread_handle = osThreadCreate(osThread(pressure_sensor), &app_configuration_data))){
-//        stm32_error_handler(__FILE__, __LINE__);
-//    }
+    osThreadDef(pressure_sensor, thread_pressure_sensor_start, osPriorityAboveNormal, 1, 1000);
+    if(NULL == (thread_startup_parameters.pressure_sensor_thread_handle = osThreadCreate(osThread(pressure_sensor), &app_configuration_data))){
+        stm32_error_handler(__FILE__, __LINE__);
+    }
 
 //    osThreadDef(startup, app_threads_controller_start, osPriorityAboveNormal, 1, 1000);
 //    if(NULL == (thread_cli_params.startupTaskHandle = osThreadCreate(osThread(startup), &app_configuration_data))){

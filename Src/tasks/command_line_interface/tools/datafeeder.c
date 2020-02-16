@@ -93,8 +93,8 @@ OPTION_FUNCTION_IMPL(datafeeder, s)
             uint32_t temperature    = to_uint32_t(&buf[32]);
 
             // process IMU data
-            imu_sensor_data imu = {.time_ticks = timestamp, .gyro_x = gyro[1], .gyro_y = gyro[2], .gyro_z = gyro[3], .acc_x = accel[1], .acc_y = accel[2], .acc_z = accel[3]};
-            imu_add_measurement(&imu);
+//            imu_sensor_data imu = {.time_ticks = timestamp, .gyro_x = gyro[1], .gyro_y = gyro[2], .gyro_z = gyro[3], .acc_x = accel[1], .acc_y = accel[2], .acc_z = accel[3]};
+//            imu_add_measurement(&imu);
 
             // process pressure sensor data
             pressure_sensor_data pressureSensorData = {.time_ticks = timestamp, .pressure = pressure, .temperature = temperature};

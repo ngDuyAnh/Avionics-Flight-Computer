@@ -41,18 +41,26 @@ typedef struct _bmi088_sensor_struct{
 static QueueHandle_t bmi088_queue;
 static _bmi_sensor* s_bmp3_sensor;
 static _bmi_sensor bmi_sensor;
-static struct bmi08x_dev bmi08x_dev_;
 
 
-static uint8_t  __imu_init  (_bmi_sensor* bmi_sensor_ptr);
+static uint8_t  __imu_init  ();
 static bool     __imu_config(configuration_data_t * parameters);
 
 
 //Wrapper functions for read and write
 int8_t user_spi_read (uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
 int8_t user_spi_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
-
 void delay_ms(uint32_t period);
+
+static struct bmi08x_dev bmi088dev_ = {
+        .accel_id = 0,
+        .gyro_id = 1,
+        .intf = BMI08X_SPI_INTF, // determines if we use SPI or I2C
+        .read = user_spi_read,   //a function pointer to our spi read function
+        .write = user_spi_write, //a function pointer to our spi write function
+        .delay_ms = delay_ms//user_delay_milli_sec
+};
+
 
 //configuration functions for accelerometer and gyroscope
 int8_t accel_config(struct bmi08x_dev *bmi088dev, configuration_data_t * configParams);
@@ -60,15 +68,9 @@ int8_t gyro_config (struct bmi08x_dev *bmi088dev, configuration_data_t * configP
 
 
 
-bool imu_sensor_init(configuration_data_t * parameters){
-    
-    _bmi_sensor* bmi_sensor_ptr = &bmi_sensor;
-    if(bmi_sensor_ptr == NULL)
-    {
-        return false;
-    }
-    
-    if(BMI08X_OK != __imu_init(bmi_sensor_ptr)){
+bool imu_sensor_init(configuration_data_t * parameters)
+{
+    if(BMI08X_OK != __imu_init()){
         return false;
     }
     
@@ -100,29 +102,29 @@ void imu_thread_start(void const *param){
     struct bmi08x_sensor_data container;
     while(1){
         
-        result_flag = bmi08a_get_data(&container, s_bmp3_sensor->bmi088_ptr);
-//        if(BMI08X_E_NULL_PTR == result_flag)
-//        {
-//            continue;
-//        }
-        dataStruct.acc_x = container.x,
-        dataStruct.acc_y = container.y,
-        dataStruct.acc_z = container.z;
-        
-        result_flag = bmi08g_get_data(&container, s_bmp3_sensor->bmi088_ptr);
-//        if(BMI08X_E_NULL_PTR == result_flag)
-//        {
-//            continue;
-//        }
-        
-        dataStruct.gyro_x = container.x,
-        dataStruct.gyro_y = container.y,
-        dataStruct.gyro_z = container.z;
-        
-        dataStruct.time_ticks = xTaskGetTickCount();
-
-        imu_add_measurement(&dataStruct);
-        vTaskDelayUntil(&prevTime,configParams->values.data_rate);
+//        result_flag = bmi08a_get_data(&container, s_bmp3_sensor->bmi088_ptr);
+////        if(BMI08X_E_NULL_PTR == result_flag)
+////        {
+////            continue;
+////        }
+//        dataStruct.acc_x = container.x,
+//        dataStruct.acc_y = container.y,
+//        dataStruct.acc_z = container.z;
+//
+//        result_flag = bmi08g_get_data(&container, s_bmp3_sensor->bmi088_ptr);
+////        if(BMI08X_E_NULL_PTR == result_flag)
+////        {
+////            continue;
+////        }
+//
+//        dataStruct.gyro_x = container.x,
+//        dataStruct.gyro_y = container.y,
+//        dataStruct.gyro_z = container.z;
+//
+//        dataStruct.time_ticks = xTaskGetTickCount();
+//
+//        imu_add_measurement(&dataStruct);
+//        vTaskDelayUntil(&prevTime,configParams->values.data_rate);
     }
 }
 
@@ -255,37 +257,16 @@ static bool __imu_config(configuration_data_t * parameters){
     return result == BMI08X_OK;
 }
 
-static uint8_t __imu_init(_bmi_sensor* bmi_sensor_ptr)
+static uint8_t __imu_init()
 {
-    struct bmi08x_dev* bmi088dev_ptr;
-    
     SPI hspi_ptr = spi3_init();
     if(hspi_ptr == NULL)
     {
         return INTERNAL_ERROR;
     }
-    
-    //Initialize BMP3 Handler
-    bmi088dev_ptr = &bmi08x_dev_;
-    if(bmi088dev_ptr == NULL)
-    {
-        return INTERNAL_ERROR;
-    }
-    
-    /* Set bmp3_sensor_ptr members to newly initialized handlers */
-    bmi_sensor_ptr->bmi088_ptr = bmi088dev_ptr;
-    bmi_sensor_ptr->hspi_ptr = hspi_ptr;
-    
-    /* Map the delay function pointer with the function responsible for implementing the delay_ms */
-    /* Select the interface mode as SPI */
-    bmi088dev_ptr->accel_id = 0;
-    bmi088dev_ptr->gyro_id = 1;
-    bmi088dev_ptr->intf  = BMI08X_SPI_INTF; // determines if we use SPI or I2C
-    bmi088dev_ptr->read  = user_spi_read;   //a function pointer to our spi read function
-    bmi088dev_ptr->write = user_spi_write;  //a function pointer to our spi write function
-    bmi088dev_ptr->delay_ms = delay_ms;     //user_delay_milli_sec
-    
-    int8_t result_flag = bmi088_init(bmi088dev_ptr); // bosch API initialization method
+
+
+    int8_t result_flag = bmi088_init(&bmi088dev_); // bosch API initialization method
     if(result_flag == BMI08X_OK)
     {
         bmi088_queue = xQueueCreate(10,sizeof(imu_sensor_data));

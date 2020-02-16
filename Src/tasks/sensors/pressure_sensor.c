@@ -115,6 +115,7 @@ int8_t __pressure_sensor_init(_bmp3_sensor *bmp3_sensor_ptr)
     
     return INTERNAL_ERROR;
 }
+
 static bool __pressure_sensor_config(uint8_t iir, uint8_t os_pres, uint8_t os_temp, uint8_t odr)
 {
     struct bmp3_dev *dev = s_bmp3_sensor->bmp_ptr;
@@ -234,20 +235,20 @@ void thread_pressure_sensor_start(void const*pvParameters)
     int8_t result_flag;
     while(1)
     {
-        
-        result_flag = get_sensor_data(s_bmp3_sensor->bmp_ptr, &sensor_data);
-        if(BMP3_E_NULL_PTR == result_flag)
-        {
-            continue;
-        }
-
-        dataStruct.pressure = sensor_data.pressure;
-        dataStruct.temperature = sensor_data.temperature;
-        
-        dataStruct.time_ticks = xTaskGetTickCount();
-
-        pressure_sensor_add_measurement(&dataStruct);
-        vTaskDelayUntil(&prevTime, configParams->values.data_rate);
+//
+//        result_flag = get_sensor_data(s_bmp3_sensor->bmp_ptr, &sensor_data);
+//        if(BMP3_E_NULL_PTR == result_flag)
+//        {
+//            continue;
+//        }
+//
+//        dataStruct.pressure = sensor_data.pressure;
+//        dataStruct.temperature = sensor_data.temperature;
+//
+//        dataStruct.time_ticks = xTaskGetTickCount();
+//
+//        pressure_sensor_add_measurement(&dataStruct);
+//        vTaskDelayUntil(&prevTime, configParams->values.data_rate);
     }
 }
 
