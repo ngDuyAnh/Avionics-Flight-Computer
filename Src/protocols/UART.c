@@ -244,7 +244,7 @@ static int uart_receive(UART_HandleTypeDef *huart, uint8_t * buf, size_t size)
         }
     }
 
-    return true;
+    return 0;
 }
 
 
