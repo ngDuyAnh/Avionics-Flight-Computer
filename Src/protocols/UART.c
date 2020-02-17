@@ -24,9 +24,8 @@
 static uint8_t bufftx[BUFFER_SIZE] = ""; // uart_transmit buffer
 static uint8_t buffrx[BUFFER_SIZE] = ""; // receive buffer
 
-static UART_HandleTypeDef uart2;
-static UART_HandleTypeDef uart6;
-
+static UART_HandleTypeDef uart2 = {.Instance = NULL, .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
+static UART_HandleTypeDef uart6 = {.Instance = NULL, .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
 
 
 static void Error_Handler_UART(void);
@@ -109,6 +108,16 @@ int UART_Port6_Init(void)
 
 static int uart_transmit(UART_HandleTypeDef *huart, const char * message)
 {
+    if(huart == NULL)
+    {
+        return 1;
+    }
+
+    if(huart->Instance == NULL)
+    {
+        return 2;
+    }
+
     memcpy (&bufftx, message, strlen(message));
 
     HAL_StatusTypeDef status;
@@ -118,6 +127,16 @@ static int uart_transmit(UART_HandleTypeDef *huart, const char * message)
 
 static int uart_transmit_line(UART_HandleTypeDef *huart, const char * message)
 {
+    if(huart == NULL)
+    {
+        return 1;
+    }
+
+    if(huart->Instance == NULL)
+    {
+        return 2;
+    }
+
     size_t i = strlen(message);
     memcpy (&bufftx, message, i);
     bufftx[i++] = '\r';
@@ -131,6 +150,16 @@ static int uart_transmit_line(UART_HandleTypeDef *huart, const char * message)
 
 static int uart_transmit_bytes(UART_HandleTypeDef *huart, uint8_t * bytes, uint16_t numBytes)
 {
+    if(huart == NULL)
+    {
+        return 1;
+    }
+
+    if(huart->Instance == NULL)
+    {
+        return 2;
+    }
+
     HAL_StatusTypeDef status;
     status = HAL_UART_Transmit(huart,  bytes, numBytes, TIMEOUT_MAX);
     return status;
@@ -138,6 +167,16 @@ static int uart_transmit_bytes(UART_HandleTypeDef *huart, uint8_t * bytes, uint1
 
 static char* uart_receive_command(UART_HandleTypeDef *huart)
 {
+    if(huart == NULL)
+    {
+        return NULL;
+    }
+
+    if(huart->Instance == NULL)
+    {
+        return NULL;
+    }
+
     uint8_t c; //key pressed character
     size_t i;
     
@@ -183,7 +222,18 @@ static char* uart_receive_command(UART_HandleTypeDef *huart)
     
     return (char*)buffrx;
 }
-static int uart_receive(UART_HandleTypeDef *huart, uint8_t * buf, size_t size){
+static int uart_receive(UART_HandleTypeDef *huart, uint8_t * buf, size_t size)
+{
+    if(huart == NULL)
+    {
+        return 1;
+    }
+
+    if(huart->Instance == NULL)
+    {
+        return 2;
+    }
+
     uint8_t c; //key pressed character
     size_t i = 0; //start at beginning of index
 

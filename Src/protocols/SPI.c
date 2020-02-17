@@ -37,9 +37,9 @@
 #define SPI3_CS2_PIN    IMU_SPI_GYRO_CS_PIN
 #define SPI3_CS2_PORT   IMU_SPI_GYRO_CS_PORT
 
-static SPI_HandleTypeDef hspi1 = {.Instance = 0};
-static SPI_HandleTypeDef hspi2 = {.Instance = 0};
-static SPI_HandleTypeDef hspi3 = {.Instance = 0}; ;
+static SPI_HandleTypeDef hspi1 = {.Instance = NULL, .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
+static SPI_HandleTypeDef hspi2 = {.Instance = NULL, .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
+static SPI_HandleTypeDef hspi3 = {.Instance = NULL, .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
 
 
 int spi1_init(void)
@@ -210,6 +210,16 @@ int spi3_init(void)
 
 static int transmit(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t *tx_buffer, uint16_t size, uint32_t timeout)
 {
+    if(hspi == NULL)
+    {
+        return 1;
+    }
+
+    if(hspi->Instance == NULL)
+    {
+        return 2;
+    }
+
     HAL_StatusTypeDef stat;
     GPIO_TypeDef *port = SPI1_CS_PORT;
     uint16_t pin = 0;
@@ -254,6 +264,16 @@ static int transmit(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t *tx_buff
 }
 static int read(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t *rx_buffer, uint16_t total_size, uint32_t timeout)
 {
+    if(hspi == NULL)
+    {
+        return 1;
+    }
+
+    if(hspi->Instance == NULL)
+    {
+        return 2;
+    }
+
     GPIO_TypeDef *port = SPI1_CS_PORT;
     uint16_t pin = 0;
     HAL_StatusTypeDef stat;
@@ -271,10 +291,7 @@ static int read(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t *rx_buffe
         port = SPI3_CS1_PORT;
         pin = SPI3_CS1_PIN;
     }
-    else
-    {
-        return 1;
-    }
+
     //Write the CS low
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
     
@@ -300,6 +317,16 @@ static int read(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t *rx_buffe
 
 static int receive(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t addr_buffer_size, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint32_t timeout)
 {
+    if(hspi == NULL)
+    {
+        return 1;
+    }
+
+    if(hspi->Instance == NULL)
+    {
+        return 2;
+    }
+
     GPIO_TypeDef *port = SPI1_CS_PORT;
     uint16_t pin = 0;
     HAL_StatusTypeDef stat;
@@ -361,6 +388,16 @@ static int receive(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t addr_b
 
 static int send(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t reg_addr_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t timeout)
 {
+    if(hspi == NULL)
+    {
+        return 1;
+    }
+
+    if(hspi->Instance == NULL)
+    {
+        return 2;
+    }
+
     HAL_StatusTypeDef stat;
     GPIO_TypeDef *port = SPI1_CS_PORT;
     uint16_t pin = 0;
