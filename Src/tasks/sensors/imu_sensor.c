@@ -254,30 +254,6 @@ void delay_ms(uint32_t period)
     vTaskDelay(pdMS_TO_TICKS(period)); // wait for the given amount of milliseconds
 }
 
-
-static int8_t __imu_config(configuration_data_t * parameters)
-{
-    int8_t result = accel_config(parameters);
-    if(result != BMI08X_OK)
-    {
-        return false;
-    }
-
-    result = gyro_config(parameters);
-    if(result != BMI08X_OK)
-    {
-        return false;
-    }
-    
-    return result == BMI08X_OK;
-}
-
-static uint8_t __imu_init()
-{
-
-}
-
-
 int imu_sensor_test()
 {
 //    int8_t result;
