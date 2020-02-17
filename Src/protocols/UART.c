@@ -24,8 +24,8 @@
 static uint8_t bufftx[BUFFER_SIZE] = ""; // uart_transmit buffer
 static uint8_t buffrx[BUFFER_SIZE] = ""; // receive buffer
 
-static UART_HandleTypeDef uart2 = {.Instance = NULL, .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
-static UART_HandleTypeDef uart6 = {.Instance = NULL, .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
+static UART_HandleTypeDef uart2 = {.Instance = NULL, .pRxBuffPtr = NULL, .pTxBuffPtr = NULL,  .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
+static UART_HandleTypeDef uart6 = {.Instance = NULL, .pRxBuffPtr = NULL, .pTxBuffPtr = NULL,  .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
 
 
 static void Error_Handler_UART(void);

@@ -37,9 +37,9 @@
 #define SPI3_CS2_PIN    IMU_SPI_GYRO_CS_PIN
 #define SPI3_CS2_PORT   IMU_SPI_GYRO_CS_PORT
 
-static SPI_HandleTypeDef hspi1 = {.Instance = NULL, .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
-static SPI_HandleTypeDef hspi2 = {.Instance = NULL, .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
-static SPI_HandleTypeDef hspi3 = {.Instance = NULL, .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
+static SPI_HandleTypeDef hspi1 = {.Instance = NULL, .pRxBuffPtr = NULL, .pTxBuffPtr = NULL,  .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
+static SPI_HandleTypeDef hspi2 = {.Instance = NULL, .pRxBuffPtr = NULL, .pTxBuffPtr = NULL,  .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
+static SPI_HandleTypeDef hspi3 = {.Instance = NULL, .pRxBuffPtr = NULL, .pTxBuffPtr = NULL,  .hdmarx = NULL,  .hdmatx = NULL, .ErrorCode = 0};
 
 
 int spi1_init(void)
