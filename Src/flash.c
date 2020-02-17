@@ -62,7 +62,7 @@ FlashStatus enable_write(Flash flash)
  * a developer should modify this function to his needs to keep this function as a generic interface forever
  * @see https://github.com/UMSATS/Avionics-2019/
  */
-FlashStatus execute_command(Flash flash, uint32_t address, uint8_t command)
+FlashStatus execute_command(Flash flash, uint32_t address, uint8_t command, uint8_t *data_buffer, uint16_t num_bytes)
 {
     uint8_t status_reg = flash_get_status_register(flash);
     if(FLASH_IS_DEVICE_BUSY(status_reg)){
@@ -73,20 +73,20 @@ FlashStatus execute_command(Flash flash, uint32_t address, uint8_t command)
         if(command == FLASH_BULK_ERASE_COMMAND)
         {
             enable_write(flash);
-            spi_send(flash->spi_handle, &command, 1, NULL, 0, 10);
+            spi_send(flash->spi_handle, &command, 1, data_buffer, num_bytes, 10);
             return FLASH_OK;
         }
         else
         {
             uint8_t command_address[] =
-                {
-                    (command),
-                    (address & (FLASH_HIGH_BYTE_MASK_24B)) >> 16,
-                    (address & (FLASH_MID_BYTE_MASK_24B))  >> 8 ,
-                    (address & (FLASH_LOW_BYTE_MASK_24B))
-                };
+            {
+                (command),
+                (address & (FLASH_HIGH_BYTE_MASK_24B)) >> 16,
+                (address & (FLASH_MID_BYTE_MASK_24B))  >> 8 ,
+                (address & (FLASH_LOW_BYTE_MASK_24B))
+            };
 
-            spi_send(flash->spi_handle, command_address, 4, NULL, 0, 10);
+            spi_send(flash->spi_handle, command_address, 4, data_buffer, num_bytes, 10);
             return FLASH_OK;
         };
     }
@@ -105,27 +105,27 @@ uint8_t flash_get_status_register(Flash p_flash)
 
 FlashStatus flash_erase_sector(Flash p_flash, uint32_t address)
 {
-    return execute_command(p_flash, address, FLASH_ERASE_SEC_COMMAND);
+    return execute_command(p_flash, address, FLASH_ERASE_SEC_COMMAND, NULL, 0);
 }
 
 FlashStatus flash_erase_param_sector(Flash p_flash, uint32_t address)
 {
-    return execute_command(p_flash, address, FLASH_ERASE_PARAM_SEC_COMMAND);
+    return execute_command(p_flash, address, FLASH_ERASE_PARAM_SEC_COMMAND, NULL, 0);
 }
 
 FlashStatus flash_write(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
 {
-    return execute_command(p_flash, address, FLASH_PP_COMMAND);
+    return execute_command(p_flash, address, FLASH_PP_COMMAND, data_buffer, num_bytes);
 }
 
 FlashStatus flash_read(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
 {
-    return execute_command(p_flash, address, FLASH_READ_COMMAND);
+    return execute_command(p_flash, address, FLASH_READ_COMMAND, data_buffer, num_bytes);
 }
 
 FlashStatus flash_erase_device(Flash flash)
 {
-    return execute_command(flash, 0, FLASH_BULK_ERASE_COMMAND);
+    return execute_command(flash, 0, FLASH_BULK_ERASE_COMMAND, NULL, 0);
 }
 
 FlashStatus flash_check_id(Flash p_flash)
