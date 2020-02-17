@@ -15,7 +15,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "tasks/app_threads_controller.h"
-#include <stm32f401xe.h>
 
 #include "stm32/STM32.h"
 #include "protocols/UART.h"
