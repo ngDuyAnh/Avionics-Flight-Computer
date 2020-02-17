@@ -39,7 +39,6 @@ static float s_reference_altitude = 0.0f;
 static char buf[128];
 
 static QueueHandle_t s_queue;
-static struct bmp3_data s_data;
 
 static void     delay_ms                    (uint32_t period_ms);
 static int8_t   spi_reg_write               (uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length);
@@ -143,14 +142,15 @@ int8_t get_sensor_data(struct bmp3_data *data)
 
 int pressure_sensor_calibrate(configuration_data_t *configParams)
 {
+    struct bmp3_data container;
     pressure_sensor_data dataStruct;
-    int status = get_sensor_data(&s_data);
+    int status = get_sensor_data(&container);
     if(status != BMP3_OK) {
         return status;
     }
     
-    dataStruct.pressure = s_data.pressure;
-    dataStruct.temperature = s_data.temperature;
+    dataStruct.pressure = container.pressure;
+    dataStruct.temperature = container.temperature;
     
     configParams->values.ref_alt = 0;
     configParams->values.ref_pres = (uint32_t) dataStruct.pressure / 100;
@@ -163,6 +163,7 @@ int pressure_sensor_calibrate(configuration_data_t *configParams)
 
 void thread_pressure_sensor_start(void const*pvParameters)
 {
+    struct bmp3_data container;
     pressure_sensor_thread_parameters *params = (pressure_sensor_thread_parameters *) pvParameters;
     configuration_data_t *configParams = params->flightCompConfig;
     /* Variable used to store the compensated data */
@@ -172,18 +173,18 @@ void thread_pressure_sensor_start(void const*pvParameters)
     
     for(size_t i = 0; i < 3; i++)
     {
-        get_sensor_data(&s_data);
-        dataStruct.pressure = s_data.pressure;
-        dataStruct.temperature = s_data.temperature;
+        get_sensor_data(&container);
+        dataStruct.pressure = container.pressure;
+        dataStruct.temperature = container.temperature;
         
         vTaskDelayUntil(&prevTime, configParams->values.data_rate);
     }
     
     if(!CONFIGURATION_IS_IN_FLIGHT(configParams->values.flags))
     {
-        get_sensor_data(&s_data);
-        dataStruct.pressure = s_data.pressure;
-        dataStruct.temperature = s_data.temperature;
+        get_sensor_data(&container);
+        dataStruct.pressure = container.pressure;
+        dataStruct.temperature = container.temperature;
         
         configParams->values.ref_pres = dataStruct.pressure / 100;
         s_reference_pressure = dataStruct.pressure / 100;
@@ -193,14 +194,14 @@ void thread_pressure_sensor_start(void const*pvParameters)
     while(1)
     {
         
-        result_flag = get_sensor_data(&s_data);
+        result_flag = get_sensor_data(&container);
         if(BMP3_E_NULL_PTR == result_flag)
         {
             continue;
         }
 
-        dataStruct.pressure = s_data.pressure;
-        dataStruct.temperature = s_data.temperature;
+        dataStruct.pressure = container.pressure;
+        dataStruct.temperature = container.temperature;
         
         dataStruct.time_ticks = xTaskGetTickCount();
 
