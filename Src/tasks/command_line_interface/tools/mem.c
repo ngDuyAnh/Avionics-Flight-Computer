@@ -9,7 +9,7 @@
 CREATE_OPT_DEFAULT_FUNCTION(mem, default_behaviour)
 {
     sprintf(__s_output, "Command [%s] not recognized.", arguments);
-    uart_transmit_line(__s_uart, __s_output);
+    uart6_transmit_line(__s_output);
 
     return true;
 }
@@ -17,7 +17,7 @@ CREATE_OPT_DEFAULT_FUNCTION(mem, default_behaviour)
 CREATE_OPT_ERROR_FUNCTION(mem, error_behaviour)
 {
     sprintf(__s_output, "Invalid option [-%s]\n", arguments);
-    uart_transmit_line(__s_uart, __s_output);
+    uart6_transmit_line(__s_output);
 }
 
 
@@ -77,7 +77,7 @@ OPTION_NEW_TOOL_IMPL(mem)
 
 OPTION_FUNCTION_IMPL(mem, h)
 {
-    uart_transmit_line(__s_uart, MEMORY_MENU_USAGE);
+    uart6_transmit_line(MEMORY_MENU_USAGE);
     return true;
 }
 
@@ -94,17 +94,17 @@ OPTION_FUNCTION_IMPL(mem, a)
     if(value >= 0 && value <= FLASH_END_ADDRESS)
     {
         sprintf(__s_output, "Reading 256 bytes starting at address %i ...", value);
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
         
         uint8_t data_rx[FLASH_PAGE_SIZE];
         FlashStatus stat;
-        stat = flash_read(__flash, value, data_rx, FLASH_PAGE_SIZE);
+        stat = flash_read(value, data_rx, FLASH_PAGE_SIZE);
         
         uint8_t busy = stat;
         
         while(FLASH_IS_DEVICE_BUSY(busy))
         {
-            busy = flash_get_status_register(__flash);
+            busy = flash_get_status_register();
             vTaskDelay(pdMS_TO_TICKS(1));
         }
         
@@ -117,21 +117,21 @@ OPTION_FUNCTION_IMPL(mem, a)
             sprintf(__s_output, "Failed:");
             return false;
         }
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
         
         for(size_t i = 0; i < FLASH_PAGE_SIZE; i++)
         {
             if((i + 1) % 16 == 0)
             {
                 sprintf(__s_output, "0x%02X ", data_rx[i]);
-                uart_transmit_line(__s_uart, __s_output);
+                uart6_transmit_line(__s_output);
             }else
             {
                 sprintf(__s_output, "0x%02X ", data_rx[i]);
-                uart_transmit(__s_uart, __s_output);
+                uart6_transmit(__s_output);
             }
         }
-        uart_transmit_line(__s_uart, "\r\n");
+        uart6_transmit_line("\r\n");
     }
     
     return true;
@@ -139,9 +139,9 @@ OPTION_FUNCTION_IMPL(mem, a)
 
 OPTION_FUNCTION_IMPL(mem, b)
 {
-    uint32_t end_Address = flash_scan(__flash);
+    uint32_t end_Address = flash_scan();
     sprintf(__s_output, "end address :%i \n", end_Address);
-    uart_transmit_line(__s_uart, __s_output);
+    uart6_transmit_line(__s_output);
     
     return true;
 }
@@ -151,7 +151,7 @@ OPTION_FUNCTION_IMPL(mem, c)
     uint8_t dataRX[FLASH_PAGE_SIZE];
     
     sprintf(__s_output, "Erasing data section ...");
-    uart_transmit_line(__s_uart, __s_output);
+    uart6_transmit_line(__s_output);
     
     uint32_t address = FLASH_START_ADDRESS;
     FlashStatus stat = FLASH_ERROR;
@@ -161,28 +161,28 @@ OPTION_FUNCTION_IMPL(mem, c)
         
         if(address > FLASH_PARAM_END_ADDRESS)
         {
-            stat = flash_erase_sector(__flash, address);
+            stat = flash_erase_sector(address);
             address += FLASH_SECTOR_SIZE;
         }else
         {
-            stat = flash_erase_param_sector(__flash, address);
+            stat = flash_erase_param_sector(address);
             address += FLASH_PARAM_SECTOR_SIZE;
         }
         //Wait for erase to finish
         while(FLASH_IS_DEVICE_BUSY(stat))
         {
             
-            stat = flash_get_status_register(__flash);
+            stat = flash_get_status_register();
             
             vTaskDelay(pdMS_TO_TICKS(1));
         }
 
 //        HAL_GPIO_TogglePin(USR_LED_PORT,USR_LED_PIN);
         sprintf(__s_output, "Erasing sector %i ...", address);
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }
 	
-	flash_read(__flash, FLASH_START_ADDRESS, dataRX, 256);
+	flash_read(FLASH_START_ADDRESS, dataRX, 256);
     uint16_t empty = 0xFFFF;
     int i;
     for(i = 0; i < 256; i++)
@@ -197,7 +197,7 @@ OPTION_FUNCTION_IMPL(mem, c)
     if(empty == 0xFFFF)
     {
         
-        uart_transmit_line(__s_uart, "Flash Erased Success!");
+        uart6_transmit_line("Flash Erased Success!");
     }
     
     if(stat == FLASH_OK)
@@ -208,7 +208,7 @@ OPTION_FUNCTION_IMPL(mem, c)
         sprintf(__s_output, "Failed:");
         return false;
     }
-    uart_transmit_line(__s_uart, __s_output);
+    uart6_transmit_line(__s_output);
     
     return true;
 }

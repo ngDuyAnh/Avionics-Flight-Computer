@@ -101,7 +101,7 @@
 
 #define PRINT(format, args...)                                                             \
             sprintf(__s_output, format, args);                                             \
-            uart_transmit_line(__s_uart, __s_output);                                      \
+            uart6_transmit_line(__s_output);                                      \
 
 const static int MAX_ARGUMENTS_LENGTH       = 3;
 const static int MAX_COMMAND_LENGTH         = 64;

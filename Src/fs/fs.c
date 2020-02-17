@@ -18,7 +18,6 @@
 struct Flash;
 static uint8_t fdworkspace[192];
 static uint8_t cache[1400];
-Flash flash;
 
 static struct spiffs_t fs;
 static struct spiffs_config_t config;
@@ -27,8 +26,8 @@ static uint8_t workspace[2 * LOG_PAGE_SIZE];
 
 static int hal_init(void)
 {
-	flash = flash_initialize();
-	flash_erase_device(flash);
+	flash_initialize();
+	flash_erase_device();
 	return (0);
 }
 
@@ -36,13 +35,13 @@ static s32_t hal_erase(struct spiffs_t *fs_p,
 					   u32_t addr,
 					   u32_t size)
 {
-	return (flash_erase_param_sector(flash, addr /*, how to control how much i want to erase?*/));
+	return (flash_erase_param_sector(addr /*, how to control how much i want to erase?*/));
 }
 
 
 static s32_t hal_read(struct spiffs_t *fs_p, u32_t addr, u32_t size, u8_t *dst_p)
 {
-	if (flash_read(flash, addr, dst_p, size) != size)
+	if (flash_read(addr, dst_p, size) != size)
 	{
 		return (-1);
 	}
@@ -52,7 +51,7 @@ static s32_t hal_read(struct spiffs_t *fs_p, u32_t addr, u32_t size, u8_t *dst_p
 
 static s32_t hal_write(struct spiffs_t *fs_p, u32_t addr, u32_t size, u8_t *src_p)
 {
-	if (flash_write(flash, addr, src_p, size) != size) {
+	if (flash_write(addr, src_p, size) != size) {
 		return (-1);
 	}
 	

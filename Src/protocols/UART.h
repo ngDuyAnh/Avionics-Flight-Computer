@@ -15,12 +15,10 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
-#include <sched.h>
+#include <stddef.h>
 
 #define TIMEOUT_MAX 0xFFFF
 #define BUFFER_SIZE 2048
-
-typedef void* UART;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -36,7 +34,7 @@ typedef void* UART;
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-UART UART_Port2_Init(void);
+int UART_Port2_Init(void);
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -52,7 +50,7 @@ UART UART_Port2_Init(void);
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-UART UART_Port6_Init(void);
+int UART_Port6_Init(void);
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -66,7 +64,8 @@ UART UART_Port6_Init(void);
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void uart_transmit(UART uart, const char * message);
+int uart2_transmit(const char * message);
+int uart6_transmit(const char * message);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -79,7 +78,8 @@ void uart_transmit(UART uart, const char * message);
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void uart_transmit_line(UART uart, const char * message);
+int uart2_transmit_line(const char * message);
+int uart6_transmit_line(const char * message);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -92,7 +92,8 @@ void uart_transmit_line(UART uart, const char * message);
 // Returns:
 //  VOID
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void uart_transmit_bytes(UART uart, uint8_t * bytes, uint16_t numBytes);
+int uart2_transmit_bytes(uint8_t * bytes, uint16_t numBytes);
+int uart6_transmit_bytes(uint8_t * bytes, uint16_t numBytes);
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
@@ -105,6 +106,10 @@ void uart_transmit_bytes(UART uart, uint8_t * bytes, uint16_t numBytes);
 // Returns:
 //  Pointer to character array containing user entered message
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-char* uart_receive_command(UART uart);
-bool uart_receive(UART uart, uint8_t * buf, size_t size);
+char* uart2_receive_command();
+char* uart6_receive_command();
+
+int uart2_receive(uint8_t * buf, size_t size);
+int uart6_receive(uint8_t * buf, size_t size);
+
 #endif //STM32F4XX_HAL_UART_CLI_H

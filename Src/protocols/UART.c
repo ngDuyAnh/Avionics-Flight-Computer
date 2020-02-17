@@ -33,8 +33,9 @@ static void Error_Handler_UART(void);
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTIONS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-UART UART_Port2_Init(void)
+int UART_Port2_Init(void)
 {
+    HAL_StatusTypeDef status;
     HAL_Init();
     __HAL_RCC_USART2_CLK_ENABLE();
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -56,32 +57,23 @@ UART UART_Port2_Init(void)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-    
-    /* Create UART struct */
-    UART_HandleTypeDef * uart = &uart2;
-    if(uart == NULL)
-    {
-        return NULL;
-    }
-    
-    uart->Instance = USART2;
-    uart->Init.BaudRate = 9600;
-    uart->Init.WordLength = UART_WORDLENGTH_8B;
-    uart->Init.StopBits = UART_STOPBITS_1;
-    uart->Init.Parity = UART_PARITY_NONE;
-    uart->Init.Mode = UART_MODE_TX_RX;
-    uart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    uart->Init.OverSampling = UART_OVERSAMPLING_16;
-    if (HAL_UART_Init(uart) != HAL_OK)
-    {
-        Error_Handler_UART();
-    }
-    
-    return uart;
-}
 
-UART UART_Port6_Init(void)
+    uart2.Instance = USART2;
+    uart2.Init.BaudRate = 9600;
+    uart2.Init.WordLength = UART_WORDLENGTH_8B;
+    uart2.Init.StopBits = UART_STOPBITS_1;
+    uart2.Init.Parity = UART_PARITY_NONE;
+    uart2.Init.Mode = UART_MODE_TX_RX;
+    uart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    uart2.Init.OverSampling = UART_OVERSAMPLING_16;
+
+    status = HAL_UART_Init(&uart6);
+
+    return status;
+}
+int UART_Port6_Init(void)
 {
+    HAL_StatusTypeDef status;
     __HAL_RCC_USART6_CLK_ENABLE();
     GPIO_InitTypeDef GPIO_InitStruct;
     
@@ -101,68 +93,51 @@ UART UART_Port6_Init(void)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF8_USART6;
     HAL_GPIO_Init(UART_RX_PORT, &GPIO_InitStruct);
-    
-    /* Create UART struct */
 
-    UART_HandleTypeDef * uart = &uart6;
-    if(uart == NULL)
-    {
-        return NULL;
-    }
-    
-    uart->Instance = USART6;
-    uart->Init.BaudRate = 115200;
-    uart->Init.WordLength = UART_WORDLENGTH_8B;
-    uart->Init.StopBits = UART_STOPBITS_1;
-    uart->Init.Parity = UART_PARITY_NONE;
-    uart->Init.Mode = UART_MODE_TX_RX;
-    uart->Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    uart->Init.OverSampling = UART_OVERSAMPLING_16;
-    if (HAL_UART_Init(uart) != HAL_OK)
-    {
-        Error_Handler_UART();
-    }
-    
-    return uart;
+    uart6.Instance = USART6;
+    uart6.Init.BaudRate = 115200;
+    uart6.Init.WordLength = UART_WORDLENGTH_8B;
+    uart6.Init.StopBits = UART_STOPBITS_1;
+    uart6.Init.Parity = UART_PARITY_NONE;
+    uart6.Init.Mode = UART_MODE_TX_RX;
+    uart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    uart6.Init.OverSampling = UART_OVERSAMPLING_16;
+    status = HAL_UART_Init(&uart6);
+
+    return status;
 }
 
-void uart_transmit(UART uart, const char * message)
+static int uart_transmit(UART_HandleTypeDef *huart, const char * message)
 {
-    for(size_t i = 0; i < strlen(message); i++){
-        bufftx[i] = (uint8_t) message[i];
-    }
-    
-    if(HAL_UART_Transmit(uart, (uint8_t*)bufftx, sizeof(uint8_t) * (strlen(message)), TIMEOUT_MAX) != HAL_OK){
-        //Do something meaningful here...
-    }
+    memcpy (&bufftx, message, strlen(message));
+
+    HAL_StatusTypeDef status;
+    status = HAL_UART_Transmit(huart, (uint8_t*)bufftx, sizeof(uint8_t) * (strlen(message)), TIMEOUT_MAX);
+    return status;
 }
 
-void uart_transmit_line(UART uart, const char * message)
+static int uart_transmit_line(UART_HandleTypeDef *huart, const char * message)
 {
-    size_t i;
-    //convert to uint8_t array
-    for(i = 0; i < strlen(message); i++){
-        bufftx[i] = (uint8_t) message[i];
-    }
-    
+    size_t i = strlen(message);
+    memcpy (&bufftx, message, i);
     bufftx[i++] = '\r';
     bufftx[i++] = '\n';
     bufftx[i++] = '\0';
-    
-    if(HAL_UART_Transmit(uart, (uint8_t*)bufftx, sizeof(uint8_t) * (i), TIMEOUT_MAX) != HAL_OK){
-        //Do something meaningful here...
-    }
+
+    HAL_StatusTypeDef status;
+    status = HAL_UART_Transmit(huart, (uint8_t*)bufftx, sizeof(uint8_t) * (i), TIMEOUT_MAX);
+    return status;
 }
 
-void uart_transmit_bytes(UART uart, uint8_t * bytes, uint16_t numBytes){
-    
-    if(HAL_UART_Transmit(uart, bytes, numBytes, TIMEOUT_MAX) != HAL_OK){
-        //Do something meaningful here...
-        while(1);
-    }
+static int uart_transmit_bytes(UART_HandleTypeDef *huart, uint8_t * bytes, uint16_t numBytes)
+{
+    HAL_StatusTypeDef status;
+    status = HAL_UART_Transmit(huart,  bytes, numBytes, TIMEOUT_MAX);
+    return status;
 }
 
-char* uart_receive_command(UART uart){
+static char* uart_receive_command(UART_HandleTypeDef *huart)
+{
     uint8_t c; //key pressed character
     size_t i;
     
@@ -172,14 +147,14 @@ char* uart_receive_command(UART uart){
     
     while(i < BUFFER_SIZE){
         //get character (BLOCKING COMMAND)
-        if (HAL_UART_Receive(uart, &c, 1, 0xFFFF) != HAL_OK){
+        if (HAL_UART_Receive(huart, &c, 1, 0xFFFF) != HAL_OK){
             //did not receive character for some reason.
         }
         
         //print the character back.
         if(c != '\0'){
             
-            if(HAL_UART_Transmit(uart, &c, sizeof(c), TIMEOUT_MAX) != HAL_OK){
+            if(HAL_UART_Transmit(huart, &c, sizeof(c), TIMEOUT_MAX) != HAL_OK){
                 //Do something meaningful here...
             }
             
@@ -200,22 +175,21 @@ char* uart_receive_command(UART uart){
     
     //put a new line for user display
     c = '\n';
-    if(HAL_UART_Transmit(uart, &c, sizeof(c), TIMEOUT_MAX) != HAL_OK){
+    if(HAL_UART_Transmit(huart, &c, sizeof(c), TIMEOUT_MAX) != HAL_OK){
         //handle transmission error
     }
+
     buffrx[i] = '\0'; //string terminator added to the end of the message
     
     return (char*)buffrx;
 }
-
-
-bool uart_receive(UART uart, uint8_t * buf, size_t size){
+static int uart_receive(UART_HandleTypeDef *huart, uint8_t * buf, size_t size){
     uint8_t c; //key pressed character
     size_t i = 0; //start at beginning of index
 
     while(i < size){
         //get character (BLOCKING COMMAND)
-        if (HAL_UART_Receive(uart, &buf[i++], 1, 0xFFFF) != HAL_OK){
+        if (HAL_UART_Receive(huart, &buf[i++], 1, 0xFFFF) != HAL_OK){
             return i == size;
         }
     }
@@ -224,7 +198,53 @@ bool uart_receive(UART uart, uint8_t * buf, size_t size){
 }
 
 
-static void Error_Handler_UART(void)
+int uart2_transmit(const char * message)
 {
-  /* User can add his own implementation to report the HAL error return state */
+    return uart_transmit(&uart2, message);
+}
+
+int uart6_transmit(const char * message)
+{
+    return uart_transmit(&uart6, message);
+}
+
+int uart2_transmit_line(const char * message)
+{
+    return uart_transmit_line(&uart2, message);
+}
+
+int uart6_transmit_line(const char * message)
+{
+    return uart_transmit_line(&uart2, message);
+}
+
+int uart2_transmit_bytes(uint8_t * bytes, uint16_t numBytes)
+{
+    return uart_transmit_bytes(&uart2, bytes, numBytes);
+}
+
+int uart6_transmit_bytes(uint8_t * bytes, uint16_t numBytes)
+{
+    return uart_transmit_bytes(&uart6, bytes, numBytes);
+}
+
+char* uart2_receive_command()
+{
+    return uart_receive_command(&uart2);
+}
+
+char* uart6_receive_command()
+{
+    return uart_receive_command(&uart6);
+}
+
+int uart2_receive(uint8_t * buf, size_t size)
+{
+    return uart_receive(&uart2, buf, size);
+}
+
+
+int uart6_receive(uint8_t * buf, size_t size)
+{
+    return uart_receive(&uart6, buf, size);
 }

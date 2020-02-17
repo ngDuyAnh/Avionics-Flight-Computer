@@ -40,7 +40,6 @@ typedef struct imu_sensor_data
 
 //Parameters for imu_thread_start.
 typedef struct{
-    UART huart;
     configuration_data_t *configuration_data;
 } imu_sensor_thread_parameters;
 
@@ -52,8 +51,8 @@ typedef struct{
 //  Enter description of return values (if any).
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool imu_sensor_test            ();
-bool imu_sensor_init            (configuration_data_t * parameters);
+int imu_sensor_test            ();
+int imu_sensor_init            (configuration_data_t * parameters);
 void imu_thread_start           (void const *param);
 bool imu_read                   (imu_sensor_data * buffer, uint8_t data_rate);
 void imu_sensor_data_to_bytes   (imu_sensor_data reading, uint8_t* bytes, uint32_t timestamp);

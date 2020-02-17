@@ -17,11 +17,9 @@
 
 
 bool __initialized                                  = false;
-UART __s_uart                                       = NULL;
 void* __startupTaskHandle                           = NULL;
 char *__command_buffer                              = NULL;
 menuState_t __state                                 = MAIN_MENU;
-Flash __flash                                       = NULL;
 uint16_t __DELAY_EMATCH_MENU_FIRE                   = 10000;
 configuration_data_t * __application_configurations = NULL;
 char __s_output[256]                                = {};
@@ -94,7 +92,7 @@ bool task_command_line_controller_execute_command(const char *command)
 // ----- Case functions implementation ----- //
 OPTION_FUNCTION_IMPL(general, help)
 {
-    uart_transmit_line(__s_uart, GENERAL_USAGE);
+    uart6_transmit_line(GENERAL_USAGE);
     return true;
 }
 
@@ -133,11 +131,9 @@ void task_command_line_controller_init(cli_thread_parameters *_parameters)
     
     cli_thread_parameters *parameters = (cli_thread_parameters *) _parameters;
     __application_configurations = parameters->application_configurations;
-    __s_uart = parameters->huart;
     __command_buffer = (char *) malloc(sizeof(char) * BUFFER_SIZE); //command buffer
     __state = MAIN_MENU;
-    __flash = parameters->flash;
-    
+
     __initialized = true;
 }
 
@@ -148,21 +144,21 @@ void thread_command_line_controller_start(void const *pvParameters)
         stm32_error_handler(__FILE__, __LINE__);
     }
     
-    uart_transmit_line(__s_uart, INTRO_USAGE);
+    uart6_transmit_line(INTRO_USAGE);
     general_help_function(NULL);
     
     /* As per most FreeRTOS tasks, this task is implemented in an infinite loop. */
     while(1)
     {
-        uart_transmit(__s_uart, ">> ");
-        __command_buffer = uart_receive_command(__s_uart); //puts input into buffrx
+        uart6_transmit(">> ");
+        __command_buffer = uart6_receive_command(); //puts input into buffrx
         task_command_line_controller_execute_command(__command_buffer); //handles command sitting in buffrx
     }
 }
 
 void task_command_line_controller_println(char *line)
 {
-    uart_transmit_line(__s_uart, line);
+    uart6_transmit_line(line);
 }
 
 

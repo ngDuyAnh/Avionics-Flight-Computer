@@ -25,11 +25,11 @@
 #define SPI2_CS_PIN     PRES_SPI_CS_PIN
 #define SPI2_CS_PORT    PRES_SPI_CS_PORT
 
-//Right now the timeout value is used to select between chip selects.
-//We should really find a better way to do this!
-//Currently only works with the send and receive functions.
-//timeout=10 for acc
-//timeout=other for gyro
+// Right now the timeout value is used to select between chip selects.
+// We should really find a better way to do this!
+// Currently only works with the send and receive functions.
+// timeout=10 for acc
+// timeout=other for gyro
 
 #define SPI3_CS1_PIN    IMU_SPI_ACC_CS_PIN
 #define SPI3_CS1_PORT   IMU_SPI_ACC_CS_PORT
@@ -37,36 +37,32 @@
 #define SPI3_CS2_PIN    IMU_SPI_GYRO_CS_PIN
 #define SPI3_CS2_PORT   IMU_SPI_GYRO_CS_PORT
 
-static SPI_HandleTypeDef hspi1;
-static SPI_HandleTypeDef hspi2;
-static SPI_HandleTypeDef hspi3;
+static SPI_HandleTypeDef hspi1 = {.Instance = 0};
+static SPI_HandleTypeDef hspi2 = {.Instance = 0};
+static SPI_HandleTypeDef hspi3 = {.Instance = 0}; ;
 
-SPI spi1_init(void)
+
+int spi1_init(void)
 {
+    HAL_StatusTypeDef status;
     __HAL_RCC_SPI1_CLK_ENABLE();
-    SPI_HandleTypeDef *hspi = &hspi1;
-    if(hspi == NULL)
+    hspi1.Instance = SPI1;
+    hspi1.Init.Mode = SPI_MODE_MASTER;
+    hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+    hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+    hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+    hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+    hspi1.Init.NSS = SPI_NSS_SOFT;
+    hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+    hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+    hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    hspi1.Init.CRCPolynomial = 10;
+
+    status = HAL_SPI_Init(&hspi1);
+    if(status != HAL_OK)
     {
-        return NULL;
-    }
-    
-    hspi->Instance = SPI1;
-    hspi->Init.Mode = SPI_MODE_MASTER;
-    hspi->Init.Direction = SPI_DIRECTION_2LINES;
-    hspi->Init.DataSize = SPI_DATASIZE_8BIT;
-    hspi->Init.CLKPolarity = SPI_POLARITY_LOW;
-    hspi->Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi->Init.NSS = SPI_NSS_SOFT;
-    hspi->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
-    hspi->Init.FirstBit = SPI_FIRSTBIT_MSB;
-    hspi->Init.TIMode = SPI_TIMODE_DISABLE;
-    hspi->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    hspi->Init.CRCPolynomial = 10;
-    
-    if(HAL_SPI_Init(hspi) != HAL_OK)
-    {
-        while(1)
-        {} //SPI setup failed!
+        return status;
     }
     
     
@@ -99,36 +95,28 @@ SPI spi1_init(void)
     HAL_GPIO_Init(SPI1_CS_PORT, &GPIO_InitStruct);
     HAL_GPIO_WritePin(SPI1_CS_PORT, SPI1_CS_PIN, GPIO_PIN_SET);
 
-    return hspi;
+    return 0;
 }
-
-SPI spi2_init(void)
+int spi2_init(void)
 {
     __HAL_RCC_SPI2_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
 
-    SPI_HandleTypeDef *hspi = &hspi2;
-    if(hspi == NULL)
+    hspi2.Instance = SPI2;
+    hspi2.Init.Mode = SPI_MODE_MASTER;
+    hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+    hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+    hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+    hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+    hspi2.Init.NSS = SPI_NSS_SOFT;
+    hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+    hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+    hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    hspi2.Init.CRCPolynomial = 10;
+    if(HAL_SPI_Init(&hspi2) != HAL_OK)
     {
-        return NULL;
-    }
-    
-    hspi->Instance = SPI2;
-    hspi->Init.Mode = SPI_MODE_MASTER;
-    hspi->Init.Direction = SPI_DIRECTION_2LINES;
-    hspi->Init.DataSize = SPI_DATASIZE_8BIT;
-    hspi->Init.CLKPolarity = SPI_POLARITY_LOW;
-    hspi->Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi->Init.NSS = SPI_NSS_SOFT;
-    hspi->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
-    hspi->Init.FirstBit = SPI_FIRSTBIT_MSB;
-    hspi->Init.TIMode = SPI_TIMODE_DISABLE;
-    hspi->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    hspi->Init.CRCPolynomial = 10;
-    if(HAL_SPI_Init(hspi) != HAL_OK)
-    {
-        while(1)
-        {} //SPI setup failed!
+        return 1;
     }
     
     
@@ -159,63 +147,49 @@ SPI spi2_init(void)
     
     HAL_GPIO_Init(SPI2_CS_PORT, &GPIO_InitStruct);
 
-    return hspi;
+    return 0;
 }
-
-SPI spi3_init(void)
+int spi3_init(void)
 {
     __HAL_RCC_SPI3_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
+    
+    hspi3.Instance = SPI3;
+    hspi3.Init.Mode = SPI_MODE_MASTER;
+    hspi3.Init.Direction = SPI_DIRECTION_2LINES;
+    hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
+    hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
+    hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
+    hspi3.Init.NSS = SPI_NSS_SOFT;
+    hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+    hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
+    hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    hspi3.Init.CRCPolynomial = 10;
+    if(HAL_SPI_Init(&hspi3) != HAL_OK)
+    {
+        return 1;
+    }
 
-    SPI_HandleTypeDef *hspi = &hspi3;
-    if(hspi == NULL)
-    {
-        return NULL;
-    }
-    
-    hspi->Instance = SPI3;
-    hspi->Init.Mode = SPI_MODE_MASTER;
-    hspi->Init.Direction = SPI_DIRECTION_2LINES;
-    hspi->Init.DataSize = SPI_DATASIZE_8BIT;
-    hspi->Init.CLKPolarity = SPI_POLARITY_LOW;
-    hspi->Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi->Init.NSS = SPI_NSS_SOFT;
-    hspi->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
-    hspi->Init.FirstBit = SPI_FIRSTBIT_MSB;
-    hspi->Init.TIMode = SPI_TIMODE_DISABLE;
-    hspi->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    hspi->Init.CRCPolynomial = 10;
-    if(HAL_SPI_Init(hspi) != HAL_OK)
-    {
-        while(1)
-        {} //SPI setup failed!
-    }
-    
-    
-    
     /*SPI3 GPIO Configuration
     PC10     ------> SPI1_SCK
     PC11     ------> SPI1_MISO
     PC12     ------> SPI1_MOSI
-    
-    
     */
+
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
     
     //Setup the SPI MOSI,MISO and SCK. These pins are fixed.
-    
     GPIO_InitStruct.Pin = IMU_SPI_SCK_PIN | IMU_SPI_MOSI_PIN | IMU_SPI_MISO_PIN;
-    
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
     
     HAL_GPIO_Init(IMU_SPI_PORT, &GPIO_InitStruct);
-    
     GPIO_InitTypeDef GPIO_InitStruct2 = {0};
     //Setup the SPI CS. This can be any pin.
     GPIO_InitStruct2.Pin = SPI3_CS1_PIN | SPI3_CS2_PIN;
@@ -231,11 +205,10 @@ SPI spi3_init(void)
     HAL_GPIO_WritePin(SPI3_CS1_PORT, SPI3_CS1_PIN, GPIO_PIN_SET);
     HAL_GPIO_WritePin(SPI3_CS2_PORT, SPI3_CS2_PIN, GPIO_PIN_SET);
 
-    return hspi;
+    return 0;
 }
 
-static void
-transmit(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t *tx_buffer, uint16_t size, uint32_t timeout)
+static int transmit(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t *tx_buffer, uint16_t size, uint32_t timeout)
 {
     HAL_StatusTypeDef stat;
     GPIO_TypeDef *port = SPI1_CS_PORT;
@@ -253,6 +226,10 @@ transmit(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t *tx_buffer, uint16_
     {
         port = SPI3_CS1_PORT;
         pin = SPI3_CS1_PIN;
+    }
+    else
+    {
+        return 1;
     }
     //Write the CS low (lock)
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
@@ -272,10 +249,10 @@ transmit(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t *tx_buffer, uint16_
     
     //Write the CS hi (release)
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
-}
 
-static void
-read(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t *rx_buffer, uint16_t total_size, uint32_t timeout)
+    return 0;
+}
+static int read(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t *rx_buffer, uint16_t total_size, uint32_t timeout)
 {
     GPIO_TypeDef *port = SPI1_CS_PORT;
     uint16_t pin = 0;
@@ -293,6 +270,10 @@ read(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t *rx_buffer, uint16_t
     {
         port = SPI3_CS1_PORT;
         pin = SPI3_CS1_PIN;
+    }
+    else
+    {
+        return 1;
     }
     //Write the CS low
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
@@ -313,10 +294,11 @@ read(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t *rx_buffer, uint16_t
         stat = HAL_SPI_GetState(hspi);
     }
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
-    
+
+    return 0;
 }
-static void receive(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t addr_buffer_size, uint8_t *rx_buffer,
-                    uint16_t rx_buffer_size, uint32_t timeout)
+
+static int receive(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t addr_buffer_size, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint32_t timeout)
 {
     GPIO_TypeDef *port = SPI1_CS_PORT;
     uint16_t pin = 0;
@@ -343,6 +325,10 @@ static void receive(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t addr_
             pin = SPI3_CS2_PIN;
         }
         
+    }
+    else
+    {
+        return 1;
     }
     //Write the CS low
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
@@ -368,12 +354,13 @@ static void receive(SPI_HandleTypeDef *hspi, uint8_t *addr_buffer, uint8_t addr_
         }
     }
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
-    
+
+
+    return 0;
 }
 
-static void send(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t reg_addr_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t timeout)
+static int send(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t reg_addr_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t timeout)
 {
-  
     HAL_StatusTypeDef stat;
     GPIO_TypeDef *port = SPI1_CS_PORT;
     uint16_t pin = 0;
@@ -398,6 +385,11 @@ static void send(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t reg_addr_si
             pin = SPI3_CS2_PIN;
         }
     }
+    else
+    {
+        return 1;
+    }
+
     //Write the CS low (lock)
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
     
@@ -421,27 +413,75 @@ static void send(SPI_HandleTypeDef *hspi, uint8_t *reg_addr, uint8_t reg_addr_si
     }
     //Write the CS hi (release)
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
-    
+
+    return 0;
 }
 
-void spi_transmit(SPI hspi, uint8_t *addr_buffer, uint8_t *tx_buffer, uint16_t total_size, uint32_t timeout)
+int spi1_transmit(uint8_t *addr_buffer, uint8_t *tx_buffer, uint16_t total_size, uint32_t timeout)
 {
-    transmit(hspi, addr_buffer, tx_buffer, total_size, timeout);
+    return transmit(&hspi1, addr_buffer, tx_buffer, total_size, timeout);
 }
 
-void spi_read(SPI hspi, uint8_t *addr_buffer, uint8_t *rx_buffer, uint16_t total_size, uint32_t timeout)
+int spi1_read(uint8_t *addr_buffer, uint8_t *rx_buffer, uint16_t total_size, uint32_t timeout)
 {
-    read(hspi, addr_buffer, rx_buffer, total_size, timeout);
+    return read(&hspi1, addr_buffer, rx_buffer, total_size, timeout);
 }
 
-void spi_send(SPI hspi, uint8_t *reg_addr, uint8_t reg_addr_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t timeout)
+int spi1_send(uint8_t *reg_addr, uint8_t reg_addr_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t timeout)
 {
-    send(hspi, reg_addr, reg_addr_size, tx_buffer, tx_buffer_size, timeout);
+    return send(&hspi1, reg_addr, reg_addr_size, tx_buffer, tx_buffer_size, timeout);
 }
 
-void spi_receive(SPI hspi, uint8_t *addr_buffer, uint8_t addr_buffer_size, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint32_t timeout)
+int spi1_receive(uint8_t *addr_buffer, uint8_t addr_buffer_size, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint32_t timeout)
 {
-    receive(hspi, addr_buffer, addr_buffer_size, rx_buffer, rx_buffer_size, timeout);
+    return receive(&hspi1, addr_buffer, addr_buffer_size, rx_buffer, rx_buffer_size, timeout);
+}
+
+
+
+
+
+
+int spi2_transmit(uint8_t *addr_buffer, uint8_t *tx_buffer, uint16_t total_size, uint32_t timeout)
+{
+    return transmit(&hspi2, addr_buffer, tx_buffer, total_size, timeout);
+}
+
+int spi2_read(uint8_t *addr_buffer, uint8_t *rx_buffer, uint16_t total_size, uint32_t timeout)
+{
+    return read(&hspi2, addr_buffer, rx_buffer, total_size, timeout);
+}
+
+int spi2_send(uint8_t *reg_addr, uint8_t reg_addr_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t timeout)
+{
+    return send(&hspi2, reg_addr, reg_addr_size, tx_buffer, tx_buffer_size, timeout);
+}
+
+int spi2_receive(uint8_t *addr_buffer, uint8_t addr_buffer_size, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint32_t timeout)
+{
+    return receive(&hspi2, addr_buffer, addr_buffer_size, rx_buffer, rx_buffer_size, timeout);
+}
+
+
+
+int spi3_transmit(uint8_t *addr_buffer, uint8_t *tx_buffer, uint16_t total_size, uint32_t timeout)
+{
+    return transmit(&hspi3, addr_buffer, tx_buffer, total_size, timeout);
+}
+
+int spi3_read(uint8_t *addr_buffer, uint8_t *rx_buffer, uint16_t total_size, uint32_t timeout)
+{
+    return read(&hspi3, addr_buffer, rx_buffer, total_size, timeout);
+}
+
+int spi3_send(uint8_t *reg_addr, uint8_t reg_addr_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t timeout)
+{
+    return send(&hspi3, reg_addr, reg_addr_size, tx_buffer, tx_buffer_size, timeout);
+}
+
+int spi3_receive(uint8_t *addr_buffer, uint8_t addr_buffer_size, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint32_t timeout)
+{
+    return receive(&hspi3, addr_buffer, addr_buffer_size, rx_buffer, rx_buffer_size, timeout);
 }
 
 

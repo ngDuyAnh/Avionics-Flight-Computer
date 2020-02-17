@@ -64,7 +64,7 @@ OPTION_NEW_TOOL_IMPL(ematch)
 
 OPTION_FUNCTION_IMPL(ematch, h)
 {
-    uart_transmit_line(__s_uart, EMATCH_USAGE);
+    uart6_transmit_line(EMATCH_USAGE);
     return true;
 }
 
@@ -76,11 +76,11 @@ OPTION_FUNCTION_IMPL(ematch, a)
     if(cont == OPEN_CIRCUIT)
     {
         sprintf(__s_output, "No continuity was detected on the drogue circuit.\n");
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }else
     {
         sprintf(__s_output, "Continuity was detected on the drogue circuit.\n");
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }
     
     return true;
@@ -94,11 +94,11 @@ OPTION_FUNCTION_IMPL(ematch, b)
     if(cont == OPEN_CIRCUIT)
     {
         sprintf(__s_output, "No continuity was detected on the main circuit.\n");
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }else
     {
         sprintf(__s_output, "Continuity was detected on the main circuit.\n");
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }
     
     return true;
@@ -112,11 +112,11 @@ OPTION_FUNCTION_IMPL(ematch, c)
     if(over == NO_OVERCURRENT)
     {
         sprintf(__s_output, "No overcurrent was detected on the drogue circuit.\n");
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }else
     {
         sprintf(__s_output, "Overcurrent was detected on the drogue circuit.\n");
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }
     return true;
 }
@@ -129,11 +129,11 @@ OPTION_FUNCTION_IMPL(ematch, d)
     if(over == NO_OVERCURRENT)
     {
         sprintf(__s_output, "No overcurrent was detected on the main circuit.\n");
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }else
     {
         sprintf(__s_output, "Overcurrent was detected on the main circuit.\n");
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }
     return true;
 }
@@ -143,7 +143,7 @@ OPTION_FUNCTION_IMPL(ematch, e)
     RecoverySelect event = DROGUE;
     recovery_enable_mosfet(event);
     sprintf(__s_output, "DROGUE DEPLOYMENT CIRCUIT IS NOW ARMED!.\n");
-    uart_transmit_line(__s_uart, __s_output);
+    uart6_transmit_line(__s_output);
     
     return true;
 }
@@ -153,7 +153,7 @@ OPTION_FUNCTION_IMPL(ematch, f)
     RecoverySelect event = MAIN;
     recovery_enable_mosfet(event);
     sprintf(__s_output, "MAIN DEPLOYMENT CIRCUIT IS NOW ARMED!.\n");
-    uart_transmit_line(__s_uart, __s_output);
+    uart6_transmit_line(__s_output);
     
     return true;
 }
@@ -163,7 +163,7 @@ OPTION_FUNCTION_IMPL(ematch, g)
     RecoverySelect event = DROGUE;
     
     sprintf(__s_output, "DROGUE WILL FIRE IN %d SECONDS!.\n", __DELAY_EMATCH_MENU_FIRE / 1000);
-    uart_transmit_line(__s_uart, __s_output);
+    uart6_transmit_line(__s_output);
     
     int time_left = __DELAY_EMATCH_MENU_FIRE;
     
@@ -173,7 +173,7 @@ OPTION_FUNCTION_IMPL(ematch, g)
         vTaskDelay(pdMS_TO_TICKS(1000));
         time_left -= (1000);
         sprintf(__s_output, "DROGUE WILL FIRE IN %d SECONDS!.\n", time_left / 1000);
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }
     recovery_activate_mosfet(event);
     
@@ -185,7 +185,7 @@ OPTION_FUNCTION_IMPL(ematch, i)
     RecoverySelect event = MAIN;
     
     sprintf(__s_output, "MAIN WILL FIRE IN %d SECONDS!.\n", __DELAY_EMATCH_MENU_FIRE / 1000);
-    uart_transmit_line(__s_uart, __s_output);
+    uart6_transmit_line(__s_output);
     
     int time_left = __DELAY_EMATCH_MENU_FIRE;
     
@@ -195,7 +195,7 @@ OPTION_FUNCTION_IMPL(ematch, i)
         vTaskDelay(pdMS_TO_TICKS(1000));
         time_left -= (1000);
         sprintf(__s_output, "MAIN WILL FIRE IN %d SECONDS!.\n", time_left / 1000);
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }
     recovery_activate_mosfet(event);
     
@@ -218,7 +218,7 @@ OPTION_FUNCTION_IMPL(ematch, j)
         
         __DELAY_EMATCH_MENU_FIRE = value * 1000;
         sprintf(__s_output, "E-match fire delay_ms set to %d.\n", value);
-        uart_transmit_line(__s_uart, __s_output);
+        uart6_transmit_line(__s_output);
     }
     
     return true;

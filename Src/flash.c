@@ -21,15 +21,6 @@
 #include "protocols/SPI.h"
 
 
-struct flash_t
-{
-    SPI spi_handle; /**< SPI handle. */
-};
-
-typedef struct flash_t* Flash;
-
-static struct flash_t flash_;
-
 /**
  * @brief
  * This function sets the write enable. This is needed before a
@@ -38,15 +29,15 @@ static struct flash_t flash_;
  * @return Will be FLASH_BUSY if there is another operation in progress, FLASH_OK otherwise.
  * @see https://github.com/UMSATS/Avionics-2019/
  */
-FlashStatus enable_write(Flash flash)
+FlashStatus enable_write()
 {
-    uint8_t status_reg = flash_get_status_register(flash);
+    uint8_t status_reg = flash_get_status_register();
     if(FLASH_IS_DEVICE_BUSY(status_reg)){
         return FLASH_BUSY;
     }
     else{
         uint8_t command = FLASH_ENABLE_WRITE_COMMAND;
-        spi_transmit(flash->spi_handle, &command, NULL, 1, 10);
+        spi1_transmit(&command, NULL, 1, 10);
         return FLASH_OK;
     }
 }
@@ -62,18 +53,19 @@ FlashStatus enable_write(Flash flash)
  * a developer should modify this function to his needs to keep this function as a generic interface forever
  * @see https://github.com/UMSATS/Avionics-2019/
  */
-FlashStatus execute_command(Flash flash, uint32_t address, uint8_t command, uint8_t *data_buffer, uint16_t num_bytes)
+
+FlashStatus execute_command(uint32_t address, uint8_t command, uint8_t *data_buffer, uint16_t num_bytes)
 {
-    uint8_t status_reg = flash_get_status_register(flash);
+    uint8_t status_reg = flash_get_status_register();
     if(FLASH_IS_DEVICE_BUSY(status_reg)){
         return FLASH_BUSY;
     }
     else{
-        enable_write(flash);
+        enable_write();
         if(command == FLASH_BULK_ERASE_COMMAND)
         {
-            enable_write(flash);
-            spi_send(flash->spi_handle, &command, 1, data_buffer, num_bytes, 10);
+            enable_write();
+            spi1_send(&command, 1, data_buffer, num_bytes, 10);
             return FLASH_OK;
         }
         else
@@ -86,7 +78,7 @@ FlashStatus execute_command(Flash flash, uint32_t address, uint8_t command, uint
                 (address & (FLASH_LOW_BYTE_MASK_24B))
             };
 
-            spi_send(flash->spi_handle, command_address, 4, data_buffer, num_bytes, 10);
+            spi1_send(command_address, 4, data_buffer, num_bytes, 10);
             return FLASH_OK;
         };
     }
@@ -94,46 +86,46 @@ FlashStatus execute_command(Flash flash, uint32_t address, uint8_t command, uint
 
 
 
-uint8_t flash_get_status_register(Flash p_flash)
+uint8_t flash_get_status_register()
 {
     uint8_t command = FLASH_GET_STATUS_REG_COMMAND;
     uint8_t status_reg;
-    spi_receive(p_flash->spi_handle, &command, 1, &status_reg, 1, 10);
+    spi1_receive(&command, 1, &status_reg, 1, 10);
     return status_reg;
 }
 
 
-FlashStatus flash_erase_sector(Flash p_flash, uint32_t address)
+FlashStatus flash_erase_sector(uint32_t address)
 {
-    return execute_command(p_flash, address, FLASH_ERASE_SEC_COMMAND, NULL, 0);
+    return execute_command(address, FLASH_ERASE_SEC_COMMAND, NULL, 0);
 }
 
-FlashStatus flash_erase_param_sector(Flash p_flash, uint32_t address)
+FlashStatus flash_erase_param_sector(uint32_t address)
 {
-    return execute_command(p_flash, address, FLASH_ERASE_PARAM_SEC_COMMAND, NULL, 0);
+    return execute_command(address, FLASH_ERASE_PARAM_SEC_COMMAND, NULL, 0);
 }
 
-FlashStatus flash_write(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
+FlashStatus flash_write(uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
 {
-    return execute_command(p_flash, address, FLASH_PP_COMMAND, data_buffer, num_bytes);
+    return execute_command(address, FLASH_PP_COMMAND, data_buffer, num_bytes);
 }
 
-FlashStatus flash_read(Flash p_flash, uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
+FlashStatus flash_read(uint32_t address, uint8_t *data_buffer, uint16_t num_bytes)
 {
-    return execute_command(p_flash, address, FLASH_READ_COMMAND, data_buffer, num_bytes);
+    return execute_command(address, FLASH_READ_COMMAND, data_buffer, num_bytes);
 }
 
-FlashStatus flash_erase_device(Flash flash)
+FlashStatus flash_erase_device()
 {
-    return execute_command(flash, 0, FLASH_BULK_ERASE_COMMAND, NULL, 0);
+    return execute_command(0, FLASH_BULK_ERASE_COMMAND, NULL, 0);
 }
 
-FlashStatus flash_check_id(Flash p_flash)
+FlashStatus flash_check_id()
 {
     uint8_t command = FLASH_READ_ID_COMMAND;
     uint8_t id[3] = {0, 0, 0};
 
-    spi_receive(p_flash->spi_handle, (uint8_t *) &command, 1, id, 3, 10);
+    spi1_receive((uint8_t *) &command, 1, id, 3, 10);
     if((id[0] == FLASH_MANUFACTURER_ID) && (id[1] == FLASH_DEVICE_ID_MSB) && (id[2] == FLASH_DEVICE_ID_LSB)){
         return FLASH_OK;
     }
@@ -142,10 +134,8 @@ FlashStatus flash_check_id(Flash p_flash)
 }
 
 
-Flash flash_initialize()
+int flash_initialize()
 {
-    Flash flash = &flash_;
-
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -171,19 +161,23 @@ Flash flash_initialize()
     HAL_GPIO_WritePin(FLASH_WP_PORT, FLASH_WP_PIN, GPIO_PIN_SET);
     HAL_GPIO_WritePin(FLASH_HOLD_PORT, FLASH_HOLD_PIN, GPIO_PIN_SET);
     //Set up the SPI interface
-    flash->spi_handle = spi1_init();
+    int status = spi1_init();
+    if(status != 0)
+    {
+        return 1;
+    }
 
     HAL_GPIO_WritePin(FLASH_SPI_CS_PORT, FLASH_SPI_CS_PIN, GPIO_PIN_SET);
     
-    if(FLASH_ERROR == flash_check_id(flash))
+    if(FLASH_ERROR == flash_check_id())
     {
-        return NULL;
+        return 2;
     }
     
-    return flash;
+    return 0;
 }
 
-size_t flash_scan(Flash p_flash)
+size_t flash_scan()
 {
     size_t result = 0;
     uint8_t dataRX[256];
@@ -197,7 +191,7 @@ size_t flash_scan(Flash p_flash)
             dataRX[j] = 0;
         }
 
-        status = flash_read(p_flash, i, dataRX, 256);
+        status = flash_read(i, dataRX, 256);
         uint16_t empty = 0xFFFF;
         for(j = 0; j < 256; j++)
         {

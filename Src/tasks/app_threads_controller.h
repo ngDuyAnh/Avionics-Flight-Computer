@@ -29,8 +29,6 @@ typedef struct
     void                    *cli_thread_params;
     void                    *timer_thread_handle;
     configuration_data_t    *configuration_data;
-    Flash                   flash_ptr;
-    UART                    huart_ptr;
 }startup_thread_parameters;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------

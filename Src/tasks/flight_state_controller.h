@@ -48,8 +48,6 @@ typedef enum{
 } BufferSelection_t;
 
 typedef struct{
-    Flash flash_ptr;
-    UART uart;
     configuration_data_t *configuration_data;
     void* timer_thread_handle;
 }flight_state_controller_thread_parameters;

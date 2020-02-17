@@ -27,7 +27,6 @@
 #include "../../protocols/UART.h"
 #include "utilities/common.h"
 
-#define INTERNAL_ERROR      -127
 #define PRES_TYPE           0x200000
 #define TEMP_TYPE           0x100000
 
@@ -37,119 +36,91 @@
 static float s_reference_pressure = 0.0f;
 static float s_reference_altitude = 0.0f;
 
-// Keep SPI connection and BMP sensor struct together
-typedef struct _bmp3_sensor_struct
-{
-    struct bmp3_dev *bmp_ptr;
-    SPI hspi_ptr;
-} _bmp3_sensor;
-static UART uart;
 static char buf[128];
-static _bmp3_sensor *s_bmp3_sensor;
-static QueueHandle_t bmp388_queue;
-static struct bmp3_data sensor_data;
-static struct bmp3_dev bmp3;
-static _bmp3_sensor bmp3_sensor;
+
+static QueueHandle_t s_queue;
+static struct bmp3_data s_data;
 
 static void     delay_ms                    (uint32_t period_ms);
 static int8_t   spi_reg_write               (uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length);
 static int8_t   spi_reg_read                (uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length);
-int8_t          __pressure_sensor_init      (_bmp3_sensor *bmp3_sensor_ptr);
-static bool     __pressure_sensor_config    (uint8_t iir, uint8_t os_pres, uint8_t os_temp, uint8_t odr);
-static int8_t   get_sensor_data             (struct bmp3_dev *dev, struct bmp3_data *data);
+static int8_t   get_sensor_data             (struct bmp3_data *data);
 static void     bmp3_print_result           (const char *api_name, int8_t rslt);
 
 
+static struct bmp3_dev s_device = {
+        .delay_ms = delay_ms,
+        /* Select the interface mode as SPI */
+        .intf = BMP3_SPI_INTF,
+        .read = spi_reg_read,
+        .write = spi_reg_write,
+        .dev_id = 0
+};
 
-int8_t __pressure_sensor_init(_bmp3_sensor *bmp3_sensor_ptr)
+
+static int8_t pressure_sensor_config(uint8_t iir, uint8_t os_pres, uint8_t os_temp, uint8_t odr)
 {
-    struct bmp3_dev *bmp3_ptr;
-    SPI hspi_ptr = spi2_init();
-    if(hspi_ptr == NULL)
-    {
-        return INTERNAL_ERROR;
-    }
-    
-    //Initialize BMP3 Handler
-    bmp3_ptr = &bmp3;
-    if(bmp3_ptr == NULL)
-    {
-        return INTERNAL_ERROR;
-    }
-    
-    /* Set bmp3_sensor_ptr members to newly initialized handlers */
-    bmp3_sensor_ptr->bmp_ptr = bmp3_ptr;
-    bmp3_sensor_ptr->hspi_ptr = hspi_ptr;
-    
-    // Save static reference to bmp3_sensor_ptr for use in spi_reg_read/write wrapper functions
-    // The spi_reg_read/write functions have function signatures defined by the BOSCH API which they conform to.
-    // Unfortunately, a reference to the SPI connection is not in that signature, so I keep a static reference to it for use in said wrapper functions.
-    s_bmp3_sensor = bmp3_sensor_ptr;
-    
-    /* Map the delay function pointer with the function responsible for implementing the delay_ms */
-    bmp3_ptr->delay_ms = delay_ms;
-    
-    /* Select the interface mode as SPI */
-    bmp3_ptr->intf = BMP3_SPI_INTF;
-    bmp3_ptr->read = spi_reg_read;
-    bmp3_ptr->write = spi_reg_write;
-    bmp3_ptr->dev_id = 0;
-    
-    int8_t result = bmp3_init(bmp3_ptr); // bosch API initialization method
-    
-    if(result == BMP3_OK)
-    {
-        bmp388_queue = xQueueCreate(10, sizeof(pressure_sensor_data));
-        if(bmp388_queue == NULL)
-        {
-            return INTERNAL_ERROR;
-        }
-        
-        vQueueAddToRegistry(bmp388_queue,"bmp388_queue");
-        return result;
-    }
-    else
-    {
-        return result;
-    }
-    
-    return INTERNAL_ERROR;
-}
-static bool __pressure_sensor_config(uint8_t iir, uint8_t os_pres, uint8_t os_temp, uint8_t odr)
-{
-    struct bmp3_dev *dev = s_bmp3_sensor->bmp_ptr;
     int8_t result = 0;
     
     /* Used to select the settings user needs to change */
     uint16_t settings_sel;
     
     /* Select the pressure and temperature sensor to be enabled */
-    dev->settings.press_en = BMP3_ENABLE;
-    dev->settings.temp_en = BMP3_ENABLE;
+    s_device.settings.press_en = BMP3_ENABLE;
+    s_device.settings.temp_en = BMP3_ENABLE;
     /* Select the output data rate and oversampling settings for pressure and temperature */
-    dev->settings.odr_filter.press_os = os_pres;
-    dev->settings.odr_filter.temp_os = os_temp;
-    dev->settings.odr_filter.odr = odr;
-    dev->settings.odr_filter.iir_filter = iir;
+    s_device.settings.odr_filter.press_os = os_pres;
+    s_device.settings.odr_filter.temp_os = os_temp;
+    s_device.settings.odr_filter.odr = odr;
+    s_device.settings.odr_filter.iir_filter = iir;
     /* Assign the settings which needs to be set in the sensor */
-    settings_sel = BMP3_PRESS_EN_SEL | BMP3_TEMP_EN_SEL | BMP3_PRESS_OS_SEL | BMP3_TEMP_OS_SEL | BMP3_ODR_SEL |
-                   BMP3_IIR_FILTER_SEL;
+    settings_sel = BMP3_PRESS_EN_SEL | BMP3_TEMP_EN_SEL | BMP3_PRESS_OS_SEL | BMP3_TEMP_OS_SEL | BMP3_ODR_SEL | BMP3_IIR_FILTER_SEL;
 
-    if(BMP3_OK == bmp3_set_sensor_settings(settings_sel, dev))
+    result = bmp3_set_sensor_settings(settings_sel, &s_device);
+    if(BMP3_OK == result)
     {
-        return true;
+        return BMP3_OK;
     }
     
     /* Set the power mode to normal mode */
-    dev->settings.op_mode = BMP3_NORMAL_MODE;
-    
-    if(BMP3_OK == bmp3_set_op_mode(dev))
+    s_device.settings.op_mode = BMP3_NORMAL_MODE;
+
+    result = bmp3_set_op_mode(&s_device);
+    if(BMP3_OK == result)
 	{
-    	return true;
+    	return BMP3_OK;
 	}
 
-    return false;
+    return result;
 }
+
+
+int pressure_sensor_init(configuration_data_t *parameters)
+{
+    int status = spi2_init();
+    if(status != 0)
+    {
+        return status;
+    }
+
+    status = bmp3_init(&s_device); // bosch API initialization method
+    if(status != BMP3_OK)
+        return status;
+
+    s_queue = xQueueCreate(10, sizeof(pressure_sensor_data));
+    if (s_queue == NULL) {
+        return 2;
+    }
+
+    vQueueAddToRegistry(s_queue, "bmp3_queue");
+
+
+    status = pressure_sensor_config(parameters->values.iir_coef, parameters->values.pres_os,
+                                    parameters->values.temp_os,  parameters->values.bmp_odr);
+
+    return status;
+}
+
 
 float pressure_sensor_calculate_altitude(pressure_sensor_data * reading)
 {
@@ -163,49 +134,36 @@ float pressure_sensor_calculate_altitude(pressure_sensor_data * reading)
     return (uint32_t) (p_term * t_term) / 0.0065F + s_reference_altitude;
 }
 
-int8_t get_sensor_data(struct bmp3_dev *dev, struct bmp3_data *data)
+int8_t get_sensor_data(struct bmp3_data *data)
 {
-    return bmp3_get_sensor_data(BMP3_PRESS | BMP3_TEMP, data, dev);
+    return bmp3_get_sensor_data(BMP3_PRESS | BMP3_TEMP, data, &s_device);
 }
 
-bool pressure_sensor_init(configuration_data_t *parameters)
-{
-    _bmp3_sensor *bmp3_sensor_ptr = &bmp3_sensor;
-    if(bmp3_sensor_ptr == NULL)
-    {
-        return false;
-    }
-    
-    if(BMP3_OK != __pressure_sensor_init(bmp3_sensor_ptr))
-    {
-        return false;
-    }
-    
-    bool result = __pressure_sensor_config(parameters->values.iir_coef,
-            parameters->values.pres_os,
-            parameters->values.temp_os,
-            parameters->values.bmp_odr);
-    
 
-    return result;
-}
-void pressure_sensor_calibrate(configuration_data_t *configParams)
+
+int pressure_sensor_calibrate(configuration_data_t *configParams)
 {
     pressure_sensor_data dataStruct;
-    get_sensor_data(s_bmp3_sensor->bmp_ptr, &sensor_data);
+    int status = get_sensor_data(&s_data);
+    if(status != BMP3_OK) {
+        return status;
+    }
     
-    dataStruct.pressure = sensor_data.pressure;
-    dataStruct.temperature = sensor_data.temperature;
+    dataStruct.pressure = s_data.pressure;
+    dataStruct.temperature = s_data.temperature;
     
     configParams->values.ref_alt = 0;
     configParams->values.ref_pres = (uint32_t) dataStruct.pressure / 100;
     s_reference_pressure = configParams->values.ref_pres;
     s_reference_altitude = configParams->values.ref_alt;
+
+    return 0;
 }
+
+
 void thread_pressure_sensor_start(void const*pvParameters)
 {
     pressure_sensor_thread_parameters *params = (pressure_sensor_thread_parameters *) pvParameters;
-    uart = params->huart;    //Get uart for printing to console
     configuration_data_t *configParams = params->flightCompConfig;
     /* Variable used to store the compensated data */
     pressure_sensor_data dataStruct;
@@ -214,18 +172,18 @@ void thread_pressure_sensor_start(void const*pvParameters)
     
     for(size_t i = 0; i < 3; i++)
     {
-        get_sensor_data(s_bmp3_sensor->bmp_ptr, &sensor_data);
-        dataStruct.pressure = sensor_data.pressure;
-        dataStruct.temperature = sensor_data.temperature;
+        get_sensor_data(&s_data);
+        dataStruct.pressure = s_data.pressure;
+        dataStruct.temperature = s_data.temperature;
         
         vTaskDelayUntil(&prevTime, configParams->values.data_rate);
     }
     
     if(!CONFIGURATION_IS_IN_FLIGHT(configParams->values.flags))
     {
-        get_sensor_data(s_bmp3_sensor->bmp_ptr, &sensor_data);
-        dataStruct.pressure = sensor_data.pressure;
-        dataStruct.temperature = sensor_data.temperature;
+        get_sensor_data(&s_data);
+        dataStruct.pressure = s_data.pressure;
+        dataStruct.temperature = s_data.temperature;
         
         configParams->values.ref_pres = dataStruct.pressure / 100;
         s_reference_pressure = dataStruct.pressure / 100;
@@ -235,14 +193,14 @@ void thread_pressure_sensor_start(void const*pvParameters)
     while(1)
     {
         
-        result_flag = get_sensor_data(s_bmp3_sensor->bmp_ptr, &sensor_data);
+        result_flag = get_sensor_data(&s_data);
         if(BMP3_E_NULL_PTR == result_flag)
         {
             continue;
         }
 
-        dataStruct.pressure = sensor_data.pressure;
-        dataStruct.temperature = sensor_data.temperature;
+        dataStruct.pressure = s_data.pressure;
+        dataStruct.temperature = s_data.temperature;
         
         dataStruct.time_ticks = xTaskGetTickCount();
 
@@ -271,9 +229,9 @@ static void delay_ms(uint32_t period_ms)
  */
 static int8_t spi_reg_write(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length)
 {
-    int8_t rslt = 0; //assume success
-    spi_send(s_bmp3_sensor->hspi_ptr, &reg_addr, 1, reg_data, length, TIMEOUT);
-    return rslt;
+    int8_t status = 0; //assume success
+    status = spi2_send(&reg_addr, 1, reg_data, length, TIMEOUT);
+    return status;
 }
 /*!
  *  @brief Function for reading the sensor's registers through SPI bus.
@@ -290,9 +248,9 @@ static int8_t spi_reg_write(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uin
  */
 static int8_t spi_reg_read(uint8_t cs, uint8_t reg_addr, uint8_t *reg_data, uint16_t length)
 {
-    int8_t rslt = 0; // assume success
-    spi_receive(s_bmp3_sensor->hspi_ptr, &reg_addr, 1, reg_data, length, TIMEOUT);
-    return rslt;
+    int status = 0; // assume success
+    status = spi2_receive(&reg_addr, 1, reg_data, length, TIMEOUT);
+    return status;
 }
 /*!
  *  @brief Prints the execution status of the APIs.
@@ -336,10 +294,11 @@ void bmp3_print_result(const char *api_name, int8_t rslt)
             //For more error codes refer "bmp3_defs.h"
             sprintf(error_msg, "Unknown error code");
         }
+
         sprintf(buf, "\r\nERROR [%d] %s : %s\r\n", rslt, api_name, error_msg);
     }
     
-    uart_transmit(uart, buf);
+    uart6_transmit(buf);
 }
 
 
@@ -351,7 +310,10 @@ bool pressure_sensor_test(void)
     uint8_t command[] = {0x80};
     uint8_t id_read[] = {0x00,0x00};
     
-    spi_receive(s_bmp3_sensor->hspi_ptr,command,1,id_read,2,10);
+    int status = spi2_receive(command,1,id_read,2,10);
+
+    if(status != 0)
+        return false;
     
     if(id_read[1] == id)
     {
@@ -363,7 +325,7 @@ bool pressure_sensor_test(void)
 
 bool pressure_sensor_read(pressure_sensor_data * buffer, uint8_t data_rate)
 {
-    return pdPASS == xQueueReceive(bmp388_queue, buffer, data_rate);
+    return pdPASS == xQueueReceive(s_queue, buffer, data_rate);
 }
 
 
@@ -382,5 +344,5 @@ void pressure_sensor_data_to_bytes(pressure_sensor_data bmp_reading, uint8_t * b
 
 bool pressure_sensor_add_measurement (pressure_sensor_data * _data)
 {
-    return pdTRUE == xQueueSend(bmp388_queue,_data,1);
+    return pdTRUE == xQueueSend(s_queue, _data, 1);
 }

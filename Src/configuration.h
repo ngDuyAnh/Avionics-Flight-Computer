@@ -102,7 +102,6 @@ typedef struct
     float       ref_alt;
     float       ref_pres;
     
-    Flash       flash;
     uint8_t     state;
 }configuration_data_values;
 

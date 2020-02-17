@@ -22,7 +22,6 @@
 #include "protocols/UART.h"
 #include "hardware_definitions.h"
 
-static UART uart;
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Enter description for static function here.

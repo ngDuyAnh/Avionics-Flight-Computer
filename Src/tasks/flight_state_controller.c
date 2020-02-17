@@ -44,8 +44,6 @@ typedef struct
     uint16_t                ring_buff_size;
     uint32_t                flash_address;
     int32_t                 acc_z_filtered;
-    Flash                   flash;
-    UART                    uart;
     configuration_data_t    *config_data;
     TaskHandle_t            *timer_thread_handle;
     data_measurement        measurement;
@@ -149,12 +147,12 @@ void sm_STATE_LAUNCHPAD_ARMED(necessary_parameters parameters)
 
         if((parameters.buffer_index_curr + 256) < buff_end)
         {
-            FlashStatus stat_f2 = flash_write(parameters.flash, parameters.flash_address,
+            FlashStatus stat_f2 = flash_write(parameters.flash_address,
 											  &parameters.launchpadBuffer[parameters.buffer_index_curr],
 											  DATA_BUFFER_SIZE);
             while(FLASH_IS_DEVICE_BUSY(stat_f2))
             {
-                stat_f2 = flash_get_status_register(parameters.flash);
+                stat_f2 = flash_get_status_register();
                 vTaskDelay(1);
             }
             parameters.buffer_index_curr += 256;
@@ -165,11 +163,11 @@ void sm_STATE_LAUNCHPAD_ARMED(necessary_parameters parameters)
             memcpy(&buff_temp, &parameters.launchpadBuffer[parameters.buffer_index_curr], buff_end - parameters.buffer_index_curr);
             memcpy(&buff_temp[buff_end - parameters.buffer_index_curr], &parameters.launchpadBuffer, DATA_BUFFER_SIZE - (buff_end - parameters.buffer_index_curr));
 
-            FlashStatus stat_f2 = flash_write(parameters.flash, parameters.flash_address, buff_temp,
+            FlashStatus stat_f2 = flash_write(parameters.flash_address, buff_temp,
 											  DATA_BUFFER_SIZE);
             while(FLASH_IS_DEVICE_BUSY(stat_f2))
             {
-                stat_f2 = flash_get_status_register(parameters.flash);
+                stat_f2 = flash_get_status_register();
                 vTaskDelay(1);
             }
             parameters.buffer_index_curr = DATA_BUFFER_SIZE - (buff_end - parameters.buffer_index_curr);
@@ -360,8 +358,6 @@ void thread_flight_state_controller_start(void const *params)
     necessary_parameters parameters =
     {
         .flight_state_controller_params  = (flight_state_controller_thread_parameters *) params,
-        .flash                           = parameters.flight_state_controller_params->flash_ptr,
-        .uart                            = parameters.flight_state_controller_params->uart,
         .config_data                     = parameters.flight_state_controller_params->configuration_data,
         .timer_thread_handle             = parameters.flight_state_controller_params->timer_thread_handle,
         .flash_address                   = FLASH_START_ADDRESS,
@@ -571,11 +567,11 @@ void fill_buffer_and_or_write_to_flash(necessary_parameters parameters)
             //We just switched to A so uart_transmit B.
             if(CONFIGURATION_IS_RECORDING(parameters.config_data->values.flags))
             {
-                FlashStatus stat_f = flash_write(parameters.flash, parameters.flash_address,
+                FlashStatus stat_f = flash_write(parameters.flash_address,
 												 parameters.data_bufferB, DATA_BUFFER_SIZE);
                 while(FLASH_IS_DEVICE_BUSY(stat_f))
                 {
-                    stat_f = flash_get_status_register(parameters.flash);
+                    stat_f = flash_get_status_register();
                     vTaskDelay(1);
                 }
 
@@ -590,7 +586,7 @@ void fill_buffer_and_or_write_to_flash(necessary_parameters parameters)
 
             }else
             {
-                uart_transmit_bytes(parameters.uart, parameters.data_bufferB, 256);
+                uart6_transmit_bytes(parameters.data_bufferB, 256);
             }
         }else if(parameters.buffer_selection == 1)
         {
@@ -598,11 +594,11 @@ void fill_buffer_and_or_write_to_flash(necessary_parameters parameters)
 
             if(CONFIGURATION_IS_RECORDING(parameters.config_data->values.flags))
             {
-                FlashStatus stat_f2 = flash_write(parameters.flash, parameters.flash_address,
+                FlashStatus stat_f2 = flash_write(parameters.flash_address,
 												  parameters.data_bufferA, DATA_BUFFER_SIZE);
                 while(FLASH_IS_DEVICE_BUSY(stat_f2))
                 {
-                    stat_f2 = flash_get_status_register(parameters.flash);
+                    stat_f2 = flash_get_status_register();
                     vTaskDelay(1);
                 }
 
@@ -617,7 +613,7 @@ void fill_buffer_and_or_write_to_flash(necessary_parameters parameters)
                 }
             }else
             {
-                uart_transmit_bytes(parameters.uart, parameters.data_bufferA, 256);
+                uart6_transmit_bytes(parameters.data_bufferA, 256);
             }
         }
 

@@ -79,7 +79,7 @@ OPTION_FUNCTION_IMPL(datafeeder, s)
     while(1)
     {
         uint8_t buf[36];
-        if(uart_receive(__s_uart, buf, 36))
+        if(uart6_receive( buf, 36))
         {
             if(memcmp(buf, END_SEQEUNCE, 36) == 0) {
                 PRINT("OK", NULL);

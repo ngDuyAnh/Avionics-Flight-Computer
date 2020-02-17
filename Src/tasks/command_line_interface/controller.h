@@ -33,8 +33,6 @@ typedef enum{
 
 typedef struct
 {
-    UART huart;
-    Flash flash;
     configuration_data_t *application_configurations;
     void* startupTaskHandle;
 

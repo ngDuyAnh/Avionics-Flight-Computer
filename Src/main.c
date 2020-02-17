@@ -44,38 +44,37 @@ int main(void)
     }
 
 
-    UART huart6 = UART_Port6_Init();
-    if(huart6 == NULL)
+    int status =  UART_Port6_Init();
+    if(status != 0)
     {
         stm32_error_handler(__FILE__, __LINE__);
     }
     else
     {
-        uart_transmit_line(huart6, "UMSATS ROCKETRY FLIGHT COMPUTER");
+        uart6_transmit_line("UMSATS ROCKETRY FLIGHT COMPUTER");
     }
     
 
-    Flash flash = flash_initialize();
-    if(flash == NULL)
+    status = flash_initialize();
+    if(status != 0)
     {
         stm32_error_handler(__FILE__, __LINE__);
     }
     else
     {
-        uart_transmit_line(huart6, "Flash ID read successful");
+        uart6_transmit_line("Flash ID read successful");
     }
 
 
-    app_configuration_data.values.flash = flash;
     read_config(&app_configuration_data);
     
     char lines[50];
     sprintf(lines, "ID :%d \n", app_configuration_data.values.id);
-    uart_transmit_line(huart6, lines);
+    uart6_transmit_line(lines);
     
     if(app_configuration_data.values.id != ID)
     {
-        uart_transmit_line(huart6, "No config found in flash, resetting to default.");
+        uart6_transmit_line("No config found in flash, resetting to default.");
         init_config(&app_configuration_data);
         write_config(&app_configuration_data);
     }
@@ -93,16 +92,16 @@ int main(void)
         app_configuration_data.values.state = STATE_IN_FLIGHT_PRE_APOGEE;
     }
     
-    size_t end_Address = 0; //flash_scan(flash);
+    size_t end_Address = 0; //flash_scan();
     sprintf(lines, "end address :%zu", end_Address);
-    uart_transmit_line(huart6, lines);
+    uart6_transmit_line(lines);
     app_configuration_data.values.end_data_address = end_Address;
     
     buzzer_init();
-    uart_transmit_line(huart6, "Buzzer has been set up.");
+    uart6_transmit_line("Buzzer has been set up.");
     
     recovery_init();
-    uart_transmit_line(huart6, "Recovery GPIO pins have been set up.");
+    uart6_transmit_line("Recovery GPIO pins have been set up.");
     
     //Initialize and get the flight computer parameters.
     imu_sensor_thread_parameters thread_imu_params;
@@ -110,28 +109,22 @@ int main(void)
     flight_state_controller_thread_parameters thread_flight_state_controller_params;
     cli_thread_parameters thread_cli_params;
     startup_thread_parameters thread_startup_parameters;
-    
-    thread_flight_state_controller_params.flash_ptr = flash;
-    thread_flight_state_controller_params.uart = huart6;
+
     thread_flight_state_controller_params.configuration_data = &app_configuration_data;
     
     
-    thread_pressure_sensor_params.huart = huart6;
     thread_pressure_sensor_params.flightCompConfig = &app_configuration_data;
     if(!pressure_sensor_init(&app_configuration_data))
     {
-        uart_transmit_line(huart6, "Pressure sensor initialization error.");
+        uart6_transmit_line("Pressure sensor initialization error.");
     }
     
-    thread_imu_params.huart = huart6;
     thread_imu_params.configuration_data = &app_configuration_data;
     if(!imu_sensor_init(&app_configuration_data))
     {
-        uart_transmit_line(huart6, "IMU sensor initialization error.");
+        uart6_transmit_line("IMU sensor initialization error.");
     }
-    
-    thread_cli_params.flash = flash;
-    thread_cli_params.huart = huart6;
+
     thread_cli_params.application_configurations = &app_configuration_data;
     task_command_line_controller_init(&thread_cli_params);
     

@@ -38,14 +38,12 @@ static void eraseFlash(startup_thread_parameters * params)
 {
     HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
     FlashStatus stat;
-    Flash flash = params->flash_ptr;
-    UART  huart = params->huart_ptr;
     configuration_data_t * config = params->configuration_data;
     
     uint8_t dataRX[256];
-    uart_transmit_line(huart,"Checking flash memory...");
+    uart6_transmit_line("Checking flash memory...");
     // Read the first page of memory. If its empty, assume the whole memory is empty.
-    stat = flash_read(flash, config->values.start_data_address, dataRX, 256);
+    stat = flash_read(config->values.start_data_address, dataRX, 256);
     
     uint16_t good= 0xFFFF;
     
@@ -60,12 +58,12 @@ static void eraseFlash(startup_thread_parameters * params)
     
     if(good == 0xFFFF)
     {
-        uart_transmit_line(huart,"flash empty.");
+        uart6_transmit_line("flash empty.");
         HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
     }
     else
     {
-        uart_transmit_line(huart,"flash not empty.");
+        uart6_transmit_line("flash not empty.");
         //Erase the whole flash. This could take up to 2 minutes.
         //stat = erase_device(flash);
         uint32_t address = FLASH_START_ADDRESS;
@@ -73,24 +71,24 @@ static void eraseFlash(startup_thread_parameters * params)
         {
             if(address>FLASH_PARAM_END_ADDRESS)
             {
-                stat = flash_erase_sector(flash,address);
+                stat = flash_erase_sector(address);
                 address += FLASH_SECTOR_SIZE;
             }
             else
             {
-                stat = flash_erase_param_sector(flash,address);
+                stat = flash_erase_param_sector(address);
                 address += FLASH_PARAM_SECTOR_SIZE;
             }
             
             //Wait for erase to finish
             while(FLASH_IS_DEVICE_BUSY(stat))
             {
-                stat = flash_get_status_register(flash);
+                stat = flash_get_status_register();
                 vTaskDelay(pdMS_TO_TICKS(1));
             }
         }
 	
-		flash_read(flash, FLASH_START_ADDRESS, dataRX, 256);
+		flash_read(FLASH_START_ADDRESS, dataRX, 256);
         uint16_t empty = 0xFFFF;
         
         for(i=0;i<256;i++)
@@ -103,7 +101,7 @@ static void eraseFlash(startup_thread_parameters * params)
         
         if(empty == 0xFFFF)
         {
-            uart_transmit_line(huart,"Flash Erased Success!");
+            uart6_transmit_line("Flash Erased Success!");
             HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_SET);
             HAL_Delay(1000);
             HAL_GPIO_WritePin(USR_LED_PORT,USR_LED_PIN,GPIO_PIN_RESET);
@@ -121,8 +119,6 @@ void app_threads_controller_start(void const* pvParams)
     osThreadId bmpTask_h = sp->pressure_sensor_thread_handle;
     osThreadId imuTask_h = sp->imu_thread_handle;
     osThreadId cliTask_h = sp->cli_thread_params;
-    Flash flash = sp->flash_ptr;
-    UART huart = sp->huart_ptr;
     configuration_data_t * config = sp->configuration_data;
 
     osThreadSuspend(cliTask_h);
