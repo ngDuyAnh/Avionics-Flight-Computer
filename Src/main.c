@@ -113,13 +113,13 @@ int main(void)
     
     
     thread_pressure_sensor_params.flightCompConfig = &app_configuration_data;
-    if(!pressure_sensor_init(&app_configuration_data))
+    if(pressure_sensor_init(&app_configuration_data) != 0)
     {
         uart6_transmit_line("Pressure sensor initialization error.");
     }
     
     thread_imu_params.configuration_data = &app_configuration_data;
-    if(!imu_sensor_init(&app_configuration_data))
+    if(imu_sensor_init(&app_configuration_data) != 0)
     {
         uart6_transmit_line("IMU sensor initialization error.");
     }
@@ -152,6 +152,8 @@ int main(void)
             }
         }
     }
+
+
     
 //    osThreadDef(timer, thread_timer_start, osPriorityAboveNormal, 1, 1000);
 //    if(NULL == (thread_startup_parameters.timer_thread_handle = osThreadCreate(osThread(timer), &app_configuration_data))){
