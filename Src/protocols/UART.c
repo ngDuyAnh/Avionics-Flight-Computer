@@ -265,7 +265,7 @@ int uart2_transmit_line(const char * message)
 
 int uart6_transmit_line(const char * message)
 {
-    return uart_transmit_line(&uart2, message);
+    return uart_transmit_line(&uart6, message);
 }
 
 int uart2_transmit_bytes(uint8_t * bytes, uint16_t numBytes)
