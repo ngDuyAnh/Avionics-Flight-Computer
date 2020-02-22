@@ -137,18 +137,21 @@ int main(void)
     if(!CONFIGURATION_IS_IN_FLIGHT(app_configuration_data.values.flags))
     {
         app_configuration_data.values.state = STATE_LAUNCHPAD;
-        if(/* imu_sensor_test() && */ pressure_sensor_test())
+        int rslt_imu = imu_sensor_test();
+        int rslt_pres = pressure_sensor_test();
+        if(rslt_imu && rslt_pres)
         {
-//             stm32_delay(1000);
-           // buzz(500); //CHANGE TO 2 SECONDS !!!!!
+            stm32_delay(1000);
+            buzz(500); //CHANGE TO 2 SECONDS !!!!!
         }
         else
         {
+        	uart6_transmit_line("Pressure sensor or IMU sensor test error. Entering CLI mode.");
+        	app_configuration_data.values.state = STATE_CLI;
             for(uint8_t i = 0; i < 20; i++)
             {
-                //buzz(500);
-                // stm32_delay(500);
-                app_configuration_data.values.state = STATE_CLI;
+                buzz(500);
+                stm32_delay(500);
             }
         }
     }
