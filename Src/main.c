@@ -103,7 +103,6 @@ int main(void)
     uart6_transmit_line("Recovery GPIO pins have been set up.");
     
     //Initialize and get the flight computer parameters.
-    imu_sensor_thread_parameters thread_imu_params;
     pressure_sensor_thread_parameters thread_pressure_sensor_params;
     flight_state_controller_thread_parameters thread_flight_state_controller_params;
     cli_thread_parameters thread_cli_params;
@@ -118,7 +117,6 @@ int main(void)
         uart6_transmit_line("Pressure sensor initialization error.");
     }
     
-    thread_imu_params.configuration_data = &app_configuration_data;
     if(imu_sensor_init(&app_configuration_data) != 0)
     {
         uart6_transmit_line("IMU sensor initialization error.");
@@ -163,10 +161,10 @@ int main(void)
 //        stm32_error_handler(__FILE__, __LINE__);
 //    }
 
-//    osThreadDef(imu, imu_thread_start, osPriorityHigh, 1, 1000);
-//    if(NULL == (thread_startup_parameters.imu_thread_handle = osThreadCreate(osThread(imu), &app_configuration_data))){
-//        stm32_error_handler(__FILE__, __LINE__);
-//    }
+    osThreadDef(imu, imu_thread_start, osPriorityHigh, 1, 1000);
+    if(NULL == (thread_startup_parameters.imu_thread_handle = osThreadCreate(osThread(imu), &app_configuration_data))){
+        stm32_error_handler(__FILE__, __LINE__);
+    }
 
 //    osThreadDef(flight_state_controller, thread_flight_state_controller_start, osPriorityHigh, 1, 1000);
 //    if(NULL == (thread_startup_parameters.flight_state_controller_thread_handle = osThreadCreate(osThread(flight_state_controller), &thread_flight_state_controller_params))){

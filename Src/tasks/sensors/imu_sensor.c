@@ -94,8 +94,7 @@ int imu_sensor_init(configuration_data_t * parameters){
 void imu_thread_start(void const *param)
 {
     //Get the parameters.
-    imu_sensor_thread_parameters * params = (imu_sensor_thread_parameters *)param;
-    configuration_data_t * configParams = params->configuration_data;
+	configuration_data_t * configParams = (configuration_data_t *)param;
     TickType_t prevTime;
     imu_sensor_data dataStruct;
 
