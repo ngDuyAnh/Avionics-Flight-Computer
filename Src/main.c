@@ -103,7 +103,6 @@ int main(void)
     uart6_transmit_line("Recovery GPIO pins have been set up.");
     
     //Initialize and get the flight computer parameters.
-    pressure_sensor_thread_parameters thread_pressure_sensor_params;
     flight_state_controller_thread_parameters thread_flight_state_controller_params;
     cli_thread_parameters thread_cli_params;
     startup_thread_parameters thread_startup_parameters;
@@ -111,7 +110,6 @@ int main(void)
     thread_flight_state_controller_params.configuration_data = &app_configuration_data;
     
     
-    thread_pressure_sensor_params.flightCompConfig = &app_configuration_data;
     if(pressure_sensor_init(&app_configuration_data) != 0)
     {
         uart6_transmit_line("Pressure sensor initialization error.");
@@ -176,10 +174,10 @@ int main(void)
         stm32_error_handler(__FILE__, __LINE__);
     }
 
-//    osThreadDef(pressure_sensor, thread_pressure_sensor_start, osPriorityAboveNormal, 1, 1000);
-//    if(NULL == (thread_startup_parameters.pressure_sensor_thread_handle = osThreadCreate(osThread(pressure_sensor), &app_configuration_data))){
-//        stm32_error_handler(__FILE__, __LINE__);
-//    }
+    osThreadDef(pressure_sensor, thread_pressure_sensor_start, osPriorityAboveNormal, 1, 1000);
+    if(NULL == (thread_startup_parameters.pressure_sensor_thread_handle = osThreadCreate(osThread(pressure_sensor), &app_configuration_data))){
+        stm32_error_handler(__FILE__, __LINE__);
+    }
 
 //    osThreadDef(startup, app_threads_controller_start, osPriorityAboveNormal, 1, 1000);
 //    if(NULL == (thread_cli_params.startupTaskHandle = osThreadCreate(osThread(startup), &app_configuration_data))){

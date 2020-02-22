@@ -164,8 +164,7 @@ int pressure_sensor_calibrate(configuration_data_t *configParams)
 void thread_pressure_sensor_start(void const*pvParameters)
 {
     struct bmp3_data container;
-    pressure_sensor_thread_parameters *params = (pressure_sensor_thread_parameters *) pvParameters;
-    configuration_data_t *configParams = params->flightCompConfig;
+    configuration_data_t *configParams = (configuration_data_t *) pvParameters;
     /* Variable used to store the compensated data */
     pressure_sensor_data dataStruct;
     TickType_t prevTime;
