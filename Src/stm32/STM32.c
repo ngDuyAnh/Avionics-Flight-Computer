@@ -28,15 +28,7 @@ STM32Status stm32_init(void)
 
 void stm32_delay(__uint32_t ms)
 {
-    //HAL_Delay(ms);
-	/*
-	 * This is a temporary fix. We should be using HAL_Delay(ms).
-	 * This is a busy wait delay. This is highly inefficient. Definitely it would be better to use Systick_timer or
-	 * TIM0 or TIM1. When can we should definitely look into this.
-	 */
-	int delay = ms * (SystemCoreClock / 1000U) / 10;
-	int i = 0;
-	while(i++ < delay){}
+    HAL_Delay(ms);
 }
 
 void stm32_led_blink(uint32_t ms)
@@ -115,4 +107,25 @@ void stm32_error_handler(const char* file, uint32_t line)
     {
         stm32_led_blink(50);
     }
+}
+
+
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    /* USER CODE BEGIN Callback 0 */
+
+    /* USER CODE END Callback 0 */
+    if (htim->Instance == TIM1) {
+        HAL_IncTick();
+    }
+
 }
