@@ -28,7 +28,15 @@ STM32Status stm32_init(void)
 
 void stm32_delay(__uint32_t ms)
 {
-    // HAL_Delay(ms);
+    //HAL_Delay(ms);
+	/*
+	 * This is a temporary fix. We should be using HAL_Delay(ms).
+	 * This is a busy wait delay. This is highly inefficient. Definitely it would be better to use Systick_timer or
+	 * TIM0 or TIM1. When can we should definitely look into this.
+	 */
+	int delay = ms * (SystemCoreClock / 1000U) / 10;
+	int i = 0;
+	while(i++ < delay){}
 }
 
 void stm32_led_blink(uint32_t ms)

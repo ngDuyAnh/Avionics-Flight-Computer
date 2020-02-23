@@ -103,8 +103,6 @@ int main(void)
     uart6_transmit_line("Recovery GPIO pins have been set up.");
     
     //Initialize and get the flight computer parameters.
-    imu_sensor_thread_parameters thread_imu_params;
-    pressure_sensor_thread_parameters thread_pressure_sensor_params;
     flight_state_controller_thread_parameters thread_flight_state_controller_params;
     cli_thread_parameters thread_cli_params;
     startup_thread_parameters thread_startup_parameters;
@@ -112,13 +110,11 @@ int main(void)
     thread_flight_state_controller_params.configuration_data = &app_configuration_data;
     
     
-    thread_pressure_sensor_params.flightCompConfig = &app_configuration_data;
     if(pressure_sensor_init(&app_configuration_data) != 0)
     {
         uart6_transmit_line("Pressure sensor initialization error.");
     }
     
-    thread_imu_params.configuration_data = &app_configuration_data;
     if(imu_sensor_init(&app_configuration_data) != 0)
     {
         uart6_transmit_line("IMU sensor initialization error.");
@@ -137,18 +133,21 @@ int main(void)
     if(!CONFIGURATION_IS_IN_FLIGHT(app_configuration_data.values.flags))
     {
         app_configuration_data.values.state = STATE_LAUNCHPAD;
-        if(/* imu_sensor_test() && */ pressure_sensor_test())
+        int rslt_imu = imu_sensor_test();
+        int rslt_pres = pressure_sensor_test();
+        if(rslt_imu && rslt_pres)
         {
-//             stm32_delay(1000);
-           // buzz(500); //CHANGE TO 2 SECONDS !!!!!
+            stm32_delay(1000);
+            buzz(500); //CHANGE TO 2 SECONDS !!!!!
         }
         else
         {
+        	uart6_transmit_line("Pressure sensor or IMU sensor test error. Entering CLI mode.");
+        	app_configuration_data.values.state = STATE_CLI;
             for(uint8_t i = 0; i < 20; i++)
             {
-                //buzz(500);
-                // stm32_delay(500);
-                app_configuration_data.values.state = STATE_CLI;
+                buzz(500);
+                stm32_delay(500);
             }
         }
     }
@@ -160,10 +159,10 @@ int main(void)
 //        stm32_error_handler(__FILE__, __LINE__);
 //    }
 
-//    osThreadDef(imu, imu_thread_start, osPriorityHigh, 1, 1000);
-//    if(NULL == (thread_startup_parameters.imu_thread_handle = osThreadCreate(osThread(imu), &app_configuration_data))){
-//        stm32_error_handler(__FILE__, __LINE__);
-//    }
+    osThreadDef(imu, imu_thread_start, osPriorityHigh, 1, 1000);
+    if(NULL == (thread_startup_parameters.imu_thread_handle = osThreadCreate(osThread(imu), &app_configuration_data))){
+        stm32_error_handler(__FILE__, __LINE__);
+    }
 
 //    osThreadDef(flight_state_controller, thread_flight_state_controller_start, osPriorityHigh, 1, 1000);
 //    if(NULL == (thread_startup_parameters.flight_state_controller_thread_handle = osThreadCreate(osThread(flight_state_controller), &thread_flight_state_controller_params))){
@@ -175,10 +174,10 @@ int main(void)
         stm32_error_handler(__FILE__, __LINE__);
     }
 
-//    osThreadDef(pressure_sensor, thread_pressure_sensor_start, osPriorityAboveNormal, 1, 1000);
-//    if(NULL == (thread_startup_parameters.pressure_sensor_thread_handle = osThreadCreate(osThread(pressure_sensor), &app_configuration_data))){
-//        stm32_error_handler(__FILE__, __LINE__);
-//    }
+    osThreadDef(pressure_sensor, thread_pressure_sensor_start, osPriorityAboveNormal, 1, 1000);
+    if(NULL == (thread_startup_parameters.pressure_sensor_thread_handle = osThreadCreate(osThread(pressure_sensor), &app_configuration_data))){
+        stm32_error_handler(__FILE__, __LINE__);
+    }
 
 //    osThreadDef(startup, app_threads_controller_start, osPriorityAboveNormal, 1, 1000);
 //    if(NULL == (thread_cli_params.startupTaskHandle = osThreadCreate(osThread(startup), &app_configuration_data))){

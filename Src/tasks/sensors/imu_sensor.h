@@ -36,13 +36,6 @@ typedef struct imu_sensor_data
     uint32_t   time_ticks; // time of sensor reading in ticks.
 }imu_sensor_data;
 
-
-
-//Parameters for imu_thread_start.
-typedef struct{
-    configuration_data_t *configuration_data;
-} imu_sensor_thread_parameters;
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
 //  Enter description for public function here.

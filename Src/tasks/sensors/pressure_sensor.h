@@ -37,12 +37,6 @@ typedef struct pressure_sensor_data
 } pressure_sensor_data;
 
 
-//Parameters for thread_pressure_sensor_start.
-typedef struct{
-    configuration_data_t *flightCompConfig;
-} pressure_sensor_thread_parameters;
-
-
 int    pressure_sensor_init               (configuration_data_t * parameters);
 int    pressure_sensor_calibrate          (configuration_data_t * configParams);
 
