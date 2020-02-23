@@ -33,20 +33,7 @@
 #define DATA_START_ADDRESS              0x00001000  // Start writing to second page of memory.
 #define DATA_END_ADDRESS                0x00001000  // Assume no saved data.
 
-#define ACC_BANDWIDTH                   BMI08X_ACCEL_BW_NORMAL
-#define ACC_ODR                         BMI08X_ACCEL_ODR_100_HZ
-#define ACC_RANGE                       BMI088_ACCEL_RANGE_12G
-#define ACC_PWR                         BMI08X_ACCEL_PM_ACTIVE
 
-#define GYRO_BANDWIDTH                  BMI08X_GYRO_BW_23_ODR_200_HZ
-#define GYRO_ODR                        BMI08X_GYRO_BW_23_ODR_200_HZ
-#define GYRO_RANGE                      BMI08X_GYRO_RANGE_1000_DPS
-#define GYRO_PWR                        BMI08X_GYRO_PM_NORMAL
-
-#define BMP_ODR                         BMP3_ODR_50_HZ
-#define PRES_OS                         BMP3_OVERSAMPLING_4X
-#define TEMP_OS                         BMP3_OVERSAMPLING_4X
-#define BMP_IIR                         BMP3_IIR_FILTER_COEFF_15
 
 #define GND_ALT                         0
 #define GND_PRES                        101325
@@ -83,22 +70,22 @@ typedef struct
     uint8_t     flags;
     uint32_t    start_data_address;
     uint32_t    end_data_address;
-    
+
     uint8_t     ac_bw;
     uint8_t     ac_odr;
     uint8_t     ac_range;
     uint8_t     ac_pwr;
-    
+
     uint8_t     gy_bw;
     uint8_t     gy_odr;
     uint8_t     gy_range;
     uint8_t     gy_pwr;
-    
+
     uint8_t     bmp_odr;
     uint8_t     temp_os;
     uint8_t     pres_os;
     uint8_t     iir_coef;
-    
+
     float       ref_alt;
     float       ref_pres;
     
@@ -107,9 +94,11 @@ typedef struct
 
 
 typedef union configuration_data_union{
-    uint8_t bytes[sizeof(configuration_data_values)] ;
+    uint8_t bytes[sizeof(configuration_data_values)];
     configuration_data_values values;
 } configuration_data_t;
+
+
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
