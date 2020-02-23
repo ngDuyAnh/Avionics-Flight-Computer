@@ -20,15 +20,20 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include "../../external/sensors/bmp3.h"
+#include "external/sensors/bmp3.h"
 #include "cmsis_os.h"
-#include "../../protocols/SPI.h"
-#include "../../configuration.h"
-#include "../../protocols/UART.h"
+#include "protocols/SPI.h"
+#include "configuration.h"
+#include "protocols/UART.h"
 #include "utilities/common.h"
 
 #define PRES_TYPE           0x200000
 #define TEMP_TYPE           0x100000
+
+#define BMP_ODR                         BMP3_ODR_50_HZ
+#define PRES_OS                         BMP3_OVERSAMPLING_4X
+#define TEMP_OS                         BMP3_OVERSAMPLING_4X
+#define BMP_IIR                         BMP3_IIR_FILTER_COEFF_15
 
 #define GND_ALT             0
 #define GND_PRES            101325
@@ -68,10 +73,10 @@ static int8_t pressure_sensor_config(uint8_t iir, uint8_t os_pres, uint8_t os_te
     s_device.settings.press_en = BMP3_ENABLE;
     s_device.settings.temp_en = BMP3_ENABLE;
     /* Select the output data rate and oversampling settings for pressure and temperature */
-    s_device.settings.odr_filter.press_os = os_pres;
-    s_device.settings.odr_filter.temp_os = os_temp;
-    s_device.settings.odr_filter.odr = odr;
-    s_device.settings.odr_filter.iir_filter = iir;
+    s_device.settings.odr_filter.press_os = PRES_OS;
+    s_device.settings.odr_filter.temp_os = TEMP_OS;
+    s_device.settings.odr_filter.odr = BMP_ODR;
+    s_device.settings.odr_filter.iir_filter = BMP_IIR;
     /* Assign the settings which needs to be set in the sensor */
     settings_sel = BMP3_PRESS_EN_SEL | BMP3_TEMP_EN_SEL | BMP3_PRESS_OS_SEL | BMP3_TEMP_OS_SEL | BMP3_ODR_SEL | BMP3_IIR_FILTER_SEL;
 

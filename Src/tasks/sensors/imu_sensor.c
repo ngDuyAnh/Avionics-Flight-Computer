@@ -30,6 +30,16 @@
 #define ACC_TYPE             0x800000
 #define GYRO_TYPE            0x400000
 
+#define ACC_BANDWIDTH                   BMI08X_ACCEL_BW_NORMAL
+#define ACC_ODR                         BMI08X_ACCEL_ODR_100_HZ
+#define ACC_RANGE                       BMI088_ACCEL_RANGE_12G
+#define ACC_PWR                         BMI08X_ACCEL_PM_ACTIVE
+
+#define GYRO_BANDWIDTH                  BMI08X_GYRO_BW_23_ODR_200_HZ
+#define GYRO_ODR                        BMI08X_GYRO_BW_23_ODR_200_HZ
+#define GYRO_RANGE                      BMI08X_GYRO_RANGE_1000_DPS
+#define GYRO_PWR                        BMI08X_GYRO_PM_NORMAL
+
 
 static QueueHandle_t s_queue;
 
@@ -164,10 +174,10 @@ int8_t accel_config(configuration_data_t * configParams){
     
     /* Assign the desired configurations */
     //Not sure yet what configurations we want
-    s_device.accel_cfg.bw = configParams->values.ac_bw;
-    s_device.accel_cfg.odr = configParams->values.ac_odr;
-    s_device.accel_cfg.range = configParams->values.ac_range;
-    s_device.accel_cfg.power = configParams->values.ac_pwr;
+    s_device.accel_cfg.bw = ACC_BANDWIDTH;
+    s_device.accel_cfg.odr = ACC_ODR;
+    s_device.accel_cfg.range = ACC_RANGE;
+    s_device.accel_cfg.power = ACC_PWR;
 
     rslt = bmi08a_set_power_mode(&s_device);
     if(rslt != BMI08X_OK)
@@ -194,16 +204,16 @@ int8_t gyro_config(configuration_data_t * configParams)
     
     
     //set power mode
-    s_device.gyro_cfg.power = configParams->values.gy_pwr;
+    s_device.gyro_cfg.power = GYRO_PWR;
     rslt = bmi08g_set_power_mode(&s_device);
     if(rslt != BMI08X_OK)
         return rslt;
     
     /* Wait for 30ms to switch between the power modes - delay_ms taken care inside the function*/
     /* Assign the desired configurations */
-   s_device.gyro_cfg.odr = configParams->values.gy_odr;
-   s_device.gyro_cfg.range = configParams->values.gy_range;
-   s_device.gyro_cfg.bw = configParams->values.gy_bw;
+   s_device.gyro_cfg.odr = GYRO_ODR;
+   s_device.gyro_cfg.range = GYRO_RANGE;
+   s_device.gyro_cfg.bw = GYRO_BANDWIDTH;
    s_device.gyro_id = data;
 
     rslt = bmi08g_set_meas_conf(&s_device);
