@@ -36,6 +36,8 @@
 // TYPEDEFS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+static QueueHandle_t s_queue;
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -43,7 +45,7 @@
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // FUNCTIONS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-void recovery_init(){
+uint8_t recovery_init(){
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -79,7 +81,21 @@ void recovery_init(){
     GPIO_InitStruct3.Mode= GPIO_MODE_INPUT;
     HAL_GPIO_Init(RECOV_MAIN_CONTINUITY_PORT,&GPIO_InitStruct3);
 
+    // Init queue for continuity
+    s_queue = xQueueCreate(10, sizeof(continuity_data));
+    if (s_queue == NULL)
+    {
+        return 2;
+    }
+    vQueueAddToRegistry(s_queue, "continuity_queue");
 
+    // Init queue for overcurrent
+    s_queue = xQueueCreate(10, sizeof(overcurrent_data));
+    if (s_queue == NULL)
+    {
+        return 2;
+    }
+    vQueueAddToRegistry(s_queue, "overcurrent_queue");
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -155,6 +171,12 @@ RecoveryContinuityStatus recovery_check_continuity(RecoverySelect recov_event){
         cont = OPEN_CIRCUIT;
     }
 
+    // Add the data to queue to be write
+    continuity_data dataStruct;
+    dataStruct.time_ticks = xTaskGetTickCount();
+    dataStruct.continuity_reading = cont;
+    xQueueSend(s_queue, &dataStruct, 1);
+
     return cont;
 }
 
@@ -177,6 +199,12 @@ RecoveryOverCurrentStatus recovery_check_overcurrent(RecoverySelect recov_event)
     else{
         overcurrent = OVERCURRENT;
     }
+
+    // Add the data to queue to be write
+    overcurrent_data dataStruct;
+    dataStruct.time_ticks = xTaskGetTickCount();
+    dataStruct.overcurrent_reading = overcurrent;
+    xQueueSend(s_queue, &dataStruct, 1);
 
     return overcurrent;
 }

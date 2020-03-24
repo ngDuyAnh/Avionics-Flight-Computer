@@ -18,6 +18,8 @@
 // INCLUDES
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+#include <inttypes.h>
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // DEFINITIONS AND MACROS
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,6 +46,20 @@ typedef enum
     NO_OVERCURRENT,
     OVERCURRENT
 } RecoveryOverCurrentStatus;
+
+// Group a time stamp with the reading of continuity
+typedef struct continuity_data
+{
+    uint32_t time_ticks; // Time of the reading
+    uint8_t continuity_reading; // The status of continuity SHORT_CIRCUIT or OPEN_CIRCUIT
+} continuity_data;
+
+// Group a time stamp with the reading of overcurrent
+typedef struct overcurrent_data
+{
+    uint32_t time_ticks; // Time of the reading
+    uint8_t overcurrent_reading; // The status of continuity NO_OVERCURRENT or OVERCURRENT
+} overcurrent_data;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Description:
