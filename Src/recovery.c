@@ -96,6 +96,9 @@ uint8_t recovery_init(){
         return 2;
     }
     vQueueAddToRegistry(s_queue, "overcurrent_queue");
+
+    // Everything is good
+    return 0;
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
